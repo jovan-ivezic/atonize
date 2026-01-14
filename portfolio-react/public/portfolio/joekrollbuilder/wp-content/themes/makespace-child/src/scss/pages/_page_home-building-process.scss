@@ -1,0 +1,74 @@
+/* -----------------------------------------
+   Home Building Process Template
+   ----------------------------------------- */
+
+.building-steps {
+	padding-bottom: rem(98);
+	padding-top: rem(15);
+	counter-reset: stepNumber;
+}
+
+.building-steps-item {
+	counter-increment: stepNumber;
+
+	&:nth-child(odd) {
+		background-color: rgba(#082639, .04);
+	}
+
+	&:nth-child(even) {
+
+		.building-steps-content {
+			flex-direction: row-reverse;
+		}
+		
+		.step-image {
+		    margin-right: 0;
+		    margin-left: rem(30);
+
+		    @media (max-width: $phablet) {
+				margin-left: auto;
+				margin-right: auto;
+			}
+		}
+	}
+
+	h2 {
+		font-size: rem(16);
+		font-family: $font-family-base;
+		text-transform: uppercase; 
+
+		&:before {
+			content: counter(stepNumber) " " ;
+			font-weight: bold;
+			font-style: italic;
+		}
+	}
+
+	p {
+		margin-bottom: 0;
+	}
+
+}
+
+	.building-steps-content {
+		@extend .container;
+		align-items: flex-start;
+		display: flex;
+		padding: rem(60) rem(53);
+
+		@media (max-width: $phablet) {
+			display: block;
+			padding: rem(60) 0;
+			text-align: center;
+		}
+	}
+
+		.step-image {
+		    margin-right: rem(30);
+		    width: rem(90);
+		    flex-shrink: 0;
+
+		    @media (max-width: $phablet) {
+				margin-right: auto;
+			}
+		}

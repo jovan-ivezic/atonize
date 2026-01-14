@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="250" height="250" viewBox="0 0 250 250">
+    <defs>
+        <circle id="a" cx="125" cy="125" r="125"/>
+    </defs>
+    <g fill="none" fill-rule="evenodd">
+        <mask id="b" fill="#fff">
+            <use xlink:href="#a"/>
+        </mask>
+        <g stroke="#AFADAE" mask="url(#b)">
+            <g stroke-width="2">
+                <path d="M140.584 247.91H13.553l-41.456-41.658H99.13z"/>
+                <path d="M267.616 247.91H140.585l-41.456-41.658h127.033zM35.61 206.247H-91.421l-41.454-41.658H-5.84z"/>
+                <path d="M162.642 206.247H35.61L-5.843 164.59h127.034z"/>
+                <path d="M289.674 206.247H162.643l-41.454-41.658h127.034zM57.674 164.589H-69.357l-41.453-41.658H16.223z"/>
+                <path d="M184.706 164.589H57.675L16.222 122.93h127.033z"/>
+                <path d="M311.738 164.589H184.707l-41.453-41.658h127.03zM80.584 122.91H-46.447l-41.456-41.658H39.13z"/>
+                <path d="M207.616 122.91H80.585L39.129 81.252h127.033z"/>
+                <path d="M334.648 122.91H207.617L166.16 81.252h127.033zM102.642 81.247H-24.39L-65.843 39.59H61.191z"/>
+                <path d="M229.674 81.247H102.643L61.189 39.59h127.034zM124.706 39.589H-2.325L-43.778-2.07H83.255z"/>
+                <path d="M251.738 39.589H124.707L83.254-2.07h127.03z"/>
+            </g>
+            <g stroke-width="14" transform="translate(72 72)">
+                <circle cx="53" cy="53" r="46"/>
+                <path stroke-linecap="square" d="M75.5 97.5l40 86"/>
+            </g>
+        </g>
+        <path fill="#AFADAE" d="M77 111h95v13H77z" mask="url(#b)"/>
+        <path fill="#AFADAE" d="M122.664 126.514h45.86v12.973h-45.86z" mask="url(#b)" transform="rotate(46 145.594 133)"/>
+        <circle cx="125" cy="125" r="120.5" stroke="#AFADAE" stroke-width="9"/>
+    </g>
+</svg>

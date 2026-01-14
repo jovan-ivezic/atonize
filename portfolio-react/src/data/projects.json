@@ -1,0 +1,164 @@
+[
+  {
+    "id": 1,
+    "title": "Restaurant Theme",
+    "description": "Wordpress theme for restaurants with online menu and reservation system.",
+    "category": "wordpress",
+    "image": "/portfolio/images/gallery/restaurant.jpg",
+    "link": "/portfolio/restaurant-theme/home.html",
+    "technologies": ["WordPress", "PHP", "JavaScript", "CSS"]
+  },
+  {
+    "id": 2,
+    "title": "Knight Services",
+    "description": "Professional website for roof repair and maintenance services.",
+    "category": "other",
+    "image": "/portfolio/images/gallery/knightservices.jpg",
+    "link": "/portfolio/knightservices",
+    "technologies": ["WordPress", "PHP", "JavaScript"]
+  },
+  {
+    "id": 3,
+    "title": "Wedding Day",
+    "description": "Elegant website for online wedding invitations with RSVP functionality.",
+    "category": "wordpress",
+    "image": "/portfolio/images/gallery/wedding-day.jpg",
+    "link": "/portfolio/wedding-day/home.html",
+    "technologies": ["WordPress", "JavaScript", "CSS"]
+  },
+  {
+    "id": 4,
+    "title": "At Medics",
+    "description": "Modern website for medical institution with patient portal.",
+    "category": "other",
+    "image": "/portfolio/images/gallery/at-medics.jpg",
+    "link": "/portfolio/at-medics/home.html",
+    "technologies": ["HTML5", "CSS3", "JavaScript"]
+  },
+  {
+    "id": 5,
+    "title": "School Space",
+    "description": "Community-based social enterprise platform for education.",
+    "category": "other",
+    "image": "/portfolio/images/gallery/school-space.jpg",
+    "link": "/portfolio/school-space/home.html",
+    "technologies": ["HTML5", "CSS3", "JavaScript"]
+  },
+  {
+    "id": 6,
+    "title": "Alriyada",
+    "description": "RTL website for internet service provider from Libya.",
+    "category": "rtl",
+    "image": "/portfolio/images/gallery/alriyada.jpg",
+    "link": "/portfolio/alriyada/home.html",
+    "technologies": ["HTML5", "CSS3 RTL", "JavaScript"]
+  },
+  {
+    "id": 7,
+    "title": "Wedding Mania",
+    "description": "Colorful and fun website for wedding invitations.",
+    "category": "wordpress",
+    "image": "/portfolio/images/gallery/wedding-mania.jpg",
+    "link": "/portfolio/wedding-mania/home.html",
+    "technologies": ["WordPress", "JavaScript"]
+  },
+  {
+    "id": 8,
+    "title": "Joe Kroll Builder",
+    "description": "Professional website for house building company.",
+    "category": "other",
+    "image": "/portfolio/images/gallery/joekroll.jpg",
+    "link": "/portfolio/joekrollbuilder/",
+    "technologies": ["WordPress", "PHP"]
+  },
+  {
+    "id": 9,
+    "title": "Smaragd",
+    "description": "Beautiful website for wedding decoration company.",
+    "category": "other",
+    "image": "/portfolio/images/gallery/smaragd.jpg",
+    "link": "/portfolio/smaragd/index.html",
+    "technologies": ["HTML5", "CSS3", "JavaScript"]
+  },
+  {
+    "id": 10,
+    "title": "DMVF Architects",
+    "description": "Minimalist portfolio website for architecture firm.",
+    "category": "other",
+    "image": "/portfolio/images/gallery/dmvf.jpg",
+    "link": "http://dmvf.ie/",
+    "technologies": ["WordPress", "Custom Theme"]
+  },
+  {
+    "id": 11,
+    "title": "Central Bank of Libya",
+    "description": "Official RTL website for the central bank with secure portal.",
+    "category": "rtl",
+    "image": "/portfolio/images/gallery/cbl.jpg",
+    "link": "/portfolio/cbl/build/home.html",
+    "technologies": ["HTML5", "CSS3 RTL", "JavaScript"]
+  },
+  {
+    "id": 12,
+    "title": "Wedding Star",
+    "description": "Romantic website template for wedding invitations.",
+    "category": "wordpress",
+    "image": "/portfolio/images/gallery/wedding-star.jpg",
+    "link": "/portfolio/wedding-star/home.html",
+    "technologies": ["WordPress", "JavaScript"]
+  },
+  {
+    "id": 13,
+    "title": "The House London",
+    "description": "Interactive website featuring custom CSS animations.",
+    "category": "animation",
+    "image": "/portfolio/images/gallery/thehouse.jpg",
+    "link": "/portfolio/the-house/index.html",
+    "technologies": ["HTML5", "CSS3 Animations", "JavaScript"]
+  },
+  {
+    "id": 14,
+    "title": "Valentino Pastry Shop",
+    "description": "Delightful website for Italian pastry shop.",
+    "category": "other",
+    "image": "/portfolio/images/gallery/valentino.jpg",
+    "link": "https://www.valentinotorte.com/",
+    "technologies": ["WordPress", "WooCommerce"]
+  },
+  {
+    "id": 15,
+    "title": "IBSL",
+    "description": "Professional WordPress theme for charity organizations.",
+    "category": "wordpress",
+    "image": "/portfolio/images/gallery/ibsl.jpg",
+    "link": "/portfolio/ibsl/home.html",
+    "technologies": ["WordPress", "Custom Theme", "PHP"]
+  },
+  {
+    "id": 16,
+    "title": "Cloud Nexus IT",
+    "description": "Corporate website for cyber security solutions provider.",
+    "category": "other",
+    "image": "/portfolio/images/gallery/cloud-nexus.jpg",
+    "link": "http://www.cloudnexusit.com/",
+    "technologies": ["WordPress", "Security Features"]
+  },
+  {
+    "id": 17,
+    "title": "Kentucky to the World",
+    "description": "Website for non-profit organization promoting Kentucky globally.",
+    "category": "other",
+    "image": "/portfolio/images/gallery/kentucky.jpg",
+    "link": "http://kentuckytotheworld.org/",
+    "technologies": ["WordPress", "Donation System"]
+  },
+  {
+    "id": 18,
+    "title": "Khulisa",
+    "description": "Impactful website for charity organization.",
+    "category": "other",
+    "image": "/portfolio/images/gallery/khulisa.jpg",
+    "link": "/portfolio/khulisa/home.html",
+    "technologies": ["HTML5", "CSS3", "JavaScript"]
+  }
+]

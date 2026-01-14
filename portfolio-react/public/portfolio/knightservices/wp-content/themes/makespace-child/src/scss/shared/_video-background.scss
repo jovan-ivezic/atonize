@@ -1,0 +1,105 @@
+/* -----------------------------------------
+   Video Background
+   ----------------------------------------- */
+
+//Show video section only on front page template
+body {
+
+ 	&:not(.home) {
+		.home-video {
+			display: none;
+		}
+	}
+}
+
+
+.video-background {
+    bottom: 0;
+    left: 0;
+    overflow: hidden;
+	position: fixed;
+    right: 0;
+    top: 0;
+    z-index: -50;
+
+	video {
+	    height: auto;
+	    left: 50%;
+	    min-width: 100%;
+	    min-height: 100%;
+		position: absolute;
+	    top: 50%;
+		transform: translate(-50%, -50%);
+	    width: auto;
+	}
+}
+
+.letter-background {
+	left: 0;
+	position: fixed;
+    top: 0;
+    right: 0;
+
+    &:before {
+    	content: '';
+	    background-image: url('assets/video-bg.png');
+	    background-size: cover;
+	    background-repeat: no-repeat;
+	    background-position: center;
+	    width: 100%;
+	    display: block;
+	   	padding-top: 45%;
+
+	   	@media (max-width : $phablet) {
+			padding-top: 49%;
+		}
+    }
+}
+
+//Fake element used to obtain the same height as a video
+.fake-height {
+	height: 0;
+    padding-top: 45%;
+	width: 100%;
+	text-align: center;
+
+	@media (max-width : $phablet) {
+		padding-top: 49%;
+	}
+}
+
+	.open-popup-link {
+	    bottom: 0;
+	    color: $brand-yellow-dk;
+	    font-size: rem(13);
+	    font-weight: 500;
+	   	left: 50%;
+	   	position: absolute;
+	    text-align: center;
+	   	transform: translateX(-50%);
+	    text-transform: uppercase;
+	    z-index: 5;
+
+	    @media (max-width : $phablet) {
+			bottom: -1.7%;
+		}
+	}
+
+
+	.video-popup {
+	  	position: relative;
+	  	max-width: 70%;
+	  	margin: rem(20) auto;
+	  	width: auto;
+
+	  	video {
+	  		max-width: 100%;
+	  	}
+	}
+
+	.mfp-close-btn-in {
+
+		.mfp-close {
+		    color: white;
+		}
+	}

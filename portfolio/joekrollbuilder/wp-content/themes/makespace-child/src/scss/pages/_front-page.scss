@@ -1,0 +1,344 @@
+/* -----------------------------------------
+   Front Page template
+   ----------------------------------------- */
+
+.home {
+	
+	h2 {
+		font-size: rem(32);
+		padding-bottom: rem(5);
+
+		@media (max-width: $tablet) {
+			font-size: rem(25);
+		}
+	}
+}
+
+//Projects slider
+.projects-slider {
+	position: relative;
+}
+
+	.slider-item {
+		position: relative;
+
+		h2 {
+			color: #fff;
+			font-size: rem(45);
+		}
+	}
+
+		.slider-image {
+			background-size: cover;
+			background-position: center;
+			background-repeat: no-repeat;
+			box-shadow: inset 0 0 0 rem(1000) rgba(51, 51, 51, 0.32);
+			height: calc(100vh - 3.75rem);
+			position: relative;
+		}
+
+			.slider-text {
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+			}
+
+			.slider-content-bottom {
+				display: inline-block;
+				font-size: rem(12);
+				padding-top: rem(20);
+				text-transform: uppercase;
+
+				@media (max-width: $phablet) {
+					display: block;
+					padding-top: rem(10);
+					padding-bottom: rem(60);
+					text-align: center;
+				}
+
+				ul {
+					display: flex;
+					list-style-type: none;
+					margin: 0;
+					padding-bottom: rem(3);
+					margin-bottom: rem(10);
+					position: relative;
+
+					@media (max-width: $phablet) {
+						display: block;
+						border-bottom: 1px solid #979797;
+					}
+
+					&:after {
+						content: '';
+						background-color: #979797;
+						height: 1px;
+						position: absolute;
+						top: 100%;
+						width: 85%;
+
+						@media (max-width: $phablet) {
+							display: none;
+						}
+					}
+				}
+
+					li {
+						+ li {
+							&:before {
+								content: '|';
+								display: inline-block;
+								margin-left: rem(6);
+								margin-right: rem(5);
+								position: relative;
+								top: -1px;
+
+								@media (max-width: $phablet) {
+									display: none;
+								}
+							}
+						}
+					}
+			}
+
+	//Slider nav with all projects link
+	.slider-nav {
+		bottom: 0;
+		background-color: #fff;
+		position: absolute;
+		right: 0;
+		padding: rem(10) 0 0 rem(10);
+
+		@media (max-width: $phablet) {
+			background: none;
+			bottom: 0;
+			padding: 0;
+			right: 50%;
+			transform: translateX(50%);
+		}
+
+		.arrows {
+			border-bottom: 1px solid #979797;
+			display: flex;
+			justify-content: space-between;
+		}
+
+
+		.all-projects {
+			font-size: rem(12);
+			text-transform: uppercase;
+		}
+
+
+			.slick-arrow {
+				background-color: transparent;
+				border: none;
+				color: $brand-yellow;
+				padding: 0;
+
+				.fa {
+					font-size: rem(25);
+				}
+			}
+	}
+
+
+//Location section
+.location {
+	align-items: center;
+	display: flex;
+	flex-wrap: wrap;
+	margin: 0 rem(-30);
+	padding: rem(40) 0 rem(60);
+
+	@media (max-width: $tablet) {
+		margin: 0;
+	}
+}
+	
+	.location-map,
+	.location-info {
+		max-width: 50%;
+		padding: 0 rem(30);
+		width: 50%;
+
+		@media (max-width: $tablet) {
+			max-width: 100%;
+			padding: 0;
+			width: 100%;
+		}
+	}
+
+	.location-info {
+
+		@media (max-width: $tablet) {
+			padding-top: rem(25);
+			text-align: center;
+		}
+
+		h2 {
+			&:before {
+				background-image: url('assets/logo-circle.svg');
+				background-size: cover;
+				background-repeat: no-repeat;
+				content: '';
+				display: block;
+				height: rem(38);
+				margin-bottom: rem(15);
+				width: rem(38);
+
+				@media (max-width: $tablet) {
+					margin: 0 auto rem(15);
+				}
+			}
+		}
+	}
+	
+	//Google map
+	#cd-map {
+		padding-bottom: 75%;
+	}
+
+
+//About section
+.about {
+	background-color: $body-color;
+	display: flex;
+	flex-wrap: wrap;
+	padding: 0 8%;
+
+	h2, h3, p, ul {
+		color: $brand-grey;
+	}
+
+	.read-more {
+
+		&:hover {
+			color: #fff;
+		}
+	}
+}
+
+	.about-info {
+		max-width: 70%;
+		padding-right: rem(65);
+		padding-top: rem(60);
+		padding-bottom: rem(60);
+		text-align: right;
+		width: 70%;
+
+		@media (max-width: $laptop) {
+			max-width: 100%;
+			padding-right: 0;
+			padding-top: rem(35);
+			text-align: center;
+			width: 100%;
+		}
+	}
+
+		.about-partners {
+			padding-top: rem(60);
+			text-align: left;
+			text-transform: uppercase;
+
+			@media (max-width: $laptop) {
+				padding-top: rem(45);
+				text-align: center;
+			}
+
+			h3 {
+				border-bottom: 1px solid $brand-grey;
+				font-family: $font-family-base;
+				padding-bottom: rem(8);
+			}
+
+			ul {
+				column-count: 3;
+				font-size: rem(14);
+				letter-spacing: rem(1);
+				list-style-type: none;
+				margin: 0;
+				padding-bottom: rem(20);
+
+				@media (max-width: $phablet) {
+					column-count: 1;
+				}
+			}
+
+				li {
+					-webkit-column-break-inside: avoid;
+				    -moz-column-break-inside: avoid;
+				    column-break-inside: avoid;
+				}
+		}
+
+	.about-image {
+		align-items: flex-end;
+		display: flex;
+		max-width: 30%;
+		padding-top: rem(40);
+		width: 30%;
+
+		@media (max-width: $laptop) {
+			max-width: 50%;
+			margin: 0 auto;
+			order: -1;
+			width: 50%;
+		}
+
+		@media (max-width: $phablet) {
+			max-width: 70%;
+			width: 70%;
+		}
+
+		img {
+			margin: 0;
+			width: 100%;
+		}
+	}
+
+//Process section
+.process {
+	background-color: rgba($brand-grey-dk, .31);
+	padding-top: rem(80);
+	padding-bottom: rem(85);
+	text-align: center;
+}
+
+	.process-intro {
+		max-width: rem(730);
+		margin: 0 auto;
+		padding: 0 rem(15);
+	}
+
+	.process-steps {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-around;
+		padding: 0 5%;
+
+		@media (max-width: $tablet) {
+			justify-content: center;
+		}
+	}
+
+		.process-steps-item {
+			padding: rem(15) rem(10);
+
+			@media (max-width: $tablet) {
+				padding: rem(20);
+			}
+
+			img {
+				height: rem(60);
+			}
+
+			h3 {
+				font-size: rem(16);
+				font-family: $font-family-base;
+				opacity: 0.98;
+				text-transform: uppercase;
+			}
+		}
+	
