@@ -17,10 +17,13 @@ const Portfolio = () => {
     { id: 'other', label: 'Other' },
   ];
 
+  // Filtriraj sakrivene projekte
+  const visibleProjects = projectsData.filter((project) => !project.hidden);
+  
   const filteredProjects =
     activeFilter === 'all'
-      ? projectsData
-      : projectsData.filter((project) => project.category === activeFilter);
+      ? visibleProjects
+      : visibleProjects.filter((project) => project.category === activeFilter);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -110,60 +113,108 @@ const Portfolio = () => {
           className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8"
         >
           <AnimatePresence mode="wait">
-            {filteredProjects.map((project, index) => (
-              <Motion.div
-                key={`${activeFilter}-${project.id}`}
-                variants={itemVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                custom={index}
-                className="group bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow"
-              >
-                <a
-                  href={project.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block"
+            {filteredProjects.map((project, index) => {
+              const isDisabled = project.disabled === true;
+              
+              return (
+                <Motion.div
+                  key={`${activeFilter}-${project.id}`}
+                  variants={itemVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  custom={index}
+                  className={`group bg-white rounded-xl overflow-hidden shadow-lg transition-shadow ${
+                    isDisabled 
+                      ? 'opacity-60 cursor-not-allowed' 
+                      : 'hover:shadow-2xl'
+                  }`}
                 >
-                  {/* Project Image */}
-                  <div className="relative overflow-hidden aspect-video">
-                    <img
-                      src={project.image}
-                      alt={project.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
-                      <span className="text-white flex items-center gap-2">
-                        View Project <FaExternalLinkAlt size={14} />
-                      </span>
-                    </div>
-                  </div>
+                  {isDisabled ? (
+                    <div className="block">
+                      {/* Project Image */}
+                      <div className="relative overflow-hidden aspect-video">
+                        <img
+                          src={project.image}
+                          alt={project.title}
+                          className="w-full h-full object-cover grayscale"
+                        />
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                          <span className="text-white font-medium px-4 py-2 bg-gray-800/80 rounded-lg">
+                            Coming Soon
+                          </span>
+                        </div>
+                      </div>
 
-                  {/* Project Info */}
-                  <div className="p-6">
-                    <h3 className="text-xl font-display font-bold text-gray-800 mb-2 group-hover:text-primary-600 transition-colors">
-                      {project.title}
-                    </h3>
-                    <p className="text-gray-600 text-sm mb-4">
-                      {project.description}
-                    </p>
+                      {/* Project Info */}
+                      <div className="p-6">
+                        <h3 className="text-xl font-display font-bold text-gray-500 mb-2">
+                          {project.title}
+                        </h3>
+                        <p className="text-gray-500 text-sm mb-4">
+                          {project.description}
+                        </p>
 
-                    {/* Technologies */}
-                    <div className="flex flex-wrap gap-2">
-                      {project.technologies.slice(0, 3).map((tech, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 bg-primary-50 text-primary-600 text-xs rounded-full font-medium"
-                        >
-                          {tech}
-                        </span>
-                      ))}
+                        {/* Technologies */}
+                        <div className="flex flex-wrap gap-2">
+                          {project.technologies.slice(0, 3).map((tech, index) => (
+                            <span
+                              key={index}
+                              className="px-3 py-1 bg-gray-100 text-gray-500 text-xs rounded-full font-medium"
+                            >
+                              {tech}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </a>
-              </Motion.div>
-            ))}
+                  ) : (
+                    <a
+                      href={project.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block"
+                    >
+                      {/* Project Image */}
+                      <div className="relative overflow-hidden aspect-video">
+                        <img
+                          src={project.image}
+                          alt={project.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
+                          <span className="text-white flex items-center gap-2">
+                            View Project <FaExternalLinkAlt size={14} />
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Project Info */}
+                      <div className="p-6">
+                        <h3 className="text-xl font-display font-bold text-gray-800 mb-2 group-hover:text-primary-600 transition-colors">
+                          {project.title}
+                        </h3>
+                        <p className="text-gray-600 text-sm mb-4">
+                          {project.description}
+                        </p>
+
+                        {/* Technologies */}
+                        <div className="flex flex-wrap gap-2">
+                          {project.technologies.slice(0, 3).map((tech, index) => (
+                            <span
+                              key={index}
+                              className="px-3 py-1 bg-primary-50 text-primary-600 text-xs rounded-full font-medium"
+                            >
+                              {tech}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </a>
+                  )}
+                </Motion.div>
+              );
+            })}
           </AnimatePresence>
         </Motion.div>
 
@@ -176,7 +227,7 @@ const Portfolio = () => {
         >
           <p className="text-gray-600">
             Showing <span className="font-bold text-primary-600">{filteredProjects.length}</span> of{' '}
-            <span className="font-bold">{projectsData.length}</span> projects
+            <span className="font-bold">{visibleProjects.length}</span> projects
           </p>
         </Motion.div>
       </div>

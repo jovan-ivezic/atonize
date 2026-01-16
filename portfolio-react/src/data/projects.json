@@ -15,7 +15,8 @@
     "category": "other",
     "image": "/portfolio/images/gallery/knightservices.jpg",
     "link": "/portfolio/knightservices",
-    "technologies": ["WordPress", "PHP", "JavaScript"]
+    "technologies": ["WordPress", "PHP", "JavaScript"],
+    "hidden": true
   },
   {
     "id": 3,
@@ -69,7 +70,8 @@
     "category": "other",
     "image": "/portfolio/images/gallery/joekroll.jpg",
     "link": "/portfolio/joekrollbuilder/",
-    "technologies": ["WordPress", "PHP"]
+    "technologies": ["WordPress", "PHP"],
+    "hidden": true
   },
   {
     "id": 9,
@@ -141,7 +143,8 @@
     "category": "other",
     "image": "/portfolio/images/gallery/cloud-nexus.jpg",
     "link": "http://www.cloudnexusit.com/",
-    "technologies": ["WordPress", "Security Features"]
+    "technologies": ["WordPress", "Security Features"],
+    "hidden": true
   },
   {
     "id": 17,
@@ -159,6 +162,15 @@
     "category": "other",
     "image": "/portfolio/images/gallery/khulisa.jpg",
     "link": "/portfolio/khulisa/home.html",
+    "technologies": ["HTML5", "CSS3", "JavaScript"]
+  },
+  {
+    "id": 19,
+    "title": "Easy Offices",
+    "description": "Office space search and booking platform.",
+    "category": "other",
+    "image": "/portfolio/images/gallery/easyoffices.jpg",
+    "link": "/portfolio/easyoffices/home.html",
     "technologies": ["HTML5", "CSS3", "JavaScript"]
   }
 ]
