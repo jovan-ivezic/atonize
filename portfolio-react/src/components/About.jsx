@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 import { useInView } from 'framer-motion';
 import { useRef } from 'react';
 
@@ -24,30 +24,30 @@ const About = () => {
   return (
     <section id="about" className="py-20 bg-white" ref={ref}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
+        <Motion.div
           variants={containerVariants}
           initial="hidden"
           animate={isInView ? 'visible' : 'hidden'}
         >
           {/* Section Title */}
-          <motion.div variants={itemVariants} className="text-center mb-16">
+          <Motion.div variants={itemVariants} className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold mb-4">
               About <span className="text-gradient">Me</span>
             </h2>
             <div className="w-20 h-1 bg-primary-600 mx-auto"></div>
-          </motion.div>
+          </Motion.div>
 
           <div className="grid md:grid-cols-2 gap-12 items-start max-w-6xl mx-auto">
             {/* Left Column - Text */}
-            <motion.div variants={itemVariants} className="space-y-5">
+            <Motion.div variants={itemVariants} className="space-y-5">
               <h3 className="text-2xl font-display font-bold text-gray-800">
-                Front-End Developer & Technical Leader
+                Front-End Developer
               </h3>
               <p className="text-gray-600 leading-relaxed">
                 My name is Jovan Ivezić and I work as a Front-End Developer with <strong>13+ years of experience</strong> in developing and leading web projects, web applications, and single-page applications (SPAs).
               </p>
               <p className="text-gray-600 leading-relaxed">
-                I specialize in <strong>JavaScript, HTML, and SCSS</strong>, with a strong focus on scalable and maintainable front-end architecture, performance, and code quality. Throughout my work, I have been involved in technical leadership and making architectural decisions, as well as modernizing existing systems.
+                I specialize in <strong>JavaScript, HTML, and SCSS</strong>, with a strong focus on scalable and maintainable front-end architecture, performance, and code quality. I am currently serving as a Team Lead, involved in making architectural decisions and modernizing existing systems.
               </p>
               <p className="text-gray-600 leading-relaxed">
                 I have experience in developing <strong>WordPress themes</strong> and websites, as well as <strong>3+ years working in SEO and internet marketing</strong>, which allows me to view technical solutions in the context of visibility and business goals.
@@ -58,17 +58,17 @@ const About = () => {
               <p className="text-gray-600 leading-relaxed">
                 I work in a <strong>structured and responsible manner</strong>, with a clear focus on quality, efficiency, and continuous product improvement.
               </p>
-            </motion.div>
+            </Motion.div>
 
             {/* Right Column - Stats */}
-            <motion.div variants={itemVariants} className="grid grid-cols-2 gap-6">
+            <Motion.div variants={itemVariants} className="grid grid-cols-2 gap-6">
               {[
                 { number: '13+', label: 'Years Experience' },
                 { number: '100+', label: 'Projects Completed' },
                 { number: '3+', label: 'Years in SEO' },
                 { number: '100%', label: 'Commitment' },
-              ].map((stat, index) => (
-                <motion.div
+              ].map((stat) => (
+                <Motion.div
                   key={stat.label}
                   className="bg-gradient-to-br from-primary-50 to-blue-50 p-6 rounded-xl text-center"
                   whileHover={{ scale: 1.05 }}
@@ -78,11 +78,11 @@ const About = () => {
                     {stat.number}
                   </div>
                   <div className="text-gray-600 font-medium text-sm">{stat.label}</div>
-                </motion.div>
+                </Motion.div>
               ))}
-            </motion.div>
+            </Motion.div>
           </div>
-        </motion.div>
+        </Motion.div>
       </div>
     </section>
   );

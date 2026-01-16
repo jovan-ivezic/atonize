@@ -8,11 +8,10 @@ import {
   FaVuejs,
   FaWordpress,
   FaGitAlt,
-  FaFigma,
   FaSass,
   FaSearch,
 } from 'react-icons/fa';
-import { SiTailwindcss, SiVite, SiFramer } from 'react-icons/si';
+import { SiTailwindcss, SiVite, SiAdobexd, SiTypescript } from 'react-icons/si';
 
 const Skills = () => {
   const ref = useRef(null);
@@ -21,16 +20,16 @@ const Skills = () => {
   const skills = [
     { name: 'HTML5', icon: FaHtml5, color: 'text-orange-600', level: 98 },
     { name: 'CSS3/SCSS', icon: FaSass, color: 'text-pink-600', level: 98 },
-    { name: 'JavaScript', icon: FaJs, color: 'text-yellow-500', level: 95 },
-    { name: 'WordPress', icon: FaWordpress, color: 'text-blue-700', level: 95 },
+    { name: 'JavaScript', icon: FaJs, color: 'text-yellow-500', level: 70 },
+    { name: 'WordPress', icon: FaWordpress, color: 'text-blue-700', level: 70 },
     { name: 'SEO', icon: FaSearch, color: 'text-green-600', level: 90 },
     { name: 'Git', icon: FaGitAlt, color: 'text-orange-700', level: 90 },
     { name: 'Tailwind CSS', icon: SiTailwindcss, color: 'text-cyan-400', level: 85 },
-    { name: 'Figma', icon: FaFigma, color: 'text-purple-600', level: 85 },
-    { name: 'React', icon: FaReact, color: 'text-cyan-500', level: 75 },
-    { name: 'Vue.js', icon: FaVuejs, color: 'text-green-500', level: 70 },
-    { name: 'Vite', icon: SiVite, color: 'text-purple-500', level: 75 },
-    { name: 'Framer Motion', icon: SiFramer, color: 'text-pink-500', level: 75 },
+    { name: 'AdobeXD', icon: SiAdobexd, color: 'text-purple-600', level: 85 },
+    { name: 'React', icon: FaReact, color: 'text-cyan-500', level: 35 },
+    { name: 'Vue.js', icon: FaVuejs, color: 'text-green-500', level: 30 },
+    { name: 'Vite', icon: SiVite, color: 'text-purple-500', level: 50 },
+    { name: 'TypeScript', icon: SiTypescript, color: 'text-blue-600', level: 35 },
   ];
 
   const containerVariants = {

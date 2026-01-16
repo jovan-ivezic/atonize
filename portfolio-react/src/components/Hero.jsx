@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 import { FaGithub, FaLinkedin, FaEnvelope } from 'react-icons/fa';
 
 const Hero = () => {
@@ -13,7 +13,7 @@ const Hero = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center text-center">
           {/* Avatar */}
-          <motion.div
+          <Motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 260, damping: 20 }}
@@ -26,10 +26,10 @@ const Hero = () => {
                 className="w-full h-full object-cover"
               />
             </div>
-          </motion.div>
+          </Motion.div>
 
           {/* Name & Title */}
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
@@ -38,16 +38,16 @@ const Hero = () => {
               Hi, I'm <span className="text-gradient">Jovan Ivezić</span>
             </h1>
             <h2 className="text-xl sm:text-2xl md:text-3xl text-gray-600 mb-6">
-              Senior Front-End Developer & Technical Leader
+              Senior Front-End Developer
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
               Crafting scalable web solutions with <strong>13+ years of experience</strong> in JavaScript, HTML & SCSS.
-              Specializing in technical leadership, architecture, and building maintainable SPAs.
+              Currently serving as a Team Lead, specializing in architecture and building maintainable SPAs.
             </p>
-          </motion.div>
+          </Motion.div>
 
           {/* CTA Buttons */}
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
@@ -65,17 +65,17 @@ const Hero = () => {
             >
               Get In Touch
             </a>
-          </motion.div>
+          </Motion.div>
 
           {/* Social Links */}
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
             className="flex gap-6"
           >
-            {socialLinks.map((social, index) => (
-              <motion.a
+            {socialLinks.map((social) => (
+              <Motion.a
                 key={social.label}
                 href={social.href}
                 target="_blank"
@@ -85,14 +85,14 @@ const Hero = () => {
                 whileTap={{ scale: 0.9 }}
               >
                 <social.icon size={28} />
-              </motion.a>
+              </Motion.a>
             ))}
-          </motion.div>
+          </Motion.div>
         </div>
       </div>
 
       {/* Scroll Indicator */}
-      <motion.div
+      <Motion.div
         className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
         animate={{ y: [0, 10, 0] }}
         transition={{ repeat: Infinity, duration: 1.5 }}
@@ -100,7 +100,7 @@ const Hero = () => {
         <div className="w-6 h-10 border-2 border-gray-400 rounded-full flex justify-center">
           <div className="w-1 h-3 bg-gray-400 rounded-full mt-2"></div>
         </div>
-      </motion.div>
+      </Motion.div>
     </section>
   );
 };

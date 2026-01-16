@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Primer konfiguracije za deployment
+# Kopiraj ovaj fajl kao deploy.config.sh i popuni svoje podatke
+# deploy.config.sh je u .gitignore i neće biti commit-ovan
+
+# Server adresa (bez ssh://)
+export DEPLOY_HOST="atonize.com"
+
+# SSH username
+export DEPLOY_USER="atonizec"
+
+# Putanja na serveru gde se nalazi public_html
+export DEPLOY_PATH="/home/atonizec/public_html"
+
+# Opciono: SSH port (ako nije default 22)
+# export DEPLOY_PORT="2222"
+
+# Opciono: SSH key putanja (ako koristiš specifičan key)
+# export DEPLOY_SSH_KEY="~/.ssh/id_rsa"
+
+# Isključi kompresiju ako dobijaš "unexpected tag" greške
+# Ovo rešava probleme sa nekompatibilnim verzijama rsync-a
+export DEPLOY_NO_COMPRESS="true"
+
+# Opciono: Koristi stariji rsync protokol za kompatibilnost (npr. 29 ili 30)
+# export DEPLOY_RSYNC_PROTOCOL="29"
+
+# Opciono: Eksplicitna putanja do rsync-a na serveru (ako je potrebno)
+# export DEPLOY_RSYNC_PATH="/usr/bin/rsync"

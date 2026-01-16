@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 import { FaBars, FaTimes } from 'react-icons/fa';
 
 const Navbar = () => {
@@ -32,7 +32,7 @@ const Navbar = () => {
   };
 
   return (
-    <motion.nav
+    <Motion.nav
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       className={`fixed w-full z-50 transition-all duration-300 ${
@@ -42,19 +42,19 @@ const Navbar = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <motion.a
+          <Motion.a
             href="#home"
             className="text-2xl font-display font-bold text-gradient"
             whileHover={{ scale: 1.05 }}
             onClick={(e) => scrollToSection(e, '#home')}
           >
             JI
-          </motion.a>
+          </Motion.a>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex space-x-8">
             {menuItems.map((item) => (
-              <motion.a
+              <Motion.a
                 key={item.name}
                 href={item.href}
                 onClick={(e) => scrollToSection(e, item.href)}
@@ -62,7 +62,7 @@ const Navbar = () => {
                 whileHover={{ y: -2 }}
               >
                 {item.name}
-              </motion.a>
+              </Motion.a>
             ))}
           </div>
 
@@ -78,7 +78,7 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
@@ -96,9 +96,9 @@ const Navbar = () => {
               </a>
             ))}
           </div>
-        </motion.div>
+        </Motion.div>
       )}
-    </motion.nav>
+    </Motion.nav>
   );
 };
 

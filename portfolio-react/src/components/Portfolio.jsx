@@ -7,6 +7,7 @@ const Portfolio = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const Motion = motion;
 
   const categories = [
     { id: 'all', label: 'All Projects' },
@@ -54,7 +55,7 @@ const Portfolio = () => {
     <section id="portfolio" className="py-20 bg-gray-50" ref={ref}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Title */}
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           className="text-center mb-12"
@@ -66,10 +67,10 @@ const Portfolio = () => {
           <p className="text-gray-600 max-w-2xl mx-auto">
             Here are some of my recent projects. Click on any project to view the live demo.
           </p>
-        </motion.div>
+        </Motion.div>
 
         {/* Filter Buttons */}
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ delay: 0.2 }}
@@ -88,10 +89,20 @@ const Portfolio = () => {
               {category.label}
             </button>
           ))}
-        </motion.div>
+          <button
+            onClick={() => setActiveFilter('all')}
+            className={`px-6 py-2 rounded-full font-medium transition-all border ${
+              activeFilter === 'all'
+                ? 'bg-primary-600 text-white shadow-lg scale-105 border-primary-600'
+                : 'bg-white text-gray-700 hover:bg-gray-100 border-gray-200'
+            }`}
+          >
+            Reset
+          </button>
+        </Motion.div>
 
         {/* Projects Grid */}
-        <motion.div
+        <Motion.div
           key={activeFilter}
           variants={containerVariants}
           initial="hidden"
@@ -100,7 +111,7 @@ const Portfolio = () => {
         >
           <AnimatePresence mode="wait">
             {filteredProjects.map((project, index) => (
-              <motion.div
+              <Motion.div
                 key={`${activeFilter}-${project.id}`}
                 variants={itemVariants}
                 initial="hidden"
@@ -151,13 +162,13 @@ const Portfolio = () => {
                     </div>
                   </div>
                 </a>
-              </motion.div>
+              </Motion.div>
             ))}
           </AnimatePresence>
-        </motion.div>
+        </Motion.div>
 
         {/* Project Count */}
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : {}}
           transition={{ delay: 0.5 }}
@@ -167,7 +178,7 @@ const Portfolio = () => {
             Showing <span className="font-bold text-primary-600">{filteredProjects.length}</span> of{' '}
             <span className="font-bold">{projectsData.length}</span> projects
           </p>
-        </motion.div>
+        </Motion.div>
       </div>
     </section>
   );
