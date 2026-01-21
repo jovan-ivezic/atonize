@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
-import { FaExternalLinkAlt } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
+import { FaTasks, FaExternalLinkAlt } from 'react-icons/fa';
 import projectsData from '../data/projects.json';
 
 const Portfolio = () => {
@@ -169,48 +170,66 @@ const Portfolio = () => {
                       </div>
                     </div>
                   ) : (
-                    <a
-                      href={project.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block"
-                    >
-                      {/* Project Image */}
-                      <div className="relative overflow-hidden aspect-video">
-                        <img
-                          src={project.image}
-                          alt={project.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
-                          <span className="text-white flex items-center gap-2">
-                            View Project <FaExternalLinkAlt size={14} />
-                          </span>
-                        </div>
-                      </div>
+                    (() => {
+                      const isExternalLink = project.link.startsWith('http://') || project.link.startsWith('https://');
+                      const linkContent = (
+                        <>
+                          {/* Project Image */}
+                          <div className="relative overflow-hidden aspect-video">
+                            <img
+                              src={project.image}
+                              alt={project.title}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
+                              <span className="text-white flex items-center gap-2">
+                                View Project {isExternalLink && <FaExternalLinkAlt size={14} />}
+                              </span>
+                            </div>
+                          </div>
 
-                      {/* Project Info */}
-                      <div className="p-6">
-                        <h3 className="text-xl font-display font-bold text-gray-800 mb-2 group-hover:text-primary-600 transition-colors">
-                          {project.title}
-                        </h3>
-                        <p className="text-gray-600 text-sm mb-4">
-                          {project.description}
-                        </p>
+                          {/* Project Info */}
+                          <div className="p-6">
+                            <h3 className="text-xl font-display font-bold text-gray-800 mb-2 group-hover:text-primary-600 transition-colors">
+                              {project.title}
+                            </h3>
+                            <p className="text-gray-600 text-sm mb-4">
+                              {project.description}
+                            </p>
 
-                        {/* Technologies */}
-                        <div className="flex flex-wrap gap-2">
-                          {project.technologies.slice(0, 3).map((tech, index) => (
-                            <span
-                              key={index}
-                              className="px-3 py-1 bg-primary-50 text-primary-600 text-xs rounded-full font-medium"
-                            >
-                              {tech}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </a>
+                            {/* Technologies */}
+                            <div className="flex flex-wrap gap-2">
+                              {project.technologies.slice(0, 3).map((tech, index) => (
+                                <span
+                                  key={index}
+                                  className="px-3 py-1 bg-primary-50 text-primary-600 text-xs rounded-full font-medium"
+                                >
+                                  {tech}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </>
+                      );
+
+                      return isExternalLink ? (
+                        <a
+                          href={project.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block"
+                        >
+                          {linkContent}
+                        </a>
+                      ) : (
+                        <Link
+                          to={`/portfolio/viewer/${project.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`}
+                          className="block"
+                        >
+                          {linkContent}
+                        </Link>
+                      );
+                    })()
                   )}
                 </Motion.div>
               );
@@ -225,10 +244,26 @@ const Portfolio = () => {
           transition={{ delay: 0.5 }}
           className="text-center mt-12"
         >
-          <p className="text-gray-600">
+          <p className="text-gray-600 mb-6">
             Showing <span className="font-bold text-primary-600">{filteredProjects.length}</span> of{' '}
             <span className="font-bold">{visibleProjects.length}</span> projects
           </p>
+          
+          {/* Task Manager Link */}
+          <Motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.6 }}
+            className="mt-8"
+          >
+            <Link
+              to="/tasks"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-full font-medium hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl"
+            >
+              <FaTasks />
+              View Task Manager App
+            </Link>
+          </Motion.div>
         </Motion.div>
       </div>
     </section>

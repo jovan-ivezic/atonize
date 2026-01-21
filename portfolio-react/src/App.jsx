@@ -1,22 +1,22 @@
-import Navbar from './components/Navbar';
-import Hero from './components/Hero';
-import About from './components/About';
-import Portfolio from './components/Portfolio';
-import Skills from './components/Skills';
-import Contact from './components/Contact';
-import Footer from './components/Footer';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { TaskProvider } from './context/TaskContext';
+import Home from './pages/Home';
+import Tasks from './pages/Tasks';
+import PortfolioViewer from './pages/PortfolioViewer';
 
 function App() {
   return (
-    <div className="App">
-      <Navbar />
-      <Hero />
-      <About />
-      <Portfolio />
-      <Skills />
-      <Contact />
-      <Footer />
-    </div>
+    <TaskProvider>
+      <BrowserRouter>
+        <div className="App">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/tasks" element={<Tasks />} />
+            <Route path="/portfolio/viewer/:projectName" element={<PortfolioViewer />} />
+          </Routes>
+        </div>
+      </BrowserRouter>
+    </TaskProvider>
   );
 }
 
