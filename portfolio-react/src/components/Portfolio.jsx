@@ -12,6 +12,7 @@ const Portfolio = () => {
 
   const categories = [
     { id: 'all', label: 'All Projects' },
+    { id: 'react', label: 'React' },
     { id: 'wordpress', label: 'WordPress' },
     { id: 'rtl', label: 'RTL Websites' },
     { id: 'animation', label: 'CSS Animation' },
@@ -93,16 +94,6 @@ const Portfolio = () => {
               {category.label}
             </button>
           ))}
-          <button
-            onClick={() => setActiveFilter('all')}
-            className={`px-6 py-2 rounded-full font-medium transition-all border ${
-              activeFilter === 'all'
-                ? 'bg-primary-600 text-white shadow-lg scale-105 border-primary-600'
-                : 'bg-white text-gray-700 hover:bg-gray-100 border-gray-200'
-            }`}
-          >
-            Reset
-          </button>
         </Motion.div>
 
         {/* Projects Grid */}
@@ -171,7 +162,14 @@ const Portfolio = () => {
                     </div>
                   ) : (
                     (() => {
-                      const isExternalLink = project.link.startsWith('http://') || project.link.startsWith('https://');
+                      const isExternalLink = project.link.startsWith('http');
+                      const isDirectRoute = project.link.startsWith('/') && !project.link.startsWith('/portfolio/');
+                      
+                      // Determine link destination
+                      const linkTo = isDirectRoute 
+                        ? project.link 
+                        : `/portfolio/viewer/${project.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`;
+
                       const linkContent = (
                         <>
                           {/* Project Image */}
@@ -222,10 +220,7 @@ const Portfolio = () => {
                           {linkContent}
                         </a>
                       ) : (
-                        <Link
-                          to={`/portfolio/viewer/${project.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`}
-                          className="block"
-                        >
+                        <Link to={linkTo} className="block">
                           {linkContent}
                         </Link>
                       );
@@ -248,22 +243,6 @@ const Portfolio = () => {
             Showing <span className="font-bold text-primary-600">{filteredProjects.length}</span> of{' '}
             <span className="font-bold">{visibleProjects.length}</span> projects
           </p>
-          
-          {/* Task Manager Link */}
-          <Motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: 0.6 }}
-            className="mt-8"
-          >
-            <Link
-              to="/tasks"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-full font-medium hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl"
-            >
-              <FaTasks />
-              View Task Manager App
-            </Link>
-          </Motion.div>
         </Motion.div>
       </div>
     </section>
