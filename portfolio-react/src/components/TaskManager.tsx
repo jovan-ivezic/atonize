@@ -6,7 +6,7 @@ import TaskForm from './TaskForm';
 import { useTaskContext } from '../context/TaskContext';
 
 const TaskManager = () => {
-  const { state, addTask, updateTask, deleteTask, toggleStatus } = useTaskContext();
+  const { state, addTask, updateTask, deleteTask, toggleStatus, clearCompletedTasks } = useTaskContext();
   const [showForm, setShowForm] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [showStatistics, setShowStatistics] = useState(true);
@@ -58,7 +58,7 @@ const TaskManager = () => {
           </p>
         </motion.div>
 
-        {/* Add Task Button */}
+        {/* Add Task Button showStatistics and clearCompletedTasks */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -78,6 +78,11 @@ const TaskManager = () => {
             </button>
             { tasks.length > 0 && (
               <button onClick={() => setShowStatistics(!showStatistics)} className="px-6 py-3 bg-primary-600 text-white rounded-full font-medium hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl"> {showStatistics ? 'Hide statistics' : 'Show statistics'}
+              </button>
+            )}
+            { completedCount > 0 && (
+              <button onClick={clearCompletedTasks} className="px-6 py-3 bg-primary-600 text-white rounded-full font-medium hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl">
+                Clear Completed ({completedCount})
               </button>
             )}
             </>

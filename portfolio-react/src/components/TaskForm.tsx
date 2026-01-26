@@ -41,6 +41,22 @@ const TaskForm = ({ onSubmit, onCancel, initialTask }: TaskFormProps) => {
       return;
     }
 
+    if (dueDate) {
+      const selectedDate = new Date(dueDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (selectedDate < today) {
+        alert('Due date cannot be in the past');
+        return
+      }
+    }
+
+    if (description.length > 500) {
+      alert('Description  must be less than 500 caracters');
+      return;
+    }
+
     const taskData: Omit<Task, 'id' | 'createdAt'> = {
       title: title.trim(),
       description: description.trim(),
