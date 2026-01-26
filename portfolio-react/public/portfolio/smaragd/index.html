@@ -95,11 +95,20 @@
         </div>
         <!-- END top info -->
         <div class="container">
-          <nav class="clearfix">
+          <nav>
               <a href="index.html" class="nav__logo">
                 <img src="images/dekoracije-smaragd-logo.png" alt="Dekoracije Smaragd">
               </a>
-              <ul class="nav__list list-inline">
+              <button class="burger-menu" id="burgerMenu" aria-label="Toggle menu">
+                <span class="burger-line"></span>
+                <span class="burger-line"></span>
+                <span class="burger-line"></span>
+              </button>
+              <ul class="nav__list" id="navList">
+                <li class="nav__header">
+                  <span class="nav__title">Meni</span>
+                  <button class="nav__close" id="navClose" aria-label="Close menu">&times;</button>
+                </li>
                 <li class="nav__item">
                   <a href="index.html" class="nav__link active">Naslovna</a>
                 </li>
@@ -367,6 +376,73 @@
       ga('create', 'UA-64011898-1', 'auto');
       ga('send', 'pageview');
 
+    </script>
+
+    <!-- Burger Menu Script -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        var burgerMenu = document.getElementById('burgerMenu');
+        var navList = document.getElementById('navList');
+        var navClose = document.getElementById('navClose');
+        
+        function closeMenu() {
+          if (burgerMenu && navList) {
+            burgerMenu.classList.remove('active');
+            navList.classList.remove('active');
+            document.body.classList.remove('menu-open');
+          }
+        }
+        
+        function openMenu() {
+          if (burgerMenu && navList) {
+            burgerMenu.classList.add('active');
+            navList.classList.add('active');
+            document.body.classList.add('menu-open');
+          }
+        }
+        
+        if (burgerMenu && navList) {
+          // Toggle menu on burger click
+          burgerMenu.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (this.classList.contains('active')) {
+              closeMenu();
+            } else {
+              openMenu();
+            }
+          });
+          
+          // Close button in menu
+          if (navClose) {
+            navClose.addEventListener('click', function(e) {
+              e.stopPropagation();
+              closeMenu();
+            });
+          }
+          
+          // Close menu when clicking on a link
+          var navLinks = navList.querySelectorAll('.nav__link');
+          navLinks.forEach(function(link) {
+            link.addEventListener('click', function() {
+              closeMenu();
+            });
+          });
+          
+          // Close menu when clicking outside
+          document.addEventListener('click', function(e) {
+            if (navList.classList.contains('active') && 
+                !navList.contains(e.target) && 
+                !burgerMenu.contains(e.target)) {
+              closeMenu();
+            }
+          });
+          
+          // Prevent clicks inside menu from closing it
+          navList.addEventListener('click', function(e) {
+            e.stopPropagation();
+          });
+        }
+      });
     </script>
 
   </body>
