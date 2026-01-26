@@ -1,7 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa';
 import { useEffect, useState } from 'react';
-import Footer from '../components/Footer';
 import projectsData from '../data/projects.json';
 
 // Helper funkcija za kreiranje slug-a iz title-a
@@ -45,7 +44,7 @@ const PortfolioViewer = () => {
   }, [projectName]);
 
   return (
-    <div className="min-h-screen grid grid-rows-[auto_1fr_auto]">
+    <div className="min-h-screen grid grid-rows-[auto_1fr]">
       {/* Navbar sa dugmetom za povratak */}
       <nav className="bg-white shadow-md py-4 z-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -72,7 +71,7 @@ const PortfolioViewer = () => {
             src={projectUrl}
             className="w-full h-full border-0"
             title={projectTitle}
-            style={{ minHeight: 'calc(100vh - 200px)' }}
+            style={{ minHeight: 'calc(100vh - 80px)' }}
             allow="fullscreen"
           />
         ) : (
@@ -83,8 +82,6 @@ const PortfolioViewer = () => {
           </div>
         )}
       </div>
-
-      <Footer />
     </div>
   );
 };
