@@ -14,6 +14,7 @@ interface TaskContextType {
   deleteTask: (id: string) => void;  // Funkcija za brisanje taska
   toggleStatus: (id: string) => void;  // Funkcija za promenu statusa (pending ↔ completed)
   clearCompletedTasks: () => void; // Funkcija za brisanje svih zavrsenih taskova
+  duplicateTask: (id: string) => void;
 }
 
 /**
@@ -166,6 +167,29 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     setTasks(prev => prev.filter(task => task.status !== 'completed'))
   };
 
+  const duplicateTask = (id: string) => {
+    // Ažuriramo tasks state koristeći funkcionalnu formu setState
+    setTasks(prev => {
+      // Pronađi task koji želimo da dupliciramo po ID-u
+      const taskToDuplicate = prev.find(task => task.id === id);
+      
+      // Ako task ne postoji, vrati originalni niz bez promena
+      if (!taskToDuplicate) return prev;
+      
+      // Kreiraj novi task objekat
+      const newTask: Task = {
+        ...taskToDuplicate,              // Kopiraj SVA polja iz originalnog task-a (description, priority, category, dueDate, itd.)
+        id: Date.now().toString(),       // Generiši NOVI jedinstveni ID (timestamp)
+        title: `Copy of ${taskToDuplicate.title}`, // Dodaj "Copy of" prefix da se vidi da je kopija
+        createdAt: new Date(),           // Postavi NOVO vreme kreiranja (sada)
+        status: 'pending',               // Resetuj status na 'pending' (čak i ako je original bio 'completed')
+      };
+      
+      // Vrati novi niz sa svim starim task-ovima + novi duplicirani task na kraju
+      return [...prev, newTask];
+    })
+  };
+
   /**
    * value objekat - "Pakujemo" sve u jedan objekat
    * 
@@ -178,7 +202,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     updateTask,        // Funkcija za izmenu
     deleteTask,        // Funkcija za brisanje
     toggleStatus,      // Funkcija za toggle statusa
-    clearCompletedTasks, // Funkcija za brisanje svih zavrsenih taskova
+    clearCompletedTasks, // Funkcija za brisanje svih zavrsenih taskova,
+    duplicateTask,       // Funkcija za dupliciranje taska
   };
 
   /**

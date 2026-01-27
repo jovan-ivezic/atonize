@@ -1,5 +1,5 @@
 import { Task } from '../types/task';
-import { FaTrash, FaCheck, FaTimes, FaEdit } from 'react-icons/fa';
+import { FaTrash, FaCheck, FaTimes, FaEdit, FaCopy } from 'react-icons/fa';
 
 interface TaskItemProps {
   task: Task;
@@ -7,6 +7,7 @@ interface TaskItemProps {
   onDelete: (id: string) => void;
   onEdit?: (task: Task) => void;
   showDetails?: boolean;
+  duplicateTask?: (id: string) => void;
 }
 
 // Priority color mapping
@@ -16,7 +17,7 @@ const priorityColors = {
   high: 'bg-red-100 text-red-800',
 };
 
-const TaskItem = ({ task, onToggleStatus, onDelete, onEdit, showDetails }: TaskItemProps) => {
+const TaskItem = ({ task, onToggleStatus, onDelete, onEdit, showDetails, duplicateTask }: TaskItemProps) => {
   return (
     <div
       className={`bg-white rounded-lg shadow-md p-4 border-l-4 ${
@@ -73,6 +74,15 @@ const TaskItem = ({ task, onToggleStatus, onDelete, onEdit, showDetails }: TaskI
           </div>
         </div>
         <div className="flex items-center gap-2 ml-4">
+          {duplicateTask && (
+            <button
+              onClick={() => duplicateTask(task.id)}
+              className="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+              aria-label="Duplicate task"
+            >
+              <FaCopy size={16} />
+            </button>
+          )}
           <button
             onClick={() => onToggleStatus(task.id)}
             className={`p-2 rounded-full transition-colors ${

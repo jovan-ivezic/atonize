@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Task, Priority, Status } from '../types/task';
+import { Task, Priority, Category, CATEGORIES, PRIORITIES } from '../types/task';
 import { FaTimes } from 'react-icons/fa';
 
 interface TaskFormProps {
@@ -12,7 +12,7 @@ const TaskForm = ({ onSubmit, onCancel, initialTask }: TaskFormProps) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
-  const [category, setCategory] = useState('');
+  const [category, setCategory] = useState<Category | ''>('');
   const [dueDate, setDueDate] = useState('');
   const [notes, setNotes] = useState('');
 
@@ -62,7 +62,7 @@ const TaskForm = ({ onSubmit, onCancel, initialTask }: TaskFormProps) => {
       description: description.trim(),
       priority,
       status: initialTask?.status || 'pending',
-      category: category.trim() || undefined,
+      category: category || undefined,
       dueDate: dueDate ? new Date(dueDate) : undefined,
       notes: notes.trim(),
     };
@@ -132,9 +132,11 @@ const TaskForm = ({ onSubmit, onCancel, initialTask }: TaskFormProps) => {
               onChange={(e) => setPriority(e.target.value as Priority)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
+              {PRIORITIES.map((p) => (
+                <option key={p} value={p}>
+                  {p.charAt(0).toUpperCase() + p.slice(1)}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -142,14 +144,19 @@ const TaskForm = ({ onSubmit, onCancel, initialTask }: TaskFormProps) => {
             <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
               Category
             </label>
-            <input
-              type="text"
+            <select
               id="category"
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              onChange={(e) => setCategory(e.target.value as Category | '')}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-              placeholder="e.g., Work, Personal"
-            />
+            >
+              <option value="">Select a category</option>
+              {CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 

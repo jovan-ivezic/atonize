@@ -6,7 +6,7 @@ import TaskForm from './TaskForm';
 import { useTaskContext } from '../context/TaskContext';
 
 const TaskManager = () => {
-  const { state, addTask, updateTask, deleteTask, toggleStatus, clearCompletedTasks } = useTaskContext();
+  const { state, addTask, updateTask, deleteTask, toggleStatus, clearCompletedTasks, duplicateTask } = useTaskContext();
   const [showForm, setShowForm] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [showStatistics, setShowStatistics] = useState(true);
@@ -131,6 +131,7 @@ const TaskManager = () => {
                 onToggleStatus={toggleStatus}
                 onDelete={deleteTask}
                 onEdit={handleEdit}
+                duplicateTask={duplicateTask}
                 showDetails={true}
               />
             ))}
