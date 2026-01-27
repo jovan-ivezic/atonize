@@ -1,12 +1,27 @@
 import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { FaGithub, FaLinkedin, FaEnvelope, FaPhone, FaMapMarkerAlt } from 'react-icons/fa';
+import { IconType } from 'react-icons';
+
+interface ContactInfo {
+  icon: IconType;
+  title: string;
+  value: string;
+  link: string | null;
+}
+
+interface SocialLink {
+  icon: IconType;
+  name: string;
+  url: string;
+  color: string;
+}
 
 const Contact = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
 
-  const contactInfo = [
+  const contactInfo: ContactInfo[] = [
     {
       icon: FaEnvelope,
       title: 'Email',
@@ -27,7 +42,7 @@ const Contact = () => {
     },
   ];
 
-  const socialLinks = [
+  const socialLinks: SocialLink[] = [
     {
       icon: FaGithub,
       name: 'GitHub',

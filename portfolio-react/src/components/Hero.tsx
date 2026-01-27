@@ -1,8 +1,15 @@
 import { motion as Motion } from 'framer-motion';
 import { FaGithub, FaLinkedin, FaEnvelope } from 'react-icons/fa';
+import { IconType } from 'react-icons';
+
+interface SocialLink {
+  icon: IconType;
+  href: string;
+  label: string;
+}
 
 const Hero = () => {
-  const socialLinks = [
+  const socialLinks: SocialLink[] = [
     { icon: FaGithub, href: 'https://github.com/jovan-ivezic', label: 'GitHub' },
     { icon: FaLinkedin, href: 'https://linkedin.com/in/jovan-ivezic', label: 'LinkedIn' },
     { icon: FaEnvelope, href: 'mailto:your.email@example.com', label: 'Email' },

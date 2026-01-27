@@ -12,12 +12,20 @@ import {
   FaSearch,
 } from 'react-icons/fa';
 import { SiTailwindcss, SiVite, SiAdobexd, SiTypescript } from 'react-icons/si';
+import { IconType } from 'react-icons';
+
+interface Skill {
+  name: string;
+  icon: IconType;
+  color: string;
+  level: number;
+}
 
 const Skills = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
 
-  const skills = [
+  const skills: Skill[] = [
     { name: 'HTML5', icon: FaHtml5, color: 'text-orange-600', level: 98 },
     { name: 'CSS3/SCSS', icon: FaSass, color: 'text-pink-600', level: 98 },
     { name: 'JavaScript', icon: FaJs, color: 'text-yellow-500', level: 70 },

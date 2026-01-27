@@ -2234,9 +2234,12 @@ nav {
     padding: 0;
     margin: 0;
     z-index: 10001;
-    transition: right 0.3s ease;
+    transition: right 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    will-change: right;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
   }
   
   .nav__list.active {
@@ -2334,7 +2337,7 @@ nav {
   }
   
   /* Overlay when menu is open - only covers content area, not menu */
-  body.menu-open::before {
+  body::before {
     content: '';
     position: fixed;
     top: 0;
@@ -2343,16 +2346,19 @@ nav {
     height: 100%;
     background-color: rgba(0,0,0,0.7);
     z-index: 999;
-    animation: fadeIn 0.3s ease;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94), visibility 0s linear 0.25s;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    pointer-events: none;
   }
   
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
+  body.menu-open::before {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.08s, visibility 0s linear 0s;
+    pointer-events: auto;
   }
   
   body.menu-open {
@@ -2619,7 +2625,7 @@ nav {
   
   /* Adjust overlay for smaller screens */
   @media (max-width: 380px) {
-    body.menu-open::before {
+    body::before {
       right: 90%;
     }
   }

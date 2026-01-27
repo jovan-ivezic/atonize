@@ -4,13 +4,30 @@ import { Link } from 'react-router-dom';
 import { FaTasks, FaExternalLinkAlt } from 'react-icons/fa';
 import projectsData from '../data/projects.json';
 
+interface Category {
+  id: string;
+  label: string;
+}
+
+interface Project {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  image: string;
+  link: string;
+  technologies: string[];
+  hidden?: boolean;
+  disabled?: boolean;
+}
+
 const Portfolio = () => {
-  const [activeFilter, setActiveFilter] = useState('all');
+  const [activeFilter, setActiveFilter] = useState<string>('all');
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
   const Motion = motion;
 
-  const categories = [
+  const categories: Category[] = [
     { id: 'all', label: 'All Projects' },
     { id: 'react', label: 'React' },
     { id: 'wordpress', label: 'WordPress' },
@@ -20,7 +37,7 @@ const Portfolio = () => {
   ];
 
   // Filtriraj sakrivene projekte
-  const visibleProjects = projectsData.filter((project) => !project.hidden);
+  const visibleProjects = (projectsData as Project[]).filter((project) => !project.hidden);
   
   const filteredProjects =
     activeFilter === 'all'

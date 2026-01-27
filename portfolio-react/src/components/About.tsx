@@ -2,6 +2,11 @@ import { motion as Motion } from 'framer-motion';
 import { useInView } from 'framer-motion';
 import { useRef } from 'react';
 
+interface Stat {
+  number: string;
+  label: string;
+}
+
 const About = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
@@ -20,6 +25,13 @@ const About = () => {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
   };
+
+  const stats: Stat[] = [
+    { number: '13+', label: 'Years Experience' },
+    { number: '100+', label: 'Projects Completed' },
+    { number: '3+', label: 'Years in SEO' },
+    { number: '100%', label: 'Commitment' },
+  ];
 
   return (
     <section id="about" className="py-20 bg-white" ref={ref}>
@@ -62,12 +74,7 @@ const About = () => {
 
             {/* Right Column - Stats */}
             <Motion.div variants={itemVariants} className="grid grid-cols-2 gap-6">
-              {[
-                { number: '13+', label: 'Years Experience' },
-                { number: '100+', label: 'Projects Completed' },
-                { number: '3+', label: 'Years in SEO' },
-                { number: '100%', label: 'Commitment' },
-              ].map((stat) => (
+              {stats.map((stat) => (
                 <Motion.div
                   key={stat.label}
                   className="bg-gradient-to-br from-primary-50 to-blue-50 p-6 rounded-xl text-center"
