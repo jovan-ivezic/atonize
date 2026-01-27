@@ -91,18 +91,11 @@ const TaskManager = () => {
 
         {/* Task Form */}
         {showForm && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="max-w-2xl mx-auto"
-          >
-            <TaskForm
-              onSubmit={handleFormSubmit}
-              onCancel={handleFormCancel}
-              initialTask={editingTask}
-            />
-          </motion.div>
+          <TaskForm
+            onSubmit={handleFormSubmit}
+            onCancel={handleFormCancel}
+            initialTask={editingTask}
+          />
         )}
 
         {/* Tasks List */}

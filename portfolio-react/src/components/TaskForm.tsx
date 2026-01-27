@@ -16,6 +16,14 @@ const TaskForm = ({ onSubmit, onCancel, initialTask }: TaskFormProps) => {
   const [dueDate, setDueDate] = useState('');
   const [notes, setNotes] = useState('');
 
+  // Blokiraj scroll na body-u kada je modal otvoren
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
   // Populate form if editing
   useEffect(() => {
     if (initialTask) {
@@ -71,142 +79,153 @@ const TaskForm = ({ onSubmit, onCancel, initialTask }: TaskFormProps) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-2xl font-display font-bold text-gray-800">
-          {initialTask ? 'Edit Task' : 'Add New Task'}
-        </h3>
-        {onCancel && (
-          <button
-            onClick={onCancel}
-            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-            type="button"
-          >
-            <FaTimes size={20} className="text-gray-500" />
-          </button>
-        )}
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Title */}
-        <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-            Title <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-            placeholder="Enter task title"
-            required
-            minLength={3}
-          />
-        </div>
-
-        {/* Description */}
-        <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-            Description
-          </label>
-          <textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-            placeholder="Enter task description (optional)"
-          />
-        </div>
-
-        {/* Priority and Category */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-1">
-              Priority
-            </label>
-            <select
-              id="priority"
-              value={priority}
-              onChange={(e) => setPriority(e.target.value as Priority)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-            >
-              {PRIORITIES.map((p) => (
-                <option key={p} value={p}>
-                  {p.charAt(0).toUpperCase() + p.slice(1)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
-              Category
-            </label>
-            <select
-              id="category"
-              value={category}
-              onChange={(e) => setCategory(e.target.value as Category | '')}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-            >
-              <option value="">Select a category</option>
-              {CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Due Date */}
-        <div>
-          <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-1">
-            Due Date
-          </label>
-          <input
-            type="date"
-            id="dueDate"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-          />
-        </div>
-
-        {/* Notes */}
-        <div>
-          <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
-            Notes
-          </label>
-          <textarea
-            id="notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-            placeholder="Additional notes (optional)"
-          />
-        </div>
-
-        {/* Submit Buttons */}
-        <div className="flex gap-4 pt-4">
-          <button
-            type="submit"
-            className="flex-1 px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl"
-          >
-            {initialTask ? 'Update Task' : 'Add Task'}
-          </button>
+    /* Modal Overlay */
+    <div 
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      onClick={onCancel}
+    >
+      {/* Modal Content */}
+      <div 
+        className="bg-white rounded-xl shadow-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-2xl font-display font-bold text-gray-800">
+            {initialTask ? 'Edit Task' : 'Add New Task'}
+          </h3>
           {onCancel && (
             <button
-              type="button"
               onClick={onCancel}
-              className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              type="button"
             >
-              Cancel
+              <FaTimes size={20} className="text-gray-500" />
             </button>
           )}
         </div>
-      </form>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Title */}
+          <div>
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+              Title <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="Enter task title"
+              required
+              minLength={3}
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+              Description
+            </label>
+            <textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="Enter task description (optional)"
+            />
+          </div>
+
+          {/* Priority and Category */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-1">
+                Priority
+              </label>
+              <select
+                id="priority"
+                value={priority}
+                onChange={(e) => setPriority(e.target.value as Priority)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                {PRIORITIES.map((p) => (
+                  <option key={p} value={p}>
+                    {p.charAt(0).toUpperCase() + p.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+                Category
+              </label>
+              <select
+                id="category"
+                value={category}
+                onChange={(e) => setCategory(e.target.value as Category | '')}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="">Select a category</option>
+                {CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Due Date */}
+          <div>
+            <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-1">
+              Due Date
+            </label>
+            <input
+              type="date"
+              id="dueDate"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
+              Notes
+            </label>
+            <textarea
+              id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="Additional notes (optional)"
+            />
+          </div>
+
+          {/* Submit Buttons */}
+          <div className="flex gap-4 pt-4">
+            <button
+              type="submit"
+              className="flex-1 px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl"
+            >
+              {initialTask ? 'Update Task' : 'Add Task'}
+            </button>
+            {onCancel && (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
