@@ -116,7 +116,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       createdAt: new Date(),  // Trenutni datum/vreme
     };
     // setTasks sa funkcijom - bezbedno za concurrent updates
-    setTasks(prev => [...prev, newTask]);  // Dodaj novi task na kraj liste
+    setTasks(prev => [newTask, ...prev]);  // Dodaj novi task na pocetak liste
   };
 
   /**
@@ -186,7 +186,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       };
       
       // Vrati novi niz sa svim starim task-ovima + novi duplicirani task na kraju
-      return [...prev, newTask];
+      return [newTask, ...prev];
     })
   };
 
