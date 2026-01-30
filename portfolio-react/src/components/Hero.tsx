@@ -45,7 +45,7 @@ const Hero = () => {
               Hi, I'm <span className="text-gradient">Jovan Ivezić</span>
             </h1>
             <h2 className="text-xl sm:text-2xl md:text-3xl text-gray-600 mb-6">
-              Senior Front-End Developer
+              Front-End Developer
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
               Crafting scalable web solutions with <strong>13+ years of experience</strong> in JavaScript, HTML & SCSS.
