@@ -15,6 +15,8 @@ interface TaskContextType {
   toggleStatus: (id: string) => void;  // Funkcija za promenu statusa (pending ↔ completed)
   clearCompletedTasks: () => void; // Funkcija za brisanje svih zavrsenih taskova
   duplicateTask: (id: string) => void;
+  exportTasks: () => void;   // Preuzimanje taskova kao JSON fajl
+  importTasks: (jsonString: string) => void;  // Učitavanje taskova iz JSON stringa
 }
 
 /**
@@ -191,6 +193,52 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   };
 
   /**
+   * exportTasks - Preuzimanje taskova kao JSON fajl
+   *
+   * Korak po korak:
+   * 1. tasks (niz objekata) → pretvori u JSON string (null, 2 = lepo formatiran sa uvlačenjem)
+   * 2. Blob = "paket" podataka u memoriji sa tipom application/json (browser zna šta je)
+   * 3. createObjectURL = kreira privremeni URL koji pokazuje na taj Blob (kao link ka fajlu u RAM-u)
+   * 4. Kreira se <a> element, postavi mu href na taj URL i download atribut (ime fajla pri preuzimanju)
+   * 5. programski klik na link → browser preuzima fajl
+   * 6. revokeObjectURL = oslobodi URL (čisti memoriju, link više ne važi)
+   */
+  const exportTasks = () => {
+    const tasksJson = JSON.stringify(tasks, null, 2);
+    const blob = new Blob([tasksJson], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tasks-${new Date().toISOString()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  /**
+   * importTasks - Učitavanje taskova iz JSON stringa (npr. sadržaj preuzetog/uploadovanog fajla)
+   *
+   * Korak po korak:
+   * 1. JSON.parse = string → JavaScript objekti (niz taskova)
+   * 2. .map() = za svaki task iz uvezenog niza:
+   *    - ...task = kopiraj sva polja
+   *    - createdAt i dueDate u JSON-u su stringovi → new Date() ih pretvara u prave Date objekte
+   * 3. setTasks() = zameni trenutnu listu taskova u state-u sa uvezenom listom
+   * 4. try/catch = ako JSON nije validan (parse baci grešku), uhvati je i prikaži alert
+   */
+  const importTasks = (jsonString: string) => {
+    try {
+      const importedTasks = JSON.parse(jsonString);
+      setTasks(importedTasks.map((task: any) => ({
+        ...task,
+        createdAt: new Date(task.createdAt),
+        dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
+      })));
+    } catch (error) {
+      alert('Invalid JSON file');
+    }
+  };
+
+  /**
    * value objekat - "Pakujemo" sve u jedan objekat
    * 
    * Ovo je ono što će sve komponente dobiti kada pozovu useTaskContext()
@@ -204,6 +252,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     toggleStatus,      // Funkcija za toggle statusa
     clearCompletedTasks, // Funkcija za brisanje svih zavrsenih taskova,
     duplicateTask,       // Funkcija za dupliciranje taska
+    exportTasks,         // Preuzimanje taskova kao JSON
+    importTasks,        // Učitavanje taskova iz JSON stringa
   };
 
   /**

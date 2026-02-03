@@ -20,7 +20,7 @@ const priorityColors = {
 const TaskItem = ({ task, onToggleStatus, onDelete, onEdit, showDetails, duplicateTask }: TaskItemProps) => {
   return (
     <div
-      className={`bg-white rounded-lg shadow-md p-4 border-l-4 ${
+      className={`bg-white rounded-lg shadow-md p-3 sm:p-4 border-l-4 ${
         task.status === 'completed'
           ? 'border-green-500 opacity-75'
           : task.priority === 'high'
@@ -30,11 +30,11 @@ const TaskItem = ({ task, onToggleStatus, onDelete, onEdit, showDetails, duplica
           : 'border-green-500'
       }`}
     >
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
+      <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
+        <div className="flex-1 min-w-0 w-full">
+          <div className="flex flex-wrap items-center gap-2 mb-2">
             <h3
-              className={`font-bold text-lg ${
+              className={`font-bold text-base sm:text-lg break-words ${
                 task.status === 'completed'
                   ? 'line-through text-gray-500'
                   : 'text-gray-800'
@@ -43,37 +43,37 @@ const TaskItem = ({ task, onToggleStatus, onDelete, onEdit, showDetails, duplica
               {task.title}
             </h3>
             <span
-              className={`px-2 py-1 rounded-full text-xs font-medium ${priorityColors[task.priority]}`}
+              className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${priorityColors[task.priority]}`}
             >
               {task.priority}
             </span>
             {task.category && (
-              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium whitespace-nowrap">
                 {task.category}
               </span>
             )}
           </div>
           {showDetails && task.description && (
             <p
-              className={`text-gray-600 mb-2 ${
+              className={`text-sm sm:text-base text-gray-600 mb-2 break-words ${
                 task.status === 'completed' ? 'line-through' : ''
               }`}
             >
               {task.description}
             </p>
           )}
-          <div className="flex items-center gap-4 text-sm text-gray-500">
-            <span>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500">
+            <span className="whitespace-nowrap">
               Created: {new Date(task.createdAt).toLocaleDateString()}
             </span>
             {task.dueDate && (
-              <span>
+              <span className="whitespace-nowrap">
                 Due: {new Date(task.dueDate).toLocaleDateString()}
               </span>
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2 ml-4">
+        <div className="flex items-center gap-2 sm:ml-4 flex-shrink-0">
           {duplicateTask && (
             <button
               onClick={() => duplicateTask(task.id)}

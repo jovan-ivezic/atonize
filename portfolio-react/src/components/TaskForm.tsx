@@ -86,7 +86,7 @@ const TaskForm = ({ onSubmit, onCancel, initialTask }: TaskFormProps) => {
     >
       {/* Modal Content */}
       <div 
-        className="bg-white rounded-xl shadow-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-xl shadow-lg p-4 sm:p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -207,10 +207,10 @@ const TaskForm = ({ onSubmit, onCancel, initialTask }: TaskFormProps) => {
           </div>
 
           {/* Submit Buttons */}
-          <div className="flex gap-4 pt-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
             <button
               type="submit"
-              className="flex-1 px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl"
+              className="flex-1 px-4 sm:px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl"
             >
               {initialTask ? 'Update Task' : 'Add Task'}
             </button>
@@ -218,7 +218,7 @@ const TaskForm = ({ onSubmit, onCancel, initialTask }: TaskFormProps) => {
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                className="px-4 sm:px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
               >
                 Cancel
               </button>

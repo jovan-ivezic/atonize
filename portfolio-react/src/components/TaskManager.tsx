@@ -4,9 +4,11 @@ import { Task } from '../types/task';
 import TaskItem from './TaskItem';
 import TaskForm from './TaskForm';
 import { useTaskContext } from '../context/TaskContext';
+import { FaDownload, FaUpload } from 'react-icons/fa';
 
 const TaskManager = () => {
-  const { state, addTask, updateTask, deleteTask, toggleStatus, clearCompletedTasks, duplicateTask } = useTaskContext();
+  const { state, addTask, updateTask, deleteTask, toggleStatus, clearCompletedTasks, duplicateTask, exportTasks, importTasks } = useTaskContext();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [showStatistics, setShowStatistics] = useState(true);
@@ -40,6 +42,18 @@ const TaskManager = () => {
     setShowForm(true);
   };
 
+  const handleImportChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      if (text) importTasks(text);
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
   return (
     <section id="task-manager" className="py-20 bg-gray-50" ref={ref}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -63,7 +77,7 @@ const TaskManager = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ delay: 0.2 }}
-          className="mb-8 flex justify-center gap-4"
+          className="mb-8 flex flex-wrap justify-center gap-3 sm:gap-4"
         >
           {!showForm ? (
             <>
@@ -72,19 +86,34 @@ const TaskManager = () => {
                 setEditingTask(null);
                 setShowForm(true);
               }}
-              className="px-6 py-3 bg-primary-600 text-white rounded-full font-medium hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl"
+              className="px-4 sm:px-6 py-2 sm:py-3 bg-primary-600 text-white rounded-full font-medium hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl text-sm sm:text-base whitespace-nowrap"
             >
               Add New Task
             </button>
             { tasks.length > 0 && (
-              <button onClick={() => setShowStatistics(!showStatistics)} className="px-6 py-3 bg-primary-600 text-white rounded-full font-medium hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl"> {showStatistics ? 'Hide statistics' : 'Show statistics'}
+              <button onClick={() => setShowStatistics(!showStatistics)} className="px-4 sm:px-6 py-2 sm:py-3 bg-primary-600 text-white rounded-full font-medium hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl text-sm sm:text-base whitespace-nowrap"> {showStatistics ? 'Hide statistics' : 'Show statistics'}
               </button>
             )}
             { completedCount > 0 && (
-              <button onClick={clearCompletedTasks} className="px-6 py-3 bg-primary-600 text-white rounded-full font-medium hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl">
+              <button onClick={clearCompletedTasks} className="px-4 sm:px-6 py-2 sm:py-3 bg-primary-600 text-white rounded-full font-medium hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl text-sm sm:text-base whitespace-nowrap">
                 Clear Completed ({completedCount})
               </button>
             )}
+            { tasks.length > 0 && (
+              <button onClick={exportTasks} className="px-4 sm:px-6 py-2 sm:py-3 bg-green-600 text-white rounded-full font-medium hover:bg-green-700 transition-colors shadow-lg hover:shadow-xl text-sm sm:text-base whitespace-nowrap inline-flex items-center gap-2">
+                <FaDownload /> Export
+              </button>
+            )}
+            <label className="px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl text-sm sm:text-base whitespace-nowrap inline-flex items-center gap-2 cursor-pointer">
+              <FaUpload /> Import
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json,application/json"
+                onChange={handleImportChange}
+                className="hidden"
+              />
+            </label>
             </>
           ) : null}
         </motion.div>
@@ -139,16 +168,16 @@ const TaskManager = () => {
             transition={{ delay: 0.4 }}
             className="mt-8 text-center"
           >
-            <div className="inline-flex gap-6 bg-white rounded-lg shadow-md p-6">
-              <div>
+            <div className="inline-flex flex-wrap justify-center gap-4 sm:gap-6 bg-white rounded-lg shadow-md p-4 sm:p-6">
+              <div className="text-center min-w-[80px]">
                 <p className="text-2xl font-bold text-primary-600">{tasks.length}</p>
                 <p className="text-sm text-gray-600">Total Tasks</p>
               </div>
-              <div>
+              <div className="text-center min-w-[80px]">
                 <p className="text-2xl font-bold text-green-600">{completedCount}</p>
                 <p className="text-sm text-gray-600">Completed</p>
               </div>
-              <div>
+              <div className="text-center min-w-[80px]">
                 <p className="text-2xl font-bold text-yellow-600">{pendingCount}</p>
                 <p className="text-sm text-gray-600">Pending</p>
               </div>
