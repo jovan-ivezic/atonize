@@ -166,7 +166,7 @@ const Portfolio = () => {
 
                         {/* Technologies */}
                         <div className="flex flex-wrap gap-2">
-                          {project.technologies.slice(0, 3).map((tech, index) => (
+                          {project.technologies.map((tech, index) => (
                             <span
                               key={index}
                               className="px-3 py-1 bg-gray-100 text-gray-500 text-xs rounded-full font-medium"
@@ -214,7 +214,7 @@ const Portfolio = () => {
 
                             {/* Technologies */}
                             <div className="flex flex-wrap gap-2">
-                              {project.technologies.slice(0, 3).map((tech, index) => (
+                              {project.technologies.map((tech, index) => (
                                 <span
                                   key={index}
                                   className="px-3 py-1 bg-primary-50 text-primary-600 text-xs rounded-full font-medium"

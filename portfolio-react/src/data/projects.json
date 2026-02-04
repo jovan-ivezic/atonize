@@ -2,11 +2,11 @@
   {
     "id": 1,
     "title": "Dating App",
-    "description": "Complete single page application dating platform built from scratch with vanilla JavaScript and PHP. Features include user profiles, matching system, messaging, and comprehensive admin panel for content management.",
+    "description": "Led front-end team in building a dating platform from scratch with vanilla JavaScript and custom modular architecture (no frameworks). Delivered public landing, member portal with profiles and galleries, real-time chat, matching and search, admin dashboard, and payment integration.",
     "category": "other",
     "image": "/portfolio/images/gallery/openrelationship.jpg",
     "link": "https://openrelationship.com",
-    "technologies": ["JavaScript", "PHP", "Single Page App", "Admin Panel"]
+    "technologies": ["JavaScript", "Single Page App", "Admin Panel", "Real-time Chat", "Payment Integration"]
   },
   {
     "id": 2,
@@ -16,6 +16,15 @@
     "image": "/portfolio/images/gallery/restaurant.jpg",
     "link": "/portfolio/restaurant-theme/home.html",
     "technologies": ["WordPress", "PHP", "JavaScript", "CSS"]
+  },
+  {
+    "id": 21,
+    "title": "Task Manager",
+    "description": "Task management application built with React and TypeScript. Create, edit, and organize your tasks with priority levels and categories.",
+    "category": "react",
+    "image": "https://dummyimage.com/800x450/0284c7/ffffff&text=Task+Manager",
+    "link": "/tasks",
+    "technologies": ["React", "TypeScript", "Context API", "Local Storage"]
   },
   {
     "id": 3,
@@ -181,14 +190,5 @@
     "image": "/portfolio/images/gallery/easyoffices.jpg",
     "link": "/portfolio/easyoffices/home.html",
     "technologies": ["HTML5", "CSS3", "JavaScript"]
-  },
-  {
-    "id": 21,
-    "title": "Task Manager",
-    "description": "Task management application built with React and TypeScript. Create, edit, and organize your tasks with priority levels and categories.",
-    "category": "react",
-    "image": "https://dummyimage.com/800x450/0284c7/ffffff&text=Task+Manager",
-    "link": "/tasks",
-    "technologies": ["React", "TypeScript", "Context API", "Local Storage"]
   }
 ]
