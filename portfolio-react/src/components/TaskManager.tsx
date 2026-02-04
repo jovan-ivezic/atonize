@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { Task } from '../types/task';
+import { Task, Priority } from '../types/task';
 import TaskItem from './TaskItem';
 import TaskForm from './TaskForm';
 import { useTaskContext } from '../context/TaskContext';
@@ -12,6 +12,7 @@ const TaskManager = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [showStatistics, setShowStatistics] = useState(true);
+  const [priorityFilter, setPriorityFilter] = useState<Priority | 'all'>('all');
 
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
@@ -54,6 +55,10 @@ const TaskManager = () => {
     e.target.value = '';
   };
 
+  const filteredTasks = priorityFilter === 'all'
+    ? tasks
+    : tasks.filter(task => task.priority === priorityFilter);
+
   return (
     <section id="task-manager" className="py-20 bg-gray-50" ref={ref}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -72,48 +77,80 @@ const TaskManager = () => {
           </p>
         </motion.div>
 
-        {/* Add Task Button showStatistics and clearCompletedTasks */}
+        {/* Toolbar - two levels (same width as task list) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ delay: 0.2 }}
-          className="mb-8 flex flex-wrap justify-center gap-3 sm:gap-4"
+          className="mb-8 max-w-4xl mx-auto space-y-4"
         >
           {!showForm ? (
             <>
-            <button
-              onClick={() => {
-                setEditingTask(null);
-                setShowForm(true);
-              }}
-              className="px-4 sm:px-6 py-2 sm:py-3 bg-primary-600 text-white rounded-full font-medium hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl text-sm sm:text-base whitespace-nowrap"
-            >
-              Add New Task
-            </button>
-            { tasks.length > 0 && (
-              <button onClick={() => setShowStatistics(!showStatistics)} className="px-4 sm:px-6 py-2 sm:py-3 bg-primary-600 text-white rounded-full font-medium hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl text-sm sm:text-base whitespace-nowrap"> {showStatistics ? 'Hide statistics' : 'Show statistics'}
-              </button>
-            )}
-            { completedCount > 0 && (
-              <button onClick={clearCompletedTasks} className="px-4 sm:px-6 py-2 sm:py-3 bg-primary-600 text-white rounded-full font-medium hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl text-sm sm:text-base whitespace-nowrap">
-                Clear Completed ({completedCount})
-              </button>
-            )}
-            { tasks.length > 0 && (
-              <button onClick={exportTasks} className="px-4 sm:px-6 py-2 sm:py-3 bg-green-600 text-white rounded-full font-medium hover:bg-green-700 transition-colors shadow-lg hover:shadow-xl text-sm sm:text-base whitespace-nowrap inline-flex items-center gap-2">
-                <FaDownload /> Export
-              </button>
-            )}
-            <label className="px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl text-sm sm:text-base whitespace-nowrap inline-flex items-center gap-2 cursor-pointer">
-              <FaUpload /> Import
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".json,application/json"
-                onChange={handleImportChange}
-                className="hidden"
-              />
-            </label>
+              {/* Row 1: Primary - Add Task + Filter */}
+              <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-between sm:gap-4">
+                <button
+                  onClick={() => {
+                    setEditingTask(null);
+                    setShowForm(true);
+                  }}
+                  className="px-4 sm:px-6 py-2 sm:py-3 bg-primary-600 text-white rounded-full font-medium hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl text-sm sm:text-base whitespace-nowrap"
+                >
+                  Add New Task
+                </button>
+                {tasks.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600 font-medium">Filter by priority:</span>
+                    <select
+                      value={priorityFilter}
+                      onChange={(e) => setPriorityFilter(e.target.value as Priority | 'all')}
+                      className="px-3 py-2 bg-white text-gray-800 rounded-lg font-medium border border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30 text-sm cursor-pointer"
+                    >
+                      <option value="all">All Priorities</option>
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {/* Row 2: Secondary - Export, Import, Clear, Statistics */}
+              <div className="flex flex-wrap justify-center gap-2 border-t border-gray-200 pt-4">
+                {tasks.length > 0 && (
+                  <button
+                    onClick={exportTasks}
+                    className="px-3 py-1.5 text-sm text-green-700 bg-green-50 rounded-full font-medium hover:bg-green-100 transition-colors inline-flex items-center gap-1.5"
+                  >
+                    <FaDownload size={12} /> Export
+                  </button>
+                )}
+                <label className="px-3 py-1.5 text-sm text-blue-700 bg-blue-50 rounded-full font-medium hover:bg-blue-100 transition-colors inline-flex items-center gap-1.5 cursor-pointer">
+                  <FaUpload size={12} /> Import
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".json,application/json"
+                    onChange={handleImportChange}
+                    className="hidden"
+                  />
+                </label>
+                {tasks.length > 0 && (
+                  <button
+                    onClick={() => setShowStatistics(!showStatistics)}
+                    className="px-3 py-1.5 text-sm text-gray-600 bg-gray-100 rounded-full font-medium hover:bg-gray-200 transition-colors"
+                  >
+                    {showStatistics ? 'Hide statistics' : 'Show statistics'}
+                  </button>
+                )}
+                {completedCount > 0 && (
+                  <button
+                    onClick={clearCompletedTasks}
+                    className="px-3 py-1.5 text-sm text-amber-800 bg-amber-50 rounded-full font-medium hover:bg-amber-100 transition-colors"
+                  >
+                    Clear Completed ({completedCount})
+                  </button>
+                )}
+              </div>
             </>
           ) : null}
         </motion.div>
@@ -139,6 +176,17 @@ const TaskManager = () => {
               No tasks yet. Click "Add New Task" to get started!
             </p>
           </motion.div>
+        ) : filteredTasks.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={isInView ? { opacity: 1 } : {}}
+            transition={{ delay: 0.3 }}
+            className="text-center py-12"
+          >
+            <p className="text-gray-500 text-lg">
+              No tasks match the selected priority.
+            </p>
+          </motion.div>
         ) : (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -146,7 +194,7 @@ const TaskManager = () => {
             transition={{ delay: 0.3 }}
             className="space-y-4 max-w-4xl mx-auto"
           >
-            {tasks.map((task) => (
+            {filteredTasks.map((task) => (
               <TaskItem
                 key={task.id}
                 task={task}
