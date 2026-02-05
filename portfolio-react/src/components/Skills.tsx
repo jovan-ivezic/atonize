@@ -2,7 +2,6 @@ import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import {
   FaHtml5,
-  FaCss3Alt,
   FaJs,
   FaReact,
   FaVuejs,
@@ -11,7 +10,7 @@ import {
   FaSass,
   FaSearch,
 } from 'react-icons/fa';
-import { SiTailwindcss, SiVite, SiAdobexd, SiTypescript } from 'react-icons/si';
+import { SiTailwindcss, SiNextdotjs, SiAdobexd, SiTypescript } from 'react-icons/si';
 import { IconType } from 'react-icons';
 
 interface Skill {
@@ -33,10 +32,10 @@ const Skills = () => {
     { name: 'SEO', icon: FaSearch, color: 'text-green-600', level: 90 },
     { name: 'Git', icon: FaGitAlt, color: 'text-orange-700', level: 90 },
     { name: 'Tailwind CSS', icon: SiTailwindcss, color: 'text-cyan-400', level: 85 },
-    { name: 'AdobeXD', icon: SiAdobexd, color: 'text-purple-600', level: 85 },
+    { name: 'AdobeXD', icon: SiAdobexd, color: 'text-purple-600', level: 55 },
     { name: 'React', icon: FaReact, color: 'text-cyan-500', level: 35 },
-    { name: 'Vue.js', icon: FaVuejs, color: 'text-green-500', level: 30 },
-    { name: 'Vite', icon: SiVite, color: 'text-purple-500', level: 50 },
+    { name: 'Vue.js', icon: FaVuejs, color: 'text-green-500', level: 15 },
+    { name: 'Next.js', icon: SiNextdotjs, color: 'text-gray-800', level: 35 },
     { name: 'TypeScript', icon: SiTypescript, color: 'text-blue-600', level: 35 },
   ];
 

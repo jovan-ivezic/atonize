@@ -65,7 +65,7 @@ const About = () => {
                 I have experience in developing <strong>WordPress themes</strong> and websites, as well as <strong>3+ years working in SEO and internet marketing</strong>, which allows me to view technical solutions in the context of visibility and business goals.
               </p>
               <p className="text-gray-600 leading-relaxed">
-                I am currently actively expanding my knowledge in <strong>React and Vue</strong> technologies, with a focus on modern SPA approaches and long-term solution sustainability.
+                I actively work with <strong>React, Next.js, and TypeScript</strong> in private projects, continuously expanding my expertise while delivering modern SPAs with focus on architecture, performance, and maintainability.
               </p>
               <p className="text-gray-600 leading-relaxed">
                 I work in a <strong>structured and responsible manner</strong>, with a clear focus on quality, efficiency, and continuous product improvement.
