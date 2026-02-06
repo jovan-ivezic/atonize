@@ -5,6 +5,7 @@ import TaskItem from './TaskItem';
 import TaskForm from './TaskForm';
 import { useTaskContext } from '../context/TaskContext';
 import { FaDownload, FaUpload } from 'react-icons/fa';
+type SortOption = 'date-desc' | 'date-asc' | 'priority' | 'title';
 
 const TaskManager = () => {
   const { state, addTask, updateTask, deleteTask, toggleStatus, clearCompletedTasks, duplicateTask, exportTasks, importTasks } = useTaskContext();
@@ -13,7 +14,7 @@ const TaskManager = () => {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [showStatistics, setShowStatistics] = useState(true);
   const [priorityFilter, setPriorityFilter] = useState<Priority | 'all'>('all');
-
+  const [sortBy, setSortBy] = useState<SortOption>('date-desc');
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
 
@@ -59,6 +60,26 @@ const TaskManager = () => {
     ? tasks
     : tasks.filter(task => task.priority === priorityFilter);
 
+  const getSortedTasks = (tasksToSort: Task[]) => {
+    const sortedTasks = [...tasksToSort];
+
+    switch (sortBy) {
+      case 'date-desc':
+        return sortedTasks.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      case 'date-asc':
+        return sortedTasks.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+      case 'priority':
+        const priorityOrder = { high: 0, medium: 1, low: 2 };
+        return sortedTasks.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+      case 'title':
+        return sortedTasks.sort((a, b) => a.title.localeCompare(b.title));
+      default:
+        return sortedTasks;
+    }
+  };
+
+  const displayTasks = getSortedTasks(filteredTasks);
+
   return (
     <section id="task-manager" className="py-20 bg-gray-50" ref={ref}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -98,19 +119,34 @@ const TaskManager = () => {
                   Add New Task
                 </button>
                 {tasks.length > 0 && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600 font-medium">Filter by priority:</span>
+                  <>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600 font-medium">Filter by priority:</span>
+                      <select
+                        value={priorityFilter}
+                        onChange={(e) => setPriorityFilter(e.target.value as Priority | 'all')}
+                        className="px-3 py-2 bg-white text-gray-800 rounded-lg font-medium border border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30 text-sm cursor-pointer"
+                      >
+                        <option value="all">All Priorities</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600 font-medium">Sort by:</span>
                     <select
-                      value={priorityFilter}
-                      onChange={(e) => setPriorityFilter(e.target.value as Priority | 'all')}
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as SortOption)}
                       className="px-3 py-2 bg-white text-gray-800 rounded-lg font-medium border border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30 text-sm cursor-pointer"
                     >
-                      <option value="all">All Priorities</option>
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
+                      <option value="date-desc">Newest First</option>
+                      <option value="date-asc">Oldest First</option>
+                      <option value="priority">Priority</option>
+                      <option value="title">Title A-Z</option>
                     </select>
                   </div>
+                  </>
                 )}
               </div>
 
@@ -176,7 +212,7 @@ const TaskManager = () => {
               No tasks yet. Click "Add New Task" to get started!
             </p>
           </motion.div>
-        ) : filteredTasks.length === 0 ? (
+        ) : displayTasks.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={isInView ? { opacity: 1 } : {}}
@@ -194,7 +230,7 @@ const TaskManager = () => {
             transition={{ delay: 0.3 }}
             className="space-y-4 max-w-4xl mx-auto"
           >
-            {filteredTasks.map((task) => (
+            {displayTasks.map((task) => (
               <TaskItem
                 key={task.id}
                 task={task}
