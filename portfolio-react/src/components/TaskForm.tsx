@@ -90,25 +90,25 @@ const TaskForm = ({ onSubmit, onCancel, initialTask }: TaskFormProps) => {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-2xl font-display font-bold text-gray-800">
-            {initialTask ? 'Edit Task' : 'Add New Task'}
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+          <h3 className="text-xl font-semibold text-gray-900">
+            {initialTask ? 'Edit Task' : 'Add Task'}
           </h3>
           {onCancel && (
             <button
               onClick={onCancel}
-              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
               type="button"
             >
-              <FaTimes size={20} className="text-gray-500" />
+              <FaTimes size={18} className="text-gray-400" />
             </button>
           )}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {/* Title */}
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
               Title <span className="text-red-500">*</span>
             </label>
             <input
@@ -116,7 +116,7 @@ const TaskForm = ({ onSubmit, onCancel, initialTask }: TaskFormProps) => {
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
               placeholder="Enter task title"
               required
               minLength={3}
@@ -125,7 +125,7 @@ const TaskForm = ({ onSubmit, onCancel, initialTask }: TaskFormProps) => {
 
           {/* Description */}
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
               Description
             </label>
             <textarea
@@ -133,7 +133,7 @@ const TaskForm = ({ onSubmit, onCancel, initialTask }: TaskFormProps) => {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 resize-none"
               placeholder="Enter task description (optional)"
             />
           </div>
@@ -141,14 +141,14 @@ const TaskForm = ({ onSubmit, onCancel, initialTask }: TaskFormProps) => {
           {/* Priority and Category */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-2">
                 Priority
               </label>
               <select
                 id="priority"
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as Priority)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 cursor-pointer"
               >
                 {PRIORITIES.map((p) => (
                   <option key={p} value={p}>
@@ -159,14 +159,14 @@ const TaskForm = ({ onSubmit, onCancel, initialTask }: TaskFormProps) => {
             </div>
 
             <div>
-              <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
                 Category
               </label>
               <select
                 id="category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value as Category | '')}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 cursor-pointer"
               >
                 <option value="">Select a category</option>
                 {CATEGORIES.map((cat) => (
@@ -180,7 +180,7 @@ const TaskForm = ({ onSubmit, onCancel, initialTask }: TaskFormProps) => {
 
           {/* Due Date */}
           <div>
-            <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-2">
               Due Date
             </label>
             <input
@@ -188,41 +188,42 @@ const TaskForm = ({ onSubmit, onCancel, initialTask }: TaskFormProps) => {
               id="dueDate"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
             />
           </div>
 
           {/* Notes */}
           <div>
-            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
               Notes
             </label>
             <textarea
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              rows={2}
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 resize-none"
               placeholder="Additional notes (optional)"
             />
           </div>
 
           {/* Submit Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4">
-            <button
-              type="submit"
-              className="flex-1 px-4 sm:px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl"
-            >
-              {initialTask ? 'Update Task' : 'Add Task'}
-            </button>
+          <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
             {onCancel && (
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-4 sm:px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                className="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
             )}
+            <button
+              type="submit"
+              className="px-6 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+            >
+              {initialTask ? 'Update Task' : 'Add Task'}
+            </button>
           </div>
         </form>
       </div>
