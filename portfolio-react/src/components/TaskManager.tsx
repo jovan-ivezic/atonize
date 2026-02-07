@@ -4,7 +4,7 @@ import { Task, Priority } from '../types/task';
 import TaskItem from './TaskItem';
 import TaskForm from './TaskForm';
 import { useTaskContext } from '../context/TaskContext';
-import { FaDownload, FaUpload } from 'react-icons/fa';
+import { FaDownload, FaUpload, FaTimes } from 'react-icons/fa';
 type SortOption = 'date-desc' | 'date-asc' | 'priority' | 'title';
 
 const TaskManager = () => {
@@ -15,6 +15,8 @@ const TaskManager = () => {
   const [showStatistics, setShowStatistics] = useState(true);
   const [priorityFilter, setPriorityFilter] = useState<Priority | 'all'>('all');
   const [sortBy, setSortBy] = useState<SortOption>('date-desc');
+  const [searchQuery, setSearchQuery] = useState('');
+
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
 
@@ -78,7 +80,13 @@ const TaskManager = () => {
     }
   };
 
-  const displayTasks = getSortedTasks(filteredTasks);
+  const searchedTasks = filteredTasks.filter(task =>
+    task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    task.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const displayTasks = getSortedTasks(searchedTasks);
+
 
   return (
     <section id="task-manager" className="py-20 bg-gray-50" ref={ref}>
@@ -93,103 +101,85 @@ const TaskManager = () => {
             Task <span className="text-gradient">Manager</span>
           </h2>
           <div className="w-20 h-1 bg-primary-600 mx-auto mb-8"></div>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-gray-600 max-w-2xl mx-auto mb-6">
             Manage your tasks efficiently. Add, complete, and organize your daily tasks.
           </p>
+          {!showForm && (
+            <button
+              onClick={() => {
+                setEditingTask(null);
+                setShowForm(true);
+              }}
+              className="px-6 py-3 bg-primary-600 text-white rounded-full font-medium hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl"
+            >
+              Add New Task
+            </button>
+          )}
         </motion.div>
 
-        {/* Toolbar - two levels (same width as task list) */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.2 }}
-          className="mb-8 max-w-4xl mx-auto space-y-4"
-        >
-          {!showForm ? (
-            <>
-              {/* Row 1: Primary - Add Task + Filter */}
-              <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-between sm:gap-4">
-                <button
-                  onClick={() => {
-                    setEditingTask(null);
-                    setShowForm(true);
-                  }}
-                  className="px-4 sm:px-6 py-2 sm:py-3 bg-primary-600 text-white rounded-full font-medium hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl text-sm sm:text-base whitespace-nowrap"
-                >
-                  Add New Task
-                </button>
-                {tasks.length > 0 && (
-                  <>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600 font-medium">Filter by priority:</span>
-                      <select
-                        value={priorityFilter}
-                        onChange={(e) => setPriorityFilter(e.target.value as Priority | 'all')}
-                        className="px-3 py-2 bg-white text-gray-800 rounded-lg font-medium border border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30 text-sm cursor-pointer"
-                      >
-                        <option value="all">All Priorities</option>
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                      </select>
-                    </div>
-                    <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600 font-medium">Sort by:</span>
-                    <select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value as SortOption)}
-                      className="px-3 py-2 bg-white text-gray-800 rounded-lg font-medium border border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30 text-sm cursor-pointer"
-                    >
-                      <option value="date-desc">Newest First</option>
-                      <option value="date-asc">Oldest First</option>
-                      <option value="priority">Priority</option>
-                      <option value="title">Title A-Z</option>
-                    </select>
-                  </div>
-                  </>
+        {/* Toolbar - responsive: stacked on mobile, single row on desktop */}
+        {!showForm && tasks.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.2 }}
+            className="mb-8 max-w-4xl mx-auto"
+          >
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              {/* Search - Full width on mobile, flex-1 on desktop */}
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  placeholder="Search tasks..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 shadow-sm text-sm"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <FaTimes size={14} />
+                  </button>
                 )}
               </div>
 
-              {/* Row 2: Secondary - Export, Import, Clear, Statistics */}
-              <div className="flex flex-wrap justify-center gap-2 border-t border-gray-200 pt-4">
-                {tasks.length > 0 && (
-                  <button
-                    onClick={exportTasks}
-                    className="px-3 py-1.5 text-sm text-green-700 bg-green-50 rounded-full font-medium hover:bg-green-100 transition-colors inline-flex items-center gap-1.5"
+              {/* Filter & Sort - Together in one row */}
+              <div className="flex items-center gap-3">
+                {/* Filter */}
+                <div className="flex items-center gap-2 flex-1 sm:flex-none">
+                  <label className="text-gray-600 font-medium text-sm whitespace-nowrap">Filter:</label>
+                  <select
+                    value={priorityFilter}
+                    onChange={(e) => setPriorityFilter(e.target.value as Priority | 'all')}
+                    className="flex-1 sm:w-auto px-3 py-2 bg-white text-gray-800 rounded-lg border border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30 cursor-pointer text-sm"
                   >
-                    <FaDownload size={12} /> Export
-                  </button>
-                )}
-                <label className="px-3 py-1.5 text-sm text-blue-700 bg-blue-50 rounded-full font-medium hover:bg-blue-100 transition-colors inline-flex items-center gap-1.5 cursor-pointer">
-                  <FaUpload size={12} /> Import
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".json,application/json"
-                    onChange={handleImportChange}
-                    className="hidden"
-                  />
-                </label>
-                {tasks.length > 0 && (
-                  <button
-                    onClick={() => setShowStatistics(!showStatistics)}
-                    className="px-3 py-1.5 text-sm text-gray-600 bg-gray-100 rounded-full font-medium hover:bg-gray-200 transition-colors"
+                    <option value="all">All</option>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+
+                {/* Sort */}
+                <div className="flex items-center gap-2 flex-1 sm:flex-none">
+                  <label className="text-gray-600 font-medium text-sm whitespace-nowrap">Sort:</label>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as SortOption)}
+                    className="flex-1 sm:w-auto px-3 py-2 bg-white text-gray-800 rounded-lg border border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30 cursor-pointer text-sm"
                   >
-                    {showStatistics ? 'Hide statistics' : 'Show statistics'}
-                  </button>
-                )}
-                {completedCount > 0 && (
-                  <button
-                    onClick={clearCompletedTasks}
-                    className="px-3 py-1.5 text-sm text-amber-800 bg-amber-50 rounded-full font-medium hover:bg-amber-100 transition-colors"
-                  >
-                    Clear Completed ({completedCount})
-                  </button>
-                )}
+                    <option value="date-desc">Newest</option>
+                    <option value="date-asc">Oldest</option>
+                    <option value="priority">Priority</option>
+                    <option value="title">A-Z</option>
+                  </select>
+                </div>
               </div>
-            </>
-          ) : null}
-        </motion.div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Task Form */}
         {showForm && (
@@ -220,7 +210,9 @@ const TaskManager = () => {
             className="text-center py-12"
           >
             <p className="text-gray-500 text-lg">
-              No tasks match the selected priority.
+              {searchQuery 
+                ? `No tasks found for "${searchQuery}"`
+                : 'No tasks match the selected filters.'}
             </p>
           </motion.div>
         ) : (
@@ -241,6 +233,49 @@ const TaskManager = () => {
                 showDetails={true}
               />
             ))}
+          </motion.div>
+        )}
+
+        {/* Footer Actions */}
+        {tasks.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={isInView ? { opacity: 1 } : {}}
+            transition={{ delay: 0.5 }}
+            className="mt-6 text-center"
+          >
+            <div className="flex flex-wrap justify-center gap-2">
+              <button
+                onClick={exportTasks}
+                className="px-3 py-1.5 text-sm text-green-700 bg-green-50 rounded-full font-medium hover:bg-green-100 transition-colors inline-flex items-center gap-1.5"
+              >
+                <FaDownload size={12} /> Export
+              </button>
+              <label className="px-3 py-1.5 text-sm text-blue-700 bg-blue-50 rounded-full font-medium hover:bg-blue-100 transition-colors inline-flex items-center gap-1.5 cursor-pointer">
+                <FaUpload size={12} /> Import
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".json,application/json"
+                  onChange={handleImportChange}
+                  className="hidden"
+                />
+              </label>
+              <button
+                onClick={() => setShowStatistics(!showStatistics)}
+                className="px-3 py-1.5 text-sm text-gray-600 bg-gray-100 rounded-full font-medium hover:bg-gray-200 transition-colors"
+              >
+                {showStatistics ? 'Hide statistics' : 'Show statistics'}
+              </button>
+              {completedCount > 0 && (
+                <button
+                  onClick={clearCompletedTasks}
+                  className="px-3 py-1.5 text-sm text-amber-800 bg-amber-50 rounded-full font-medium hover:bg-amber-100 transition-colors"
+                >
+                  Clear Completed ({completedCount})
+                </button>
+              )}
+            </div>
           </motion.div>
         )}
 
