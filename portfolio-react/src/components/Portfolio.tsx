@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { FaTasks, FaExternalLinkAlt } from 'react-icons/fa';
+import { FaExternalLinkAlt } from 'react-icons/fa';
 import projectsData from '../data/projects.json';
 
 interface Category {
@@ -30,6 +30,7 @@ const Portfolio = () => {
   const categories: Category[] = [
     { id: 'all', label: 'All Projects' },
     { id: 'react', label: 'React' },
+    { id: 'in-progress', label: 'In Progress' },
     { id: 'wordpress', label: 'WordPress' },
     { id: 'rtl', label: 'RTL Websites' },
     { id: 'animation', label: 'CSS Animation' },
@@ -150,7 +151,7 @@ const Portfolio = () => {
                         />
                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                           <span className="text-white font-medium px-4 py-2 bg-gray-800/80 rounded-lg">
-                            Coming Soon
+                            {project.category === 'in-progress' ? 'In Progress' : 'Coming Soon'}
                           </span>
                         </div>
                       </div>

@@ -9,6 +9,16 @@
     "technologies": ["JavaScript", "Single Page App", "Admin Panel", "Real-time Chat", "Payment Integration"]
   },
   {
+    "id": 22,
+    "title": "Holiday, Travel & Flights Affiliate Comparison MVP",
+    "description": "Currently building an affiliate comparison MVP in the Holiday, Travel and Flight sector, using structured intent modeling, event tracking architecture, and session-based identity designed for seamless upgrade to authenticated user accounts without refactoring core flows.",
+    "category": "in-progress",
+    "image": "https://dummyimage.com/800x450/0f172a/ffffff&text=Affiliate+Comparison+MVP",
+    "link": "#",
+    "technologies": ["React", "Next.js", "Node.js", "Event Tracking", "Session Identity"],
+    "disabled": true
+  },
+  {
     "id": 2,
     "title": "Restaurant Theme",
     "description": "Wordpress theme for restaurants with online menu and reservation system.",
