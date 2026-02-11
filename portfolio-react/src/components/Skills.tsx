@@ -25,7 +25,7 @@ const Skills = () => {
   const isInView = useInView(ref, { once: true, margin: '-100px' });
 
   const skills: Skill[] = [
-    { name: 'HTML5', icon: FaHtml5, color: 'text-orange-600', level: 98 },
+    { name: 'HTML5', icon: FaHtml5, color: 'text-orange-600', level: 100 },
     { name: 'CSS3/SCSS', icon: FaSass, color: 'text-pink-600', level: 98 },
     { name: 'JavaScript', icon: FaJs, color: 'text-yellow-500', level: 70 },
     { name: 'WordPress', icon: FaWordpress, color: 'text-blue-700', level: 70 },
@@ -33,8 +33,8 @@ const Skills = () => {
     { name: 'Git', icon: FaGitAlt, color: 'text-orange-700', level: 90 },
     { name: 'Tailwind CSS', icon: SiTailwindcss, color: 'text-cyan-400', level: 85 },
     { name: 'AdobeXD', icon: SiAdobexd, color: 'text-purple-600', level: 55 },
-    { name: 'React', icon: FaReact, color: 'text-cyan-500', level: 35 },
-    { name: 'Vue.js', icon: FaVuejs, color: 'text-green-500', level: 15 },
+    { name: 'React', icon: FaReact, color: 'text-cyan-500', level: 40 },
+    { name: 'Vue.js', icon: FaVuejs, color: 'text-green-500', level: 30 },
     { name: 'Next.js', icon: SiNextdotjs, color: 'text-gray-800', level: 35 },
     { name: 'TypeScript', icon: SiTypescript, color: 'text-blue-600', level: 35 },
   ];
