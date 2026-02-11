@@ -17,4 +17,5 @@ export interface Task {
   createdAt: Date;
   dueDate?: Date; 
   notes?: string;
+  archived?: boolean;
 }

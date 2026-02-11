@@ -3,24 +3,46 @@ import { Task, Priority } from '../types/task';
 import TaskItem from './TaskItem';
 import TaskForm from './TaskForm';
 import { useTaskContext } from '../context/TaskContext';
-import { FaDownload, FaUpload, FaTimes, FaList, FaCircle, FaCheckCircle, FaChartLine, FaEyeSlash, FaEye } from 'react-icons/fa';
+import { FaDownload, FaUpload, FaTimes, FaList, FaCircle, FaCheckCircle, FaChartLine, FaEyeSlash, FaEye, FaArchive } from 'react-icons/fa';
 type SortOption = 'date-desc' | 'date-asc' | 'priority' | 'title';
 
 const TaskManager = () => {
-  const { state, addTask, updateTask, deleteTask, toggleStatus, clearCompletedTasks, duplicateTask, exportTasks, importTasks } = useTaskContext();
+  const { 
+    state, 
+    addTask, 
+    updateTask, 
+    deleteTask, 
+    toggleStatus, 
+    clearCompletedTasks, 
+    duplicateTask, 
+    exportTasks, 
+    importTasks, 
+    archiveTask, 
+    restoreTask 
+  } = useTaskContext();
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [showForm, setShowForm] = useState(false);
+
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+
   const [showStatistics, setShowStatistics] = useState(true);
   const [priorityFilter, setPriorityFilter] = useState<Priority | 'all'>('all');
+
   const [sortBy, setSortBy] = useState<SortOption>('date-desc');
   const [searchQuery, setSearchQuery] = useState('');
 
+  const [showArchived, setShowArchived] = useState(false);
+
+
   // Computed values
   const tasks = state.tasks;
-  const completedCount = tasks.filter(t => t.status === 'completed').length;
-  const pendingCount = tasks.filter(t => t.status === 'pending').length;
-  const progressPercentage = tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0;
+  const activeTasks = tasks.filter(t => !t.archived);
+  const completedCount = activeTasks.filter(t => t.status === 'completed').length;
+  const pendingCount = activeTasks.filter(t => t.status === 'pending').length;
+  const progressPercentage = activeTasks.length > 0 ? Math.round((completedCount / activeTasks.length) * 100) : 0;
+  const archivedCount = tasks.filter(t => t.archived).length;  // Koristi 'tasks', ne 'activeTasks'!
 
   // Form handlers
   const handleFormSubmit = (taskData: Omit<Task, 'id' | 'createdAt'>) => {
@@ -55,9 +77,13 @@ const TaskManager = () => {
     e.target.value = '';
   };
 
+  const activedOrArchivedTasks = showArchived
+    ? tasks.filter(task => task.archived)
+    : tasks.filter(task => !task.archived);
+
   const filteredTasks = priorityFilter === 'all'
-    ? tasks
-    : tasks.filter(task => task.priority === priorityFilter);
+    ? activedOrArchivedTasks
+    : activedOrArchivedTasks.filter(task => task.priority === priorityFilter);
 
   const getSortedTasks = (tasksToSort: Task[]) => {
     const sortedTasks = [...tasksToSort];
@@ -120,7 +146,7 @@ const TaskManager = () => {
                 </div>
                 <div>
                   <p className="text-gray-600 text-sm">Total</p>
-                  <p className="text-2xl font-bold text-gray-900">{tasks.length}</p>
+                  <p className="text-2xl font-bold text-gray-900">{activeTasks.length}</p>
                 </div>
               </div>
             </div>
@@ -262,6 +288,8 @@ const TaskManager = () => {
                 onEdit={handleEdit}
                 duplicateTask={duplicateTask}
                 showDetails={true}
+                archiveTask={archiveTask}
+                restoreTask={restoreTask}
               />
             ))}
           </div>
@@ -301,6 +329,18 @@ const TaskManager = () => {
               {showStatistics ? <FaEyeSlash size={14} /> : <FaEye size={14} />}
               {showStatistics ? 'Hide Statistics' : 'Show Statistics'}
             </button>
+            {(archivedCount > 0 || showArchived) && ( 
+              <button
+                onClick={() => setShowArchived(!showArchived)}
+                className="w-full sm:w-auto px-4 py-2.5 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg font-medium hover:bg-gray-50 transition-colors inline-flex items-center justify-center gap-2 shadow-sm"
+              >
+                <FaArchive size={14} />
+                {showArchived 
+                  ? 'Hide Archived' 
+                  : `Show Archived ${archivedCount > 0 ? `(${archivedCount})` : ''}`
+                }
+              </button>
+            )}
           </div>
         )}
       </div>

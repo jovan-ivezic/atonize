@@ -1,5 +1,5 @@
 import { Task } from '../types/task';
-import { FaTrash, FaCheck, FaTimes, FaEdit, FaCopy } from 'react-icons/fa';
+import { FaTrash, FaCheck, FaTimes, FaEdit, FaCopy, FaArchive, FaUndo } from 'react-icons/fa';
 
 interface TaskItemProps {
   task: Task;
@@ -8,6 +8,8 @@ interface TaskItemProps {
   onEdit?: (task: Task) => void;
   showDetails?: boolean;
   duplicateTask?: (id: string) => void;
+  archiveTask?: (id: string) => void;
+  restoreTask?: (id: string) => void;
 }
 
 // Priority color mapping for border
@@ -24,12 +26,13 @@ const priorityBadgeColors = {
   high: 'bg-red-50 text-red-700 border-red-200',
 };
 
-const TaskItem = ({ task, onToggleStatus, onDelete, onEdit, showDetails, duplicateTask }: TaskItemProps) => {
+const TaskItem = ({ task, onToggleStatus, onDelete, onEdit, showDetails, duplicateTask, archiveTask, restoreTask }: TaskItemProps) => {
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'completed';
   
   return (
     <div
-      className={`bg-white rounded-xl shadow-sm border border-gray-100 border-l-4 p-4 transition-all hover:shadow-md ${
+      className={`bg-white rounded-xl shadow-sm border border-gray-100 border-l-4 p-4 transition-all hover:shadow-md
+        ${task.archived ? 'opacity-50' : ''} ${
         task.status === 'completed'
           ? 'border-l-green-500 opacity-60'
           : priorityBorderColors[task.priority]
@@ -57,6 +60,11 @@ const TaskItem = ({ task, onToggleStatus, onDelete, onEdit, showDetails, duplica
               {task.category && (
                 <span className="px-2.5 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 rounded-md text-xs font-medium">
                   {task.category}
+                </span>
+              )}
+              {task.archived && (
+                <span className="px-2.5 py-0.5 bg-gray-50 text-gray-700 border border-gray-200 rounded-md text-xs font-medium">
+                  Archived
                 </span>
               )}
             </div>
@@ -90,6 +98,26 @@ const TaskItem = ({ task, onToggleStatus, onDelete, onEdit, showDetails, duplica
         
         {/* Action buttons */}
         <div className="flex items-center gap-1.5 sm:ml-4 flex-shrink-0">
+        { !task.archived && archiveTask && (
+              <button
+                onClick={() => archiveTask(task.id)}
+                className="p-2 rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors"
+                aria-label="Archive task"
+                title="Archive task"
+              >
+                <FaArchive size={14} />
+              </button>
+            )}
+            {task.archived && restoreTask && (
+              <button
+                onClick={() => restoreTask(task.id)}
+                className="p-2 rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors"
+                aria-label="Restore task"
+                title="Restore task"
+              >
+                <FaUndo size={14} />
+              </button>
+            )}
           {duplicateTask && (
             <button
               onClick={() => duplicateTask(task.id)}
@@ -100,6 +128,7 @@ const TaskItem = ({ task, onToggleStatus, onDelete, onEdit, showDetails, duplica
               <FaCopy size={14} />
             </button>
           )}
+          
           <button
             onClick={() => onToggleStatus(task.id)}
             className={`p-2 rounded-lg transition-colors ${

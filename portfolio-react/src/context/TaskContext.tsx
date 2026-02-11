@@ -17,6 +17,8 @@ interface TaskContextType {
   duplicateTask: (id: string) => void;
   exportTasks: () => void;   // Preuzimanje taskova kao JSON fajl
   importTasks: (jsonString: string) => void;  // Učitavanje taskova iz JSON stringa
+  archiveTask: (id: string) => void;
+  restoreTask: (id: string) => void;
 }
 
 /**
@@ -238,6 +240,14 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const archiveTask = (id: string) => {
+    updateTask(id, { archived: true });
+  };
+
+  const restoreTask = (id: string) => {
+    updateTask(id, { archived: false });
+  };
+
   /**
    * value objekat - "Pakujemo" sve u jedan objekat
    * 
@@ -254,6 +264,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     duplicateTask,       // Funkcija za dupliciranje taska
     exportTasks,         // Preuzimanje taskova kao JSON
     importTasks,        // Učitavanje taskova iz JSON stringa
+    archiveTask,        // Funkcija za arhiviranje taska
+    restoreTask,        // Funkcija za vraćanje archived taska u aktivnu listu
   };
 
   /**
