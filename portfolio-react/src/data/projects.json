@@ -73,18 +73,62 @@
   },
   {
     "id": 22,
-    "title": "Holiday, Travel & Flights Affiliate Comparison MVP",
-    "description": "Currently building an affiliate comparison MVP in the Holiday, Travel and Flight sector, using structured intent modeling, event tracking architecture, and session-based identity designed for seamless upgrade to authenticated user accounts without refactoring core flows.",
-    "category": "in-progress",
-    "image": "portfolio/images/gallery/ljetovanje.webp",
-    "link": "https://ljetovanje.com",
+    "title": "Ljetovanje.com - Travel & Flight Affiliate Comparison Startup",
+    "description": "Built Ljetovanje.com from the ground up as an independent, data-driven startup venture. At its core, the entire business model revolves around heavy data orchestration—aggregating, standardizing, and presenting massive datasets to end-users.",
+    "category": "react",
+    "image": "/portfolio/images/gallery/ljetovanje.webp",
+    "link": "https://www.ljetovanje.com",
     "technologies": [
-      "React",
-      "Next.js",
+      "Next.js 15",
+      "React 18",
+      "TypeScript",
+      "Tailwind CSS v4",
       "Node.js",
-      "Event Tracking",
-      "Session Identity",
-      "SEO"
+      "MySQL"
+    ],
+    "hasModal": true,
+    "details": {
+      "role": "Co-Founder & Full-Stack Developer",
+      "features": [
+        {
+          "title": "🎯 Project Overview & Business Strategy",
+          "description": "Built Ljetovanje.com from the ground up as an independent, data-driven startup venture. At its core, the entire business model revolves around heavy data orchestration—aggregating, standardizing, and presenting massive datasets (flights, accommodations, activities) to end-users. I was responsible for the complete lifecycle of the project, from conceptualizing this data-centric business strategy and designing the user journey, to executing the full-stack technical architecture."
+        },
+        {
+          "title": "🚀 End-to-End Ownership",
+          "description": "Concepted the entire business model based on affiliate marketing, designing the complete user journey to maximize conversions and user retention."
+        },
+        {
+          "title": "🎨 Bespoke UI/UX Design",
+          "description": "Crafted a custom, scalable design system using Tailwind CSS, focusing on a premium look-and-feel, modern aesthetics, and intuitive interactions that rival established global competitors."
+        },
+        {
+          "title": "📈 SEO-First Strategy",
+          "description": "Developed a robust, conceptual SEO strategy to drive organic traffic, utilizing programmatic destination pages, intelligent routing, and localized targeting to build deep topical authority."
+        },
+        {
+          "title": "⚙️ Complex B2B API Integrations",
+          "description": "Engineered direct, real-time data pipelines using the Aviasales API for live flight aggregation and the Stay22 API for dynamic accommodation mapping. Successfully parsed and standardized complex, disparate data feeds into a single, unified user experience."
+        },
+        {
+          "title": "💻 Advanced Frontend Engineering",
+          "description": "Handled complex application state, asynchronous data fetching, and intelligent routing across different user funnels using Next.js App Router and React Context. Developed highly interactive tools such as dynamic price calendars and multi-step search grids."
+        },
+        {
+          "title": "🗄️ Custom CMS & Database Architecture",
+          "description": "Engineered a complete proprietary Content Management System (CMS) from scratch. This custom admin panel provides total internal control over the platform's MySQL database, managing destinations, flights, hotels, and blog content without off-the-shelf constraints."
+        },
+        {
+          "title": "📊 Bespoke Analytics Engine",
+          "description": "Designed and implemented a custom event-tracking system tracking the entire user funnel directly into the database. Built a SaaS-grade Audience Insights dashboard that processes live activity feeds via highly optimized, asynchronous SQL queries for real-time business intelligence."
+        }
+      ]
+    },
+    "gallery": [
+      "/portfolio/images/gallery/ljetovanje-1.webp",
+      "/portfolio/images/gallery/ljetovanje-2.webp",
+      "/portfolio/images/gallery/ljetovanje-3.webp",
+      "/portfolio/images/gallery/ljetovanje-4.webp"
     ]
   },
   {
