@@ -1,22 +1,91 @@
 [
   {
+    "id": 23,
+    "title": "VEEV B2B Platform",
+    "description": "Architected and developed a comprehensive B2B web application, e-commerce catalog, and a custom CRM/CMS platform for an international railway vehicle components manufacturer. The platform was designed for high performance, multilinguality, and seamless lead generation.",
+    "category": "react",
+    "image": "/portfolio/images/gallery/veev/veev-1.webp",
+    "link": "https://www.veevrailway.com/",
+    "technologies": [
+      "Next.js 16",
+      "React 19",
+      "MySQL",
+      "Tailwind CSS"
+    ],
+    "hasModal": true,
+    "gallery": [
+      "/portfolio/images/gallery/veev/veev-1.webp",
+      "/portfolio/images/gallery/veev/veev-2.webp",
+      "/portfolio/images/gallery/veev/veev-3.webp",
+      "/portfolio/images/gallery/veev/veev-4.webp",
+      "/portfolio/images/gallery/veev/veev-5.webp",
+      "/portfolio/images/gallery/veev/veev-6.webp",
+      "/portfolio/images/gallery/veev/veev-7.webp",
+      "/portfolio/images/gallery/veev/veev-8.webp",
+      "/portfolio/images/gallery/veev/veev-9.webp",
+      "/portfolio/images/gallery/veev/veev-10.webp",
+      "/portfolio/images/gallery/veev/veev-11.webp"
+    ],
+    "details": {
+      "role": "Lead Full-Stack Developer",
+      "features": [
+        {
+          "title": "🎨 End-to-End UX/UI Design",
+          "description": "Independently led the product design phase, translating complex B2B requirements into functional wireframes. Solely responsible for designing and implementing the final 'Industrial Midnight' visual identity and user interface from scratch, ensuring a premium user experience."
+        },
+        {
+          "title": "📊 Custom CRM & CMS Dashboard",
+          "description": "Built a secure, bespoke Admin Panel from scratch to manage the entire sales pipeline, RFQ submissions, and product catalog. Automated Lead Management and engineered a custom session-tracking module."
+        },
+        {
+          "title": "🎯 Advanced Tracking, Analytics & GDPR Compliance",
+          "description": "Integrated GTM and GA4 with a custom analytics layer for accurate conversion and lead tracking. Ensured compliance using Dynamic Consent Mode v2 and engineered a self-service GDPR portal."
+        },
+        {
+          "title": "🚀 High-Performance B2B RFQ System",
+          "description": "Developed a multi-step RFQ form utilizing React Hook Form and Zod for robust validation. Designed a dedicated customer-facing tracking system, allowing clients to independently monitor their RFQ submissions."
+        },
+        {
+          "title": "📈 Comprehensive SEO & Digital Strategy",
+          "description": "Spearheaded the digital marketing strategy by conducting deep competitor research and B2B keyword analysis. Implemented dynamic Next.js Metadata, JSON-LD structured data, and semantic HTML."
+        },
+        {
+          "title": "⚙️ Modern Architecture & Performance",
+          "description": "Leveraged Server-Side Rendering (SSR) and Incremental Static Regeneration (ISR) combined with Cloudflare CDN caching to achieve Lighthouse scores of 90+. Designed a scalable relational MySQL schema and built infrastructure for a multi-language experience."
+        }
+      ]
+    }
+  },
+  {
     "id": 1,
     "title": "Dating App",
     "description": "Led front-end team in building a dating platform from scratch with vanilla JavaScript and custom modular architecture (no frameworks). Delivered public landing, member portal with profiles and galleries, real-time chat, matching and search, admin dashboard, and payment integration.",
     "category": "other",
     "image": "/portfolio/images/gallery/openrelationship.jpg",
     "link": "https://openrelationship.com",
-    "technologies": ["JavaScript", "Single Page App", "Admin Panel", "Real-time Chat", "Payment Integration"]
+    "technologies": [
+      "JavaScript",
+      "Single Page App",
+      "Admin Panel",
+      "Real-time Chat",
+      "Payment Integration"
+    ]
   },
   {
     "id": 22,
     "title": "Holiday, Travel & Flights Affiliate Comparison MVP",
     "description": "Currently building an affiliate comparison MVP in the Holiday, Travel and Flight sector, using structured intent modeling, event tracking architecture, and session-based identity designed for seamless upgrade to authenticated user accounts without refactoring core flows.",
     "category": "in-progress",
-    "image": "https://dummyimage.com/800x450/0f172a/ffffff&text=Affiliate+Comparison+MVP",
-    "link": "#",
-    "technologies": ["React", "Next.js", "Node.js", "Event Tracking", "Session Identity"],
-    "disabled": true
+    "image": "portfolio/images/gallery/ljetovanje.webp",
+    "link": "https://ljetovanje.com",
+    "technologies": [
+      "React",
+      "Next.js",
+      "Node.js",
+      "Event Tracking",
+      "Session Identity",
+      "SEO"
+    ]
   },
   {
     "id": 2,
@@ -25,7 +94,12 @@
     "category": "wordpress",
     "image": "/portfolio/images/gallery/restaurant.jpg",
     "link": "/portfolio/restaurant-theme/home.html",
-    "technologies": ["WordPress", "PHP", "JavaScript", "CSS"]
+    "technologies": [
+      "WordPress",
+      "PHP",
+      "JavaScript",
+      "CSS"
+    ]
   },
   {
     "id": 21,
@@ -34,7 +108,12 @@
     "category": "react",
     "image": "https://dummyimage.com/800x450/0284c7/ffffff&text=Task+Manager",
     "link": "/tasks",
-    "technologies": ["React", "TypeScript", "Context API", "Local Storage"]
+    "technologies": [
+      "React",
+      "TypeScript",
+      "Context API",
+      "Local Storage"
+    ]
   },
   {
     "id": 3,
@@ -43,7 +122,11 @@
     "category": "other",
     "image": "/portfolio/images/gallery/knightservices.jpg",
     "link": "/portfolio/knightservices",
-    "technologies": ["WordPress", "PHP", "JavaScript"],
+    "technologies": [
+      "WordPress",
+      "PHP",
+      "JavaScript"
+    ],
     "hidden": true
   },
   {
@@ -53,7 +136,11 @@
     "category": "wordpress",
     "image": "/portfolio/images/gallery/wedding-day.jpg",
     "link": "/portfolio/wedding-day/home.html",
-    "technologies": ["WordPress", "JavaScript", "CSS"]
+    "technologies": [
+      "WordPress",
+      "JavaScript",
+      "CSS"
+    ]
   },
   {
     "id": 5,
@@ -62,7 +149,11 @@
     "category": "other",
     "image": "/portfolio/images/gallery/at-medics.jpg",
     "link": "/portfolio/at-medics/home.html",
-    "technologies": ["HTML5", "CSS3", "JavaScript"]
+    "technologies": [
+      "HTML5",
+      "CSS3",
+      "JavaScript"
+    ]
   },
   {
     "id": 6,
@@ -71,7 +162,11 @@
     "category": "other",
     "image": "/portfolio/images/gallery/school-space.jpg",
     "link": "/portfolio/school-space/home.html",
-    "technologies": ["HTML5", "CSS3", "JavaScript"]
+    "technologies": [
+      "HTML5",
+      "CSS3",
+      "JavaScript"
+    ]
   },
   {
     "id": 7,
@@ -80,7 +175,11 @@
     "category": "rtl",
     "image": "/portfolio/images/gallery/alriyada.jpg",
     "link": "/portfolio/alriyada/home.html",
-    "technologies": ["HTML5", "CSS3 RTL", "JavaScript"]
+    "technologies": [
+      "HTML5",
+      "CSS3 RTL",
+      "JavaScript"
+    ]
   },
   {
     "id": 8,
@@ -89,7 +188,10 @@
     "category": "wordpress",
     "image": "/portfolio/images/gallery/wedding-mania.jpg",
     "link": "/portfolio/wedding-mania/home.html",
-    "technologies": ["WordPress", "JavaScript"]
+    "technologies": [
+      "WordPress",
+      "JavaScript"
+    ]
   },
   {
     "id": 9,
@@ -98,7 +200,10 @@
     "category": "other",
     "image": "/portfolio/images/gallery/joekroll.jpg",
     "link": "/portfolio/joekrollbuilder/",
-    "technologies": ["WordPress", "PHP"],
+    "technologies": [
+      "WordPress",
+      "PHP"
+    ],
     "hidden": true
   },
   {
@@ -108,7 +213,11 @@
     "category": "other",
     "image": "/portfolio/images/gallery/smaragd.jpg",
     "link": "/portfolio/smaragd/index.html",
-    "technologies": ["HTML5", "CSS3", "JavaScript"]
+    "technologies": [
+      "HTML5",
+      "CSS3",
+      "JavaScript"
+    ]
   },
   {
     "id": 11,
@@ -117,7 +226,10 @@
     "category": "other",
     "image": "/portfolio/images/gallery/dmvf.jpg",
     "link": "http://dmvf.ie/",
-    "technologies": ["WordPress", "Custom Theme"]
+    "technologies": [
+      "WordPress",
+      "Custom Theme"
+    ]
   },
   {
     "id": 12,
@@ -126,7 +238,11 @@
     "category": "rtl",
     "image": "/portfolio/images/gallery/cbl.jpg",
     "link": "/portfolio/cbl/build/home.html",
-    "technologies": ["HTML5", "CSS3 RTL", "JavaScript"]
+    "technologies": [
+      "HTML5",
+      "CSS3 RTL",
+      "JavaScript"
+    ]
   },
   {
     "id": 13,
@@ -135,7 +251,10 @@
     "category": "wordpress",
     "image": "/portfolio/images/gallery/wedding-star.jpg",
     "link": "/portfolio/wedding-star/home.html",
-    "technologies": ["WordPress", "JavaScript"]
+    "technologies": [
+      "WordPress",
+      "JavaScript"
+    ]
   },
   {
     "id": 14,
@@ -144,7 +263,11 @@
     "category": "animation",
     "image": "/portfolio/images/gallery/thehouse.jpg",
     "link": "/portfolio/the-house/index.html",
-    "technologies": ["HTML5", "CSS3 Animations", "JavaScript"]
+    "technologies": [
+      "HTML5",
+      "CSS3 Animations",
+      "JavaScript"
+    ]
   },
   {
     "id": 15,
@@ -153,7 +276,10 @@
     "category": "other",
     "image": "/portfolio/images/gallery/valentino.jpg",
     "link": "https://www.valentinotorte.com/",
-    "technologies": ["WordPress", "WooCommerce"]
+    "technologies": [
+      "WordPress",
+      "WooCommerce"
+    ]
   },
   {
     "id": 16,
@@ -162,7 +288,11 @@
     "category": "wordpress",
     "image": "/portfolio/images/gallery/ibsl.jpg",
     "link": "/portfolio/ibsl/home.html",
-    "technologies": ["WordPress", "Custom Theme", "PHP"]
+    "technologies": [
+      "WordPress",
+      "Custom Theme",
+      "PHP"
+    ]
   },
   {
     "id": 17,
@@ -171,7 +301,10 @@
     "category": "other",
     "image": "/portfolio/images/gallery/cloud-nexus.jpg",
     "link": "http://www.cloudnexusit.com/",
-    "technologies": ["WordPress", "Security Features"],
+    "technologies": [
+      "WordPress",
+      "Security Features"
+    ],
     "hidden": true
   },
   {
@@ -181,7 +314,10 @@
     "category": "other",
     "image": "/portfolio/images/gallery/kentucky.jpg",
     "link": "http://kentuckytotheworld.org/",
-    "technologies": ["WordPress", "Donation System"]
+    "technologies": [
+      "WordPress",
+      "Donation System"
+    ]
   },
   {
     "id": 19,
@@ -190,7 +326,11 @@
     "category": "other",
     "image": "/portfolio/images/gallery/khulisa.jpg",
     "link": "/portfolio/khulisa/home.html",
-    "technologies": ["HTML5", "CSS3", "JavaScript"]
+    "technologies": [
+      "HTML5",
+      "CSS3",
+      "JavaScript"
+    ]
   },
   {
     "id": 20,
@@ -199,6 +339,10 @@
     "category": "other",
     "image": "/portfolio/images/gallery/easyoffices.jpg",
     "link": "/portfolio/easyoffices/home.html",
-    "technologies": ["HTML5", "CSS3", "JavaScript"]
+    "technologies": [
+      "HTML5",
+      "CSS3",
+      "JavaScript"
+    ]
   }
 ]

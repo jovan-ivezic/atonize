@@ -1,0 +1,2416 @@
+<!DOCTYPE html>
+<html lang="sr-Latn" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VEEV Pre-Discovery Upitnik</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+  <style>
+    /* ── Dark enterprise palette ── */
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #e2e8f0;
+      --accent: #38bdf8;
+      --border: #334155;
+      --muted: #94a3b8;
+      --danger: #f87171;
+      --success: #4ade80;
+    }
+
+    /* ── Reset Pico to our palette ── */
+    [data-theme="dark"] {
+      --pico-background-color: var(--bg);
+      --pico-color: var(--text);
+      --pico-primary: var(--accent);
+      --pico-primary-hover: #7dd3fc;
+      --pico-form-element-background-color: #0f172a;
+      --pico-form-element-border-color: var(--border);
+      --pico-form-element-color: var(--text);
+      --pico-form-element-focus-color: var(--accent);
+      --pico-card-background-color: var(--card);
+      --pico-card-border-color: var(--border);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Container ── */
+    .app-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+    }
+
+    /* ── App header ── */
+    .app-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .app-header h1 {
+      font-size: clamp(1.5rem, 4vw, 2.2rem);
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 0.3rem;
+    }
+
+    .app-header .app-subtitle {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .app-header .app-meta {
+      display: inline-block;
+      margin-top: 0.75rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 0.3rem 1rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    /* ── Progress ── */
+    .progress-wrap {
+      margin-bottom: 2rem;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+
+    .progress-track {
+      height: 5px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 99px;
+      transition: width 0.35s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    /* ── Section card ── */
+    .section-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin: 0 0 0.35rem;
+    }
+
+    .section-desc {
+      color: var(--muted);
+      font-size: 0.875rem;
+      margin: 0 0 2rem;
+      line-height: 1.65;
+    }
+
+    /* ── Question block ── */
+    .q-block {
+      margin-bottom: 1.75rem;
+      padding-bottom: 1.75rem;
+      border-bottom: 1px solid var(--border);
+      transition: opacity 0.18s ease;
+    }
+
+    .q-block:last-child,
+    .q-block.is-last-visible {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .q-label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.95rem;
+      line-height: 1.55;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+
+    .q-required {
+      color: var(--accent);
+      margin-left: 3px;
+    }
+
+    .q-hint {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+      line-height: 1.55;
+    }
+
+    /* ── Tooltip badge ── */
+    .tip-badge {
+      display: inline-block;
+      position: relative;
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--accent);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 1px 7px;
+      border-radius: 4px;
+      margin-left: 7px;
+      cursor: help;
+      vertical-align: middle;
+    }
+
+    .tip-badge:hover .tip-popup {
+      display: block;
+    }
+
+    .tip-popup {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 0;
+      min-width: 220px;
+      max-width: 280px;
+      background: #0c1628;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 0.75rem;
+      font-weight: 400;
+      line-height: 1.5;
+      padding: 8px 12px;
+      border-radius: 8px;
+      z-index: 200;
+      white-space: normal;
+      pointer-events: none;
+    }
+
+    /* ── Inputs ── */
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    textarea,
+    select {
+      background: #0a1120 !important;
+      border: 1px solid var(--border) !important;
+      color: var(--text) !important;
+      border-radius: 8px !important;
+      padding: 0.6rem 0.85rem !important;
+      width: 100%;
+      transition: border-color 0.18s, box-shadow 0.18s;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: var(--accent) !important;
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12) !important;
+      outline: none !important;
+    }
+
+    input[type="checkbox"],
+    input[type="radio"] {
+      accent-color: var(--accent);
+      width: 1.05rem;
+      height: 1.05rem;
+      flex-shrink: 0;
+      margin: 0;
+    }
+
+    select option {
+      background: var(--card);
+      color: var(--text);
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    /* ── Radio / checkbox groups ── */
+    .radio-group,
+    .check-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .radio-group label,
+    .check-group label {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      cursor: pointer;
+      padding: 0.45rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      font-weight: 400;
+      font-size: 0.9rem;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .radio-group label:hover,
+    .check-group label:hover {
+      background: rgba(56, 189, 248, 0.06);
+      border-color: var(--border);
+    }
+
+    .radio-group label:has(input:checked),
+    .check-group label:has(input:checked) {
+      background: rgba(56, 189, 248, 0.1);
+      border-color: rgba(56, 189, 248, 0.35);
+    }
+
+    /* ── Validation error ── */
+    .q-block.has-error .q-label {
+      color: var(--danger);
+    }
+
+    .q-block.has-error input[type="text"],
+    .q-block.has-error input[type="number"],
+    .q-block.has-error input[type="date"],
+    .q-block.has-error textarea,
+    .q-block.has-error select {
+      border-color: var(--danger) !important;
+    }
+
+    .q-error-msg {
+      display: none;
+      color: var(--danger);
+      font-size: 0.78rem;
+      margin-top: 0.35rem;
+    }
+
+    .q-block.has-error .q-error-msg {
+      display: block;
+    }
+
+    /* ── Nav buttons ── */
+    .nav-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1.5rem;
+      gap: 1rem;
+    }
+
+    .btn-prev {
+      background: transparent !important;
+      border: 1px solid var(--border) !important;
+      color: var(--muted) !important;
+      padding: 0.6rem 1.4rem !important;
+      border-radius: 8px !important;
+      cursor: pointer;
+      font-weight: 600;
+      transition: border-color 0.18s, color 0.18s;
+    }
+
+    .btn-prev:hover {
+      border-color: var(--accent) !important;
+      color: var(--accent) !important;
+    }
+
+    .btn-next {
+      background: var(--accent) !important;
+      border: 1px solid var(--accent) !important;
+      color: #0f172a !important;
+      padding: 0.6rem 1.8rem !important;
+      border-radius: 8px !important;
+      cursor: pointer;
+      font-weight: 700;
+      transition: background 0.18s;
+    }
+
+    .btn-next:hover {
+      background: #7dd3fc !important;
+      border-color: #7dd3fc !important;
+    }
+
+    /* ── Autosave notice ── */
+    .autosave-bar {
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+    }
+
+    .autosave-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      display: inline-block;
+      transition: transform 0.2s ease;
+    }
+
+    @keyframes pulse-success {
+      0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.4);
+      }
+
+      70% {
+        transform: scale(1.4);
+        box-shadow: 0 0 0 6px rgba(74, 222, 128, 0);
+      }
+
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(74, 222, 128, 0);
+      }
+    }
+
+    .autosave-dot.pulsing {
+      animation: pulse-success 0.8s ease-out;
+    }
+
+    /* ── Modal overlay ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 10, 24, 0.85);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .modal-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 480px;
+      width: 100%;
+    }
+
+    .modal-box h3 {
+      color: var(--text);
+      font-size: 1.1rem;
+      margin: 0 0 0.6rem;
+    }
+
+    .modal-box p {
+      color: var(--muted);
+      font-size: 0.875rem;
+      margin: 0 0 1.5rem;
+      line-height: 1.6;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    /* ── Utility ── */
+    .hidden {
+      display: none !important;
+    }
+
+    /* ── Review screen ── */
+    .review-section {
+      margin-bottom: 2rem;
+    }
+
+    .review-section-title {
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      padding: .5rem 0;
+      margin-bottom: .5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .review-row {
+      display: grid;
+      grid-template-columns: 2fr 3fr;
+      gap: .75rem;
+      padding: .75rem 0;
+      border-bottom: 1px solid rgba(51, 65, 85, .5);
+      font-size: .875rem;
+    }
+
+    .review-row:last-child {
+      border-bottom: none;
+    }
+
+    .review-q {
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .review-a {
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    .review-empty .review-a {
+      color: var(--muted);
+      opacity: 0.45;
+      font-style: italic;
+    }
+
+    .ans-empty {
+      color: var(--muted);
+      opacity: 0.45;
+      font-style: italic;
+    }
+
+    .ans-text {
+      white-space: pre-wrap;
+    }
+
+    .ans-list {
+      margin: 0;
+      padding: 0 0 0 1.1rem;
+      list-style: disc;
+    }
+
+    .ans-list li {
+      margin-bottom: .2rem;
+    }
+
+    /* ── Action toolbar ── */
+    .action-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .6rem;
+      margin-top: 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: .8rem;
+      font-weight: 600;
+      padding: .5rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color .15s, color .15s, background .15s;
+      white-space: nowrap;
+    }
+
+    .action-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(56, 189, 248, .06);
+    }
+
+    .action-icon {
+      font-style: normal;
+    }
+
+    /* ── Advisory blocks ── */
+    .advisory-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      margin-top: 1.75rem;
+    }
+
+    .advisory-card {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.05) 0%, rgba(30, 41, 59, 0.8) 100%);
+      border: 1px solid rgba(56, 189, 248, 0.22);
+      border-left: 3px solid var(--accent);
+      border-radius: 10px;
+      padding: 1.1rem 1.25rem;
+    }
+
+    .advisory-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.55rem;
+    }
+
+    .advisory-badge {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 4px;
+      padding: 2px 7px;
+      white-space: nowrap;
+    }
+
+    .advisory-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    .advisory-body {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.65;
+      margin-bottom: 0.5rem;
+    }
+
+    .advisory-result {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent);
+      opacity: 0.9;
+    }
+
+    /* ── Print styles ── */
+    @media print {
+      body {
+        background: #fff !important;
+        color: #000 !important;
+      }
+
+      .app-header,
+      #progress-wrap,
+      #nav-row,
+      #autosave-bar,
+      .action-toolbar,
+      #btn-reset,
+      .modal-overlay {
+        display: none !important;
+      }
+
+      .app-container {
+        max-width: 100%;
+        padding: 0;
+      }
+
+      .section-card {
+        background: #fff !important;
+        border: none !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+      }
+
+      .section-title,
+      .review-section-title {
+        color: #0284c7 !important;
+      }
+
+      .review-row {
+        border-bottom: 1px solid #e5e7eb !important;
+      }
+
+      .review-q {
+        color: #6b7280 !important;
+      }
+
+      .review-a {
+        color: #111 !important;
+      }
+
+      .ans-empty {
+        color: #9ca3af !important;
+      }
+
+      .advisory-card {
+        background: #f0f9ff !important;
+        border: 1px solid #bae6fd !important;
+        border-left: 3px solid #0284c7 !important;
+      }
+
+      .advisory-badge {
+        color: #0284c7 !important;
+        background: #e0f2fe !important;
+      }
+
+      .advisory-title {
+        color: #0f172a !important;
+      }
+
+      .advisory-body {
+        color: #475569 !important;
+      }
+
+      .advisory-result {
+        color: #0284c7 !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ── Draft restore modal ── -->
+  <div id="modal-draft" class="modal-overlay hidden">
+    <div class="modal-box">
+      <h3 id="modal-title"></h3>
+      <p id="modal-text"></p>
+      <div class="modal-actions">
+        <button id="btn-modal-continue" class="btn-next"></button>
+        <button id="btn-modal-restart" class="btn-prev"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Reset confirm modal ── -->
+  <div id="modal-reset" class="modal-overlay hidden">
+    <div class="modal-box">
+      <h3 id="reset-title"></h3>
+      <p id="reset-text"></p>
+      <div class="modal-actions">
+        <button id="btn-reset-confirm" class="btn-next"
+          style="background:var(--danger)!important;border-color:var(--danger)!important;"></button>
+        <button id="btn-reset-cancel" class="btn-prev"></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-container">
+
+    <!-- ── Header ── -->
+    <header class="app-header">
+      <h1 id="app-title"></h1>
+      <p class="app-subtitle" id="app-subtitle"></p>
+      <span class="app-meta" id="app-meta"></span>
+    </header>
+
+    <!-- ── Progress bar ── -->
+    <div id="progress-wrap" class="progress-wrap hidden">
+      <div class="progress-meta">
+        <span id="progress-section-name"></span>
+        <span id="progress-step-label"></span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- ── Main questionnaire area ── -->
+    <main id="main-area"></main>
+
+    <!-- ── Nav buttons ── -->
+    <div id="nav-row" class="nav-row hidden">
+      <button id="btn-prev" class="btn-prev"></button>
+      <button id="btn-next" class="btn-next"></button>
+    </div>
+
+    <!-- ── Autosave notice ── -->
+    <div id="autosave-bar" class="autosave-bar hidden">
+      <span class="autosave-dot"></span>
+      <span id="autosave-text"></span>
+    </div>
+
+  </div><!-- /app-container -->
+
+  <script>
+    // ============================================================
+    //  OWNER EMAIL — promeni ovo pre slanja klijentu
+    // ============================================================
+    const OWNER_EMAIL = "jovanivezic@gmail.com";
+
+    // ============================================================
+    //  QUESTIONNAIRE DATA
+    // ============================================================
+    const questionnaireData = {
+      meta: {
+        appId: "veev-pre-discovery-questionnaire",
+        version: "2026-03",
+        title: "VEEV Pre-Discovery Upitnik",
+        subtitle: "Novi veb-sajt · Digitalna strategija · Tehnička infrastruktura",
+        language: "sr-Latn",
+        estimatedTime: "20–30 minuta",
+        storageKey: "veev-questionnaire-draft",
+        ownerEmail: OWNER_EMAIL
+      },
+
+      ui: {
+        startButton: "Započni upitnik",
+        nextButton: "Dalje →",
+        prevButton: "← Nazad",
+        reviewButton: "Pregled odgovora →",
+        resetButton: "Resetuj upitnik",
+        exportHtmlButton: "Preuzmi odgovore (HTML)",
+        exportJsonButton: "Preuzmi draft (JSON)",
+        importJsonButton: "Učitaj draft (JSON)",
+        printButton: "Štampaj / Sačuvaj kao PDF",
+        emailButton: "Pošalji odgovore emailom",
+        autosaveText: "Odgovori se automatski čuvaju u ovom browseru.",
+        reviewTitle: "Pregled odgovora",
+        resumeDraftTitle: "Pronađen sačuvan draft",
+        resumeDraftText: "U ovom browseru postoji sačuvan draft upitnika. Možete nastaviti gde ste stali ili krenuti ispočetka.",
+        continueButton: "Nastavi",
+        startOverButton: "Počni ispočetka",
+        confirmResetTitle: "Da li ste sigurni?",
+        confirmResetText: "Ova akcija briše sve sačuvane odgovore iz browser-a za ovaj upitnik.",
+        confirmButton: "Potvrdi brisanje",
+        cancelButton: "Otkaži",
+        requiredMessage: "Ovo polje je obavezno.",
+        pdfHintText: "Preporuka: Sačuvajte odgovore kao PDF i pošaljete ih u prilogu emaila za maksimalnu sigurnost podataka."
+      },
+
+      glossary: {
+        mvp: { label: "MVP", short: "Minimalna verzija sajta koja može brzo da ide live." },
+        rfq: { label: "RFQ", short: "Request for Quotation – zahtev za ponudu od kupca." },
+        facetedSearch: { label: "Faceted search", short: "Filtriranje proizvoda po tehničkim parametrima." },
+        crm: { label: "CRM", short: "Sistem za upravljanje leadovima, upitima i prodajom." },
+        cms: { label: "CMS", short: "Sistem za upravljanje sadržajem sajta." }
+      },
+
+      sections: [
+        {
+          id: "intro-goals",
+          title: "Scope i prioriteti",
+          description: "Ova sekcija pomaže da se definiše šta je zaista neophodno za lansiranje, a šta može da sačeka narednu fazu.",
+          questions: [
+            {
+              id: "primary_goal_6_months", type: "textarea",
+              label: "Koji je vaš primarni cilj u narednih 6 meseci?",
+              exportLabel: "Primarni cilj u narednih 6 meseci",
+              placeholder: "Primer: želimo da lansiramo digitalni katalog komponenti za šinska vozila sa RFQ formom u roku od 8 nedelja.",
+              helpText: "Opišite šta je za vas najvažniji poslovni ishod novog sajta u narednih 6 meseci.",
+              required: true, rows: 5
+            },
+            {
+              id: "current_pain_points", type: "textarea",
+              label: "Šta je najveća prepreka na trenutnom sajtu (ako postoji) koja vas sprečava da ostvarite ove ciljeve?",
+              exportLabel: "Najveća prepreka na trenutnom sajtu",
+              placeholder: "Primer: Sajt se ne učitava dobro na mobilnim uređajima, katalog je zastareo, workflow za upite je spor...",
+              required: false, rows: 4
+            },
+            {
+              id: "critical_launch_elements", type: "textarea",
+              label: "Koja su 3 apsolutno kritična elementa koja sajt mora imati na dan lansiranja?",
+              exportLabel: "Tri kritična elementa za lansiranje",
+              placeholder: "Primer: RFQ forma, katalog proizvoda, engleski jezik.",
+              helpText: "Navedite tri elementa bez kojih lansiranje sajta ne bi imalo smisla.",
+              required: true, rows: 5
+            },
+            {
+              id: "phase_2_features", type: "checkbox_group",
+              label: "Koje funkcionalnosti mogu da sačekaju fazu 2?",
+              exportLabel: "Funkcionalnosti za fazu 2",
+              helpText: "Izaberite funkcionalnosti koje nisu neophodne za prvi launch.",
+              required: false,
+              options: [
+                { value: "virtual-tour", label: "360° virtual tour fabrike" },
+                { value: "webinars", label: "Webinari" },
+                { value: "extra-languages", label: "Višejezičnost osim engleskog" },
+                { value: "product-comparison", label: "Side-by-side poređenje proizvoda" },
+                { value: "blog", label: "Blog sekcija" },
+                { value: "case-studies", label: "Case studies" },
+                { value: "video-testimonials", label: "Video testimonijali" },
+                { value: "advanced-search", label: "Napredna pretraga" },
+                { value: "other", label: "Drugo" }
+              ]
+            },
+            {
+              id: "phase_2_features_other", type: "text",
+              label: "Ako ste izabrali 'Drugo', navedite koje funkcionalnosti",
+              exportLabel: "Dodatne funkcionalnosti za fazu 2",
+              placeholder: "Unesite dodatne funkcionalnosti...",
+              required: false,
+              conditional: { dependsOn: "phase_2_features", includes: "other" }
+            },
+            {
+              id: "launch_date", type: "date",
+              label: "Do kog datuma želite da novi sajt bude live?",
+              exportLabel: "Željeni datum lansiranja",
+              helpText: "Ako nemate fiksan datum, unesite približan ciljani rok.",
+              required: false
+            },
+            {
+              id: "external_deadline", type: "radio",
+              label: "Da li postoji spoljašnji rok za lansiranje?",
+              exportLabel: "Postoji spoljašnji rok",
+              helpText: "Na primer: sajam, investitor, partnerski sastanak, interna poslovna inicijativa.",
+              required: true,
+              options: [
+                { value: "yes", label: "Da" },
+                { value: "no", label: "Ne" },
+                { value: "not-sure", label: "Nismo sigurni" }
+              ]
+            },
+            {
+              id: "external_deadline_details", type: "textarea",
+              label: "Opišite spoljašnji rok",
+              exportLabel: "Detalji spoljašnjeg roka",
+              placeholder: "Primer: sajam u septembru, sastanak sa partnerom, prezentacija investitoru...",
+              required: false, rows: 4,
+              conditional: { dependsOn: "external_deadline", equals: "yes" }
+            },
+            {
+              id: "success_metrics", type: "checkbox_group",
+              label: "Kako ćete meriti uspeh novog sajta u prvih 6–12 meseci?",
+              exportLabel: "Merenje uspeha sajta",
+              helpText: "Izaberite šta bi za vas predstavljalo uspešan rezultat novog sajta.",
+              required: false,
+              options: [
+                { value: "more-qualified-leads", label: "Više kvalifikovanih upita" },
+                { value: "better-credibility", label: "Bolji kredibilitet i profesionalniji nastup" },
+                { value: "new-markets", label: "Izlazak na nova tržišta" },
+                { value: "better-product-presentation", label: "Bolja prezentacija proizvoda i rešenja" },
+                { value: "less-manual-sales-work", label: "Manje ručne komunikacije u prodajnom procesu" },
+                { value: "other", label: "Drugo" }
+              ]
+            },
+            {
+              id: "success_metrics_other", type: "text",
+              label: "Ako ste izabrali 'Drugo', navedite šta još smatrate uspehom",
+              exportLabel: "Dodatni kriterijumi uspeha",
+              placeholder: "Unesite dodatni kriterijum uspeha...",
+              required: false,
+              conditional: { dependsOn: "success_metrics", includes: "other" }
+            }
+          ],
+          advisoryBlocks: [
+            {
+              id: "advisory-analytics",
+              title: "Analitika koja meri realne poslovne rezultate",
+              body: "Od početka se može implementirati analitika koja ne meri samo posete, već i konkretne poslovne signale: broj RFQ upita, interesovanje po kategorijama proizvoda, tržišta iz kojih dolaze posetioci i sadržaj koji generiše najviše upita. Ovo omogućava da sajt ne bude samo prezentacija, već alat za donošenje prodajnih i marketinških odluka.",
+              result: "Rezultat: marketing i prodaja dobijaju konkretne podatke za razvoj tržišta i optimizaciju sajta.",
+              variant: "info"
+            }
+          ]
+        },
+
+        {
+          id: "budget",
+          title: "Budžet",
+          description: "Ova sekcija pomaže da se projekat realno uskladi sa budžetom, obimom i rokovima.",
+          questions: [
+            {
+              id: "project_budget_range", type: "radio",
+              label: "Koji je okvirni budžet za razvoj sajta?",
+              exportLabel: "Okvirni budžet za razvoj sajta",
+              required: true,
+              options: [
+                { value: "3k-5k", label: "€3k–5k (MVP)" },
+                { value: "5k-15k", label: "€5k–15k (standard B2B sajt)" },
+                { value: "15k-30k", label: "€15k–30k (kompleksan portal)" },
+                { value: "30k-plus", label: "€30k+ (enterprise rešenje)" },
+                { value: "undisclosed", label: "Ne bismo trenutno navodili budžet" }
+              ]
+            },
+            {
+              id: "monthly_budget", type: "select",
+              label: "Koji je mesečni budžet za održavanje sajta?",
+              exportLabel: "Mesečni budžet za održavanje",
+              required: false,
+              options: [
+                { value: "", label: "Izaberite opciju" },
+                { value: "lt-200", label: "< €200" },
+                { value: "200-500", label: "€200–500" },
+                { value: "500-1000", label: "€500–1000" },
+                { value: "1000-plus", label: "€1000+" }
+              ]
+            },
+            {
+              id: "separate_marketing_budget", type: "radio",
+              label: "Da li postoji poseban budžet za digitalni marketing?",
+              exportLabel: "Poseban budžet za digitalni marketing",
+              required: true,
+              options: [
+                { value: "yes", label: "Da" },
+                { value: "no", label: "Ne" },
+                { value: "not-sure", label: "Nismo sigurni" }
+              ]
+            },
+            {
+              id: "internal_project_owner", type: "radio",
+              label: "Da li postoji interna osoba koja će voditi projekat sa vaše strane?",
+              exportLabel: "Postoji interni vlasnik projekta",
+              required: true,
+              options: [
+                { value: "yes", label: "Da" },
+                { value: "no", label: "Ne" },
+                { value: "to-be-defined", label: "Biće definisano naknadno" }
+              ]
+            },
+            {
+              id: "internal_project_owner_details", type: "text",
+              label: "Ako da, navedite ime ili funkciju te osobe",
+              exportLabel: "Interni vlasnik projekta – detalji",
+              placeholder: "Primer: Marketing manager, direktor prodaje, project lead...",
+              required: false,
+              conditional: { dependsOn: "internal_project_owner", equals: "yes" }
+            }
+          ]
+        },
+
+        {
+          id: "languages",
+          title: "Višejezičnost",
+          description: "Višejezičnost utiče na scope, rokove i dugoročno održavanje sajta.",
+          questions: [
+            {
+              id: "site_languages", type: "checkbox_group",
+              label: "Na kojim jezicima želite sajt?",
+              exportLabel: "Željeni jezici sajta",
+              required: true,
+              options: [
+                { value: "sr", label: "Srpski" },
+                { value: "en", label: "Engleski" },
+                { value: "de", label: "Nemački" },
+                { value: "pl", label: "Poljski" },
+                { value: "ro", label: "Rumunski" },
+                { value: "ru", label: "Ruski" }
+              ]
+            },
+            {
+              id: "all_languages_at_launch", type: "radio",
+              label: "Da li svi jezici moraju biti spremni na dan lansiranja?",
+              exportLabel: "Svi jezici spremni za lansiranje",
+              required: true,
+              options: [
+                { value: "all-at-launch", label: "Da, svi jezici odmah" },
+                { value: "english-first", label: "Ne, prvo engleski" },
+                { value: "english-plus-priority", label: "Ne, prvo engleski i prioritetna tržišta" },
+                { value: "not-decided", label: "Još nismo odlučili" }
+              ]
+            },
+            {
+              id: "translation_owner", type: "radio",
+              label: "Ko prevodi sadržaj?",
+              exportLabel: "Ko prevodi sadržaj",
+              required: true,
+              options: [
+                { value: "internal-team", label: "Interni tim" },
+                { value: "external-translators", label: "Eksterni prevodioci" },
+                { value: "ai-plus-review", label: "AI prevod + kontrola" },
+                { value: "not-defined", label: "Još nije definisano" }
+              ]
+            },
+            {
+              id: "translation_maintenance_owner", type: "textarea",
+              label: "Ko će održavati prevode kada se sadržaj menja?",
+              exportLabel: "Ko održava prevode",
+              placeholder: "Opišite ko će biti odgovoran za ažuriranje sadržaja na različitim jezicima.",
+              required: false, rows: 4
+            },
+            {
+              id: "priority_markets_context", type: "textarea",
+              label: "Za koje konkretne tržišne prilike su vam prioritet nemački, poljski, rumunski i ruski jezik?",
+              exportLabel: "Kontekst za prioritetne jezike i tržišta",
+              placeholder: "Primer: postojeći partneri, aktivni pregovori, plan širenja, sajmovi, distributeri...",
+              required: false, rows: 5
+            }
+          ],
+          advisoryBlocks: [
+            {
+              id: "advisory-ai-translation",
+              title: "AI asistirani tehnički prevodi",
+              body: "Za tehničku dokumentaciju i opis produkata može se koristiti AI-assisted translation workflow uz ljudsku kontrolu završnog kvaliteta. To značajno smanjuje vreme i trošak prevođenja, posebno kada postoji veliki broj sličnih tehničkih opisa i standardizovanih termina.",
+              result: "Rezultat: višejezični sajt može biti spreman znatno ranije, uz niži trošak i bolju konzistentnost terminologije.",
+              variant: "info"
+            }
+          ]
+        },
+
+        {
+          id: "rfq",
+          title: "RFQ sistem i prodajni proces",
+          description: "RFQ je centralni deo B2B sajta i treba da bude usklađen sa vašim prodajnim tokom.",
+          questions: [
+            {
+              id: "current_lead_channels", type: "checkbox_group",
+              label: "Kako trenutno primate upite od kupaca?",
+              exportLabel: "Trenutni kanali za upite",
+              required: true,
+              options: [
+                { value: "email", label: "Email" },
+                { value: "phone", label: "Telefon" },
+                { value: "trade-fairs", label: "Sajmovi" },
+                { value: "linkedin", label: "LinkedIn" },
+                { value: "contact-form", label: "Kontakt forma" },
+                { value: "other", label: "Drugo" }
+              ]
+            },
+            {
+              id: "target_user_personas", type: "checkbox_group",
+              label: "Ko su primarni korisnici koji će koristiti sajt i popunjavati RFQ formu?",
+              exportLabel: "Primarne korisničke persone",
+              helpText: "Označite tipove korisnika koji su vam najvažniji za prodajni proces.",
+              required: false,
+              options: [
+                { value: "engineers", label: "Inženjeri / Tehničko osoblje" },
+                { value: "procurement", label: "Nabavka (Procurement)" },
+                { value: "ceo-owners", label: "Vlasnici / Direktori" },
+                { value: "distributors", label: "Distributeri / Partneri" },
+                { value: "end-users", label: "Krajnji korisnici (B2C)" },
+                { value: "other", label: "Drugo" }
+              ]
+            },
+            {
+              id: "current_lead_channels_other", type: "text",
+              label: "Ako ste izabrali 'Drugo', navedite kanal",
+              exportLabel: "Dodatni kanal za upite",
+              placeholder: "Unesite dodatni kanal...",
+              required: false,
+              conditional: { dependsOn: "current_lead_channels", includes: "other" }
+            },
+            {
+              id: "monthly_inquiries_volume", type: "select",
+              label: "Koliko upita prosečno dobijate mesečno?",
+              exportLabel: "Broj upita mesečno",
+              required: false,
+              options: [
+                { value: "", label: "Izaberite opciju" },
+                { value: "0-10", label: "0–10" },
+                { value: "10-30", label: "10–30" },
+                { value: "30-100", label: "30–100" },
+                { value: "100-plus", label: "100+" },
+                { value: "not-sure", label: "Nismo sigurni" }
+              ]
+            },
+            {
+              id: "uses_crm", type: "radio",
+              label: "Da li koristite CRM?",
+              exportLabel: "Korišćenje CRM-a",
+              tooltipKey: "crm",
+              required: true,
+              options: [
+                { value: "yes", label: "Da" },
+                { value: "no", label: "Ne" },
+                { value: "planned", label: "Planiramo" }
+              ]
+            },
+            {
+              id: "crm_name", type: "text",
+              label: "Koji CRM koristite?",
+              exportLabel: "Naziv CRM sistema",
+              placeholder: "Primer: HubSpot, Salesforce, Pipedrive...",
+              required: false,
+              conditional: { dependsOn: "uses_crm", equals: "yes" }
+            },
+            {
+              id: "rfq_required_info", type: "checkbox_group",
+              label: "Koje informacije treba da sadrži RFQ forma?",
+              exportLabel: "Potrebne informacije u RFQ formi",
+              tooltipKey: "rfq",
+              required: true,
+              options: [
+                { value: "product-type", label: "Tip proizvoda" },
+                { value: "technical-specs", label: "Tehničke specifikacije" },
+                { value: "quantity", label: "Količina" },
+                { value: "delivery-time", label: "Rok isporuke" },
+                { value: "file-upload", label: "Upload tehničkih crteža" },
+                { value: "contact-data", label: "Kontakt podaci" },
+                { value: "other", label: "Drugo" }
+              ]
+            },
+            {
+              id: "rfq_required_info_other", type: "text",
+              label: "Ako ste izabrali 'Drugo', navedite dodatne informacije",
+              exportLabel: "Dodatne informacije za RFQ",
+              placeholder: "Unesite dodatne stavke...",
+              required: false,
+              conditional: { dependsOn: "rfq_required_info", includes: "other" }
+            },
+            {
+              id: "rfq_flow_varies_by_product", type: "radio",
+              label: "Da li se RFQ tok razlikuje po tipu proizvoda?",
+              exportLabel: "RFQ tok zavisi od tipa proizvoda",
+              required: true,
+              options: [
+                { value: "yes", label: "Da" },
+                { value: "no", label: "Ne" },
+                { value: "partially", label: "Delimično" }
+              ]
+            },
+            {
+              id: "rfq_flow_varies_details", type: "textarea",
+              label: "Opišite glavne razlike u RFQ toku po tipu proizvoda",
+              exportLabel: "Detalji razlika u RFQ toku",
+              placeholder: "Opišite kako se menja tok ili sadržaj forme u zavisnosti od vrste proizvoda.",
+              required: false, rows: 4,
+              conditional: { dependsOn: "rfq_flow_varies_by_product", oneOf: ["yes", "partially"] }
+            },
+            {
+              id: "rfq_multi_product", type: "radio",
+              label: "Da li korisnik treba da može da pošalje jedan RFQ za više proizvoda odjednom?",
+              exportLabel: "RFQ za više proizvoda odjednom",
+              required: true,
+              options: [
+                { value: "yes", label: "Da" },
+                { value: "no", label: "Ne" },
+                { value: "nice-to-have", label: "Poželjno, ali nije obavezno" }
+              ]
+            },
+            {
+              id: "rfq_notifications", type: "checkbox_group",
+              label: "Gde treba da stignu notifikacije kada dođe novi upit?",
+              exportLabel: "Odredišta za RFQ notifikacije",
+              required: false,
+              options: [
+                { value: "single-email", label: "Jedna email adresa" },
+                { value: "multiple-emails", label: "Više email adresa" },
+                { value: "crm", label: "CRM" },
+                { value: "slack-teams", label: "Slack / Teams" },
+                { value: "other", label: "Drugo" }
+              ]
+            },
+            {
+              id: "rfq_notifications_other", type: "text",
+              label: "Ako ste izabrali 'Drugo', navedite detalje",
+              exportLabel: "Dodatna odredišta za RFQ notifikacije",
+              placeholder: "Unesite dodatne detalje...",
+              required: false,
+              conditional: { dependsOn: "rfq_notifications", includes: "other" }
+            },
+            {
+              id: "outbound_strategy", type: "radio",
+              label: "Da li planirate aktivni outbound uz inbound sa sajta?",
+              exportLabel: "Plan za outbound strategiju",
+              helpText: "Outbound znaci da vi aktivno kontaktirate potencijalne kupce (cold email, LinkedIn poruke) — za razliku od inbound-a gde kupci dolaze sami kroz sajt i Google pretragu.",
+              required: true,
+              options: [
+                { value: "yes-planned", label: "Da, planiramo aktivni outbound" },
+                { value: "inbound-first", label: "Za sada samo inbound" },
+                { value: "both", label: "Kombinacija — inbound i outbound" },
+                { value: "not-sure", label: "Nismo sigurni" }
+              ]
+            },
+            {
+              id: "linkedin_company_page", type: "radio",
+              label: "Da li imate aktivnu LinkedIn Company Page?",
+              exportLabel: "Status LinkedIn Company Page",
+              helpText: "LinkedIn je kljucni B2B kanal za industriju zeleznickih komponenti — direktno utice na outbound strategiju i vidljivost na engleskim trzistima.",
+              required: true,
+              options: [
+                { value: "yes-active", label: "Da, aktivna i redovno azurirana" },
+                { value: "yes-inactive", label: "Da, ali nije aktivna" },
+                { value: "no", label: "Ne postoji" }
+              ]
+            },
+            {
+              id: "rfq_response_expectation", type: "select",
+              label: "Koliko brzo očekujete odgovor kupcu nakon prijema RFQ-a?",
+              exportLabel: "Očekivano vreme odgovora na RFQ",
+              required: false,
+              options: [
+                { value: "", label: "Izaberite opciju" },
+                { value: "same-day", label: "Istog dana" },
+                { value: "24h", label: "U roku od 24h" },
+                { value: "48h", label: "U roku od 48h" },
+                { value: "3-5-days", label: "3–5 radnih dana" },
+                { value: "depends", label: "Zavisi od upita" }
+              ]
+            }
+          ],
+          advisoryBlocks: [
+            {
+              id: "advisory-hubspot",
+              title: "Hubspot Free — besplatan CRM za upravljanje upitima",
+              html: true,
+              body: "HubSpot Free je idealan polazni CRM za B2B kompanije koje tek uvode digitalni prodajni proces. Svaki RFQ upit sa sajta automatski kreira kontakt u HubSpotu, prodajni tim dobija notifikaciju, a svi razgovori, ponude i statusi ostaju na jednom mestu. Integracija sa Next.js sajtom se radi kroz HubSpot Forms API bez dodatnih troskova. Dovoljno za prvih 12-18 meseci. Sajt: <a href='https://www.hubspot.com/products/crm' target='_blank' rel='noopener' style='color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(56, 189, 248, 0.3);'>hubspot.com/products/crm</a>",
+              result: "Rezultat: besplatan sistem za pracenje svih upita od prvog dana, bez rucnog prepisivanja i bez gubitka leadova.",
+              variant: "info"
+            },
+            {
+              id: "advisory-snovio",
+              title: "Snov.io — alat za aktivni outbound (nije CRM)",
+              html: true,
+              body: "Snov.io nije CRM — to je alat za pronalazenje i kontaktiranje potencijalnih kupaca koji vas jos ne poznaju. Pronalazi email adrese procurement menadzera u ciljnim kompanijama i automatski salje personalizovane cold email sekvence uz LinkedIn outreach. Ima smisla aktivirati ga tek kada sajt bude live i profesionalan — slanje cold emaila na neprofesionalan sajt je kontraproduktivno. Moze se integrisati sa HubSpotom. Sajt: <a href='https://snov.io' target='_blank' rel='noopener' style='color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(56, 189, 248, 0.3);'>snov.io</a>",
+              result: "Rezultat: aktivan pristup trzistu — umesto cekanja da kupci pronadu vas, vi proaktivno kontaktirate pravu osobu u pravoj kompaniji.",
+              variant: "info"
+            },
+            {
+              id: "advisory-smart-rfq",
+              title: "Smart RFQ sistem sa prepopunjenim parametrima",
+              body: "Umesto generičke forme, RFQ sistem može automatski prepopuniti tehničke parametre na osnovu proizvoda koji je korisnik izabrao u katalogu. Time se smanjuju greške, ubrzava popunjavanje i povećava kvalitet samog upita koji dolazi prodajnom timu.",
+              result: "Rezultat: kvalitetniji upiti i manje vremena izgubljenog na dodatna pojašnjenja sa kupcem.",
+              variant: "info"
+            },
+            {
+              id: "advisory-rfq-logging",
+              title: "Automatsko logovanje svih upita i prodajnih prilika",
+              body: "Svaki RFQ može se automatski beležiti u CRM, internu bazu ili kontrolnu tabelu, zajedno sa osnovnim kontekstom i statusom obrade. To sprečava gubitak upita i pretvara sajt u aktivan prodajni kanal, a ne samo informativnu prezentaciju.",
+              result: "Rezultat: svi upiti ostaju evidentirani i prodajni proces postaje pregledniji i merljiv.",
+              variant: "info"
+            }
+          ]
+        },
+
+        {
+          id: "catalog",
+          title: "Katalog proizvoda i dokumentacija",
+          description: "Ova sekcija pomaže da se proceni obim podataka i spremnost tehničke dokumentacije.",
+          questions: [
+            {
+              id: "product_categories_count", type: "number",
+              label: "Koliko kategorija proizvoda imate?",
+              exportLabel: "Broj kategorija proizvoda",
+              placeholder: "Unesite broj kategorija",
+              required: false, min: 0
+            },
+            {
+              id: "product_variants_count", type: "number",
+              label: "Koliko približno varijanti proizvoda imate ukupno?",
+              exportLabel: "Broj varijanti proizvoda",
+              placeholder: "Unesite procenjeni broj varijanti",
+              required: false, min: 0
+            },
+            {
+              id: "technical_specs_format", type: "checkbox_group",
+              label: "U kom formatu postoje tehničke specifikacije?",
+              exportLabel: "Format tehničkih specifikacija",
+              required: true,
+              options: [
+                { value: "pdf", label: "PDF" },
+                { value: "excel", label: "Excel" },
+                { value: "cad", label: "CAD" },
+                { value: "word", label: "Word" },
+                { value: "no-central-base", label: "Ne postoji centralna baza" },
+                { value: "other", label: "Drugo" }
+              ]
+            },
+            {
+              id: "technical_specs_format_other", type: "text",
+              label: "Ako ste izabrali 'Drugo', navedite format",
+              exportLabel: "Dodatni formati tehničkih specifikacija",
+              placeholder: "Unesite dodatni format...",
+              required: false,
+              conditional: { dependsOn: "technical_specs_format", includes: "other" }
+            },
+            {
+              id: "product_data_standardized", type: "radio",
+              label: "Da li su podaci o proizvodima standardizovani i centralizovani?",
+              exportLabel: "Podaci standardizovani i centralizovani",
+              required: true,
+              options: [
+                { value: "yes", label: "Da" },
+                { value: "partially", label: "Delimično" },
+                { value: "no", label: "Ne" }
+              ]
+            },
+            {
+              id: "catalog_filters", type: "textarea",
+              label: "Koji filteri su ključni za pretragu proizvoda?",
+              exportLabel: "Ključni filteri za katalog",
+              tooltipKey: "facetedSearch",
+              placeholder: "Primer: radni napon, UIC standard, tip vozila (teretni/putnički), materijal, otpornost na habanje...",
+              required: false, rows: 5
+            },
+            {
+              id: "datasheets_availability", type: "radio",
+              label: "Da li postoje PDF datasheetovi za sve proizvode?",
+              exportLabel: "Postojanje PDF datasheetova",
+              required: true,
+              options: [
+                { value: "all", label: "Da, za sve" },
+                { value: "most", label: "Za većinu" },
+                { value: "some", label: "Samo za neke" },
+                { value: "none", label: "Ne" }
+              ]
+            },
+            {
+              id: "need_help_structuring_data", type: "radio",
+              label: "Da li vam je potrebna pomoć i u strukturiranju podataka, ne samo u izradi sajta?",
+              exportLabel: "Potreba za pomoći u strukturiranju podataka",
+              required: true,
+              options: [
+                { value: "yes", label: "Da" },
+                { value: "maybe", label: "Možda" },
+                { value: "no", label: "Ne" }
+              ]
+            }
+          ],
+          advisoryBlocks: [
+            {
+              id: "advisory-cloudinary",
+              title: "Cloudinary — besplatno skladiste za PDF datasheet i fotografije",
+              html: true,
+              body: "Cloudinary je cloud servis za cuvanje i isporuku fajlova — PDF datasheetova, fotografija proizvoda i sertifikata. Besplatni plan ukljucuje 25GB prostora i 25GB mesecnog transfera, sto je sasvim dovoljno za kompletan VEEV katalog na pocetku. Kako funkcionise: VEEV tim uploaduje PDF, dobija link, i taj link se cuva u Sanity CMS uz odgovarajuci proizvod. Kupac klikne Preuzmi datasheet i fajl se preuzima direktno. Bez kreditne kartice. Sajt: <a href='https://cloudinary.com' target='_blank' rel='noopener' style='color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(56, 189, 248, 0.3);'>cloudinary.com</a>",
+              result: "Rezultat: profesionalno upravljanje dokumentacijom i fotografijama bez mesecnih troskova na pocetku projekta.",
+              variant: "info"
+            },
+            {
+              id: "advisory-catalog-structure",
+              title: "Automatsko generisanje strukture produktnog kataloga",
+              body: "Ako već postoje PDF katalozi, Excel tabele ili CAD specifikacije, moguće je koristiti automatizovano parsiranje kako bi se izvukli tehnički parametri i predložila početna struktura kataloga. To smanjuje ručni unos i ubrzava organizaciju velikog broja proizvoda.",
+              result: "Rezultat: brže formiranje kataloga i manje ručnog prepisivanja tehničkih podataka.",
+              variant: "info"
+            },
+            {
+              id: "advisory-datasheet-pages",
+              title: "Automatsko generisanje datasheet stranica",
+              body: "Iz postojećih tehničkih specifikacija moguće je generisati strukturirane web stranice proizvoda, tehničke tabele i osnovu za PDF datasheet prikaz. Ovo je posebno korisno kada postoji veliki broj proizvoda sa sličnom dokumentacijom.",
+              result: "Rezultat: brži unos i objava produktnih stranica uz manji operativni napor.",
+              variant: "info"
+            }
+          ]
+        },
+
+        {
+          id: "content-media",
+          title: "Sadržaj, fotografije i media",
+          description: "Kvalitet sadržaja i vizualna snažno utiče na kredibilitet i brzinu realizacije projekta.",
+          questions: [
+            {
+              id: "professional_photos", type: "radio",
+              label: "Da li postoje profesionalne fotografije proizvoda, fabrike i tima?",
+              exportLabel: "Postojanje profesionalnih fotografija",
+              required: true,
+              options: [
+                { value: "yes", label: "Da" },
+                { value: "partial", label: "Delimično" },
+                { value: "planned", label: "Planiramo snimanje" },
+                { value: "no", label: "Ne" }
+              ]
+            },
+            {
+              id: "video_materials", type: "radio",
+              label: "Da li postoje video materijali ili testimonijali klijenata?",
+              exportLabel: "Postojanje video materijala ili testimonijala",
+              required: true,
+              options: [
+                { value: "yes", label: "Da" },
+                { value: "partial", label: "Delimično" },
+                { value: "planned", label: "Planiramo snimanje" },
+                { value: "no", label: "Ne" }
+              ]
+            },
+            {
+              id: "virtual_tour_priority", type: "radio",
+              label: "Da li je 360° virtual tour realan zahtev za prvu fazu?",
+              exportLabel: "Prioritet za 360° virtual tour",
+              required: true,
+              options: [
+                { value: "important-now", label: "Da, važan je odmah" },
+                { value: "later", label: "Poželjan je kasnije" },
+                { value: "not-priority", label: "Nije prioritet" },
+                { value: "not-sure", label: "Nismo sigurni" }
+              ]
+            },
+            {
+              id: "content_owner_after_launch", type: "textarea",
+              label: "Ko će biti odgovoran za ažuriranje sadržaja nakon lansiranja?",
+              exportLabel: "Odgovorna osoba za sadržaj nakon lansiranja",
+              placeholder: "Opišite ko će unositi nove sadržaje, ažurirati proizvode, objavljivati novosti i slično.",
+              required: false, rows: 4
+            },
+            {
+              id: "help_with_initial_drafts", type: "radio",
+              label: "Da li želite pomoć u pripremi inicijalnih draftova sadržaja?",
+              exportLabel: "Pomoć u pripremi inicijalnih draftova",
+              required: true,
+              options: [
+                { value: "yes", label: "Da" },
+                { value: "maybe", label: "Možda" },
+                { value: "no", label: "Ne" }
+              ]
+            }
+          ],
+          advisoryBlocks: [
+            {
+              id: "advisory-ai-drafts",
+              title: "AI generisani draftovi tehničkih tekstova",
+              body: "Kada nedostaje sadržaj, AI može pripremiti prve verzije tehničkih opisa, kategorijskih tekstova, FAQ sadržaja ili osnovnih B2B landing stranica. Vaš tim zatim samo radi stručnu proveru i korekciju, umesto da piše sve od nule.",
+              result: "Rezultat: sadržaj se proizvodi brže i uklanja se jedno od najvećih uskih grla u web projektima.",
+              variant: "info"
+            }
+          ]
+        },
+
+        {
+          id: "integrations",
+          title: "Tehničke integracije i infrastruktura",
+          description: "Ova sekcija služi da se identifikuju sistemi i integracije koji utiču na arhitekturu rešenja.",
+          questions: [
+            {
+              id: "needed_integrations", type: "checkbox_group",
+              label: "Koje integracije su potrebne?",
+              exportLabel: "Potrebne integracije",
+              required: false,
+              options: [
+                { value: "crm", label: "CRM" },
+                { value: "erp", label: "ERP" },
+                { value: "email-marketing", label: "Email marketing" },
+                { value: "webinars", label: "Webinari" },
+                { value: "analytics", label: "Analytics" },
+                { value: "document-repository", label: "Repozitorijum dokumenata" },
+                { value: "none", label: "Ništa od navedenog" },
+                { value: "other", label: "Drugo" }
+              ]
+            },
+            {
+              id: "needed_integrations_details", type: "textarea",
+              label: "Ako znate konkretne alate ili sisteme, navedite ih",
+              exportLabel: "Detalji potrebnih integracija",
+              placeholder: "Primer: HubSpot, SAP, Mailchimp, GA4, Microsoft Dynamics, SharePoint...",
+              required: false, rows: 4
+            },
+            {
+              id: "webinar_scope", type: "radio",
+              label: "Šta podrazumevate pod webinar funkcionalnošću?",
+              exportLabel: "Obim webinar funkcionalnosti",
+              required: false,
+              options: [
+                { value: "landing-only", label: "Samo landing stranica i prijava" },
+                { value: "zoom-teams", label: "Integracija sa Zoom / Teams" },
+                { value: "recordings-library", label: "Biblioteka snimaka i replay sadržaja" },
+                { value: "not-defined", label: "Još nije definisano" }
+              ]
+            },
+            {
+              id: "site_admin_after_launch", type: "radio",
+              label: "Ko će administrirati sajt nakon lansiranja?",
+              exportLabel: "Administrator sajta nakon lansiranja",
+              required: true,
+              options: [
+                { value: "internal-marketing", label: "Interni marketing" },
+                { value: "internal-it", label: "Interni IT" },
+                { value: "external-partner", label: "Eksterni partner" },
+                { value: "combined", label: "Kombinovano" },
+                { value: "not-defined", label: "Još nije definisano" }
+              ]
+            }
+          ],
+          advisoryBlocks: [
+            {
+              id: "advisory-seo-automation",
+              title: "Automatsko generisanje SEO strukture za globalna tržišta",
+              body: "Kod višejezičnih i većih B2B sajtova moguće je automatizovati osnovnu SEO strukturu: meta naslove, meta opise, URL logiku, hreflang i strukturirane podatke. Time se smanjuje potreba za ručnim SEO radom na svakoj pojedinačnoj stranici.",
+              result: "Rezultat: sajt je SEO spreman od početka i lakši za skaliranje na više tržišta.",
+              variant: "info"
+            },
+            {
+              id: "advisory-performance",
+              title: "Automatska optimizacija slika i performansi",
+              body: "Tehnička infrastruktura može uključiti automatsku optimizaciju slika, moderne formate poput WebP/AVIF, lazy loading i CDN distribuciju. Ove optimizacije poboljšavaju brzinu učitavanja i korisničko iskustvo, posebno na mobilnim uređajima.",
+              result: "Rezultat: brži sajt, bolje performanse i bolja osnova za SEO.",
+              variant: "info"
+            },
+            {
+              id: "advisory-scalable-arch",
+              title: "Skalabilna arhitektura za buduće funkcionalnosti",
+              body: "Ako se arhitektura postavi pravilno od početka, kasnije je mnogo lakše dodati partner portal, korisničke naloge, konfiguratore, dodatne integracije ili naprednije B2B funkcionalnosti. To smanjuje rizik da se sajt mora skupo rekonstrusati posle godinu ili dve.",
+              result: "Rezultat: platforma ostaje fleksibilna i spremna za rast bez nepotrebnih budućih troškova.",
+              variant: "info"
+            }
+          ]
+        },
+
+        {
+          id: "vision",
+          title: "Vizija i reference",
+          description: "Ova sekcija pomaže da se razume željeni pravac dizajna, pozicioniranja i odluke o partneru.",
+          questions: [
+            {
+              id: "reference_sites", type: "textarea",
+              label: "Koji sajtovi su vam referentni za dizajn i strukturu?",
+              exportLabel: "Referentni sajtovi",
+              helpText: "Vec ste naveli nekoliko referenci — mozete dopuniti ili korigovati listu.",
+              defaultValue: "https://www.fratellibigaran.com/en/\nhttps://www.casram.com/en/markets-products/railway/\nhttps://www.pkcgroup.com/products/npi-new-product-introduction.html\nhttps://www.bartels.eu/en/unser-unternehmen/bartels-bahntechnik",
+              required: false, rows: 6
+            },
+            {
+              id: "reference_sites_detail", type: "textarea",
+              label: "Sta vam se konkretno svida ili ne svida na ovim sajtovima?",
+              exportLabel: "Feedback na konkretne referentne sajtove",
+              helpText: "Slobodno dopunite, korigujte ili izbrisite stavke.",
+              defaultValue: "fratellibigaran.com — uzeli smo kao primarnu referencu (opsti utisak, prezentacija kompanije)\ncasram.com — svida nam se prikaz komponenti po kategorijama\npkcgroup.com — svida nam se sekcija za nove proizvode (NPI)\nbartels.eu — nije nam referentni sajt, ne dopada nam se pristup",
+              required: false, rows: 8
+            },
+            {
+              id: "main_competitors", type: "textarea",
+              label: "Navedite 2–3 direktna konkurenta čiji nastup na tržištu (ili sajt) smatrate ozbiljnim.",
+              exportLabel: "Glavni konkurenti",
+              placeholder: "Navedite linkove ili imena kompanija...",
+              required: false, rows: 4
+            },
+            {
+              id: "important_keywords", type: "textarea",
+              label: "Koje su najvažnije ključne reči po kojima želite da vas kupci pronađu (uopšteno o industriji ili specifično po nazivima i tipovima proizvoda)?",
+              exportLabel: "Najvažnije ključne reči (SEO)",
+              placeholder: "Primer: air brakes for wagons, railway couplings, electrical equipment for locomotives, UIC 541-0 standard...",
+              required: false, rows: 4
+            },
+            {
+              id: "desired_brand_perception", type: "checkbox_group",
+              label: "Kako želite da tržište doživi vaš brend online?",
+              exportLabel: "Željena percepcija brenda online",
+              required: false,
+              options: [
+                { value: "technologically-advanced", label: "Tehnološki napredno" },
+                { value: "reliable-stable", label: "Pouzdano i stabilno" },
+                { value: "serious-industrial", label: "Industrijski ozbiljno" },
+                { value: "modern-innovative", label: "Moderno i inovativno" },
+                { value: "international-ready", label: "Spremno za međunarodno tržište" },
+                { value: "other", label: "Drugo" }
+              ]
+            },
+            {
+              id: "desired_brand_perception_other", type: "text",
+              label: "Ako ste izabrali 'Drugo', navedite dodatni opis",
+              exportLabel: "Dodatna percepcija brenda online",
+              placeholder: "Unesite dodatni opis...",
+              required: false,
+              conditional: { dependsOn: "desired_brand_perception", includes: "other" }
+            },
+            {
+              id: "brand_guide_exists", type: "radio",
+              label: "Da li postoji brand guide?",
+              exportLabel: "Postojanje brand guide-a",
+              required: true,
+              options: [
+                { value: "yes", label: "Da" },
+                { value: "partial", label: "Delimično" },
+                { value: "no", label: "Ne" }
+              ]
+            },
+            {
+              id: "why_now", type: "textarea",
+              label: "Šta vas je inspirisalo da pokrenete ovaj projekat upravo sada?",
+              exportLabel: "Inspiracija za pokretanje projekta",
+              placeholder: "Primer: širenje na nova tržišta, novi proizvodi, rast kompanije, sajam koji se priprema, novi partneri...",
+              required: true, rows: 5
+            },
+            {
+              id: "decision_makers", type: "textarea",
+              label: "Ko učestvuje u donošenju odluke o projektu?",
+              exportLabel: "Ko učestvuje u donošenju odluke",
+              placeholder: "Primer: direktor, marketing, prodaja, vlasnik, tehnički tim...",
+              required: false, rows: 4
+            },
+            {
+              id: "additional_notes", type: "textarea",
+              label: "Da li postoji jos nesto sto bi trebalo da znamo pre pripreme preporuke i ponude?",
+              exportLabel: "Dodatne napomene",
+              placeholder: "Unesite sve dodatne informacije koje smatrate vaznim za projekat.",
+              required: false, rows: 5
+            }
+          ],
+          advisoryBlocks: [
+            {
+              id: "advisory-design-resources",
+              title: "Gotovi dizajn resursi — ubrzajte proces bez dizajnera",
+              html: true,
+              body: "Posto nemate internog dizajnera, ne morate krenuti od nule. Postoje dve prakticne opcije:<br><br><strong>① Figma Community (besplatno i premium)</strong> — gotovi wireframe i UI sabloni koje vas developer preuzima i prilagodava. Besplatni sabloni su sasvim dovoljno za pocetak, premium verzije (~15–40 EUR) nude detaljnije komponente:<br>• <a href='https://www.figma.com/community/file/1460675152420512689' target='_blank' rel='noopener' style='color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(56, 189, 248, 0.3);'>Industrial Website UI Design Template</a><br>• <a href='https://www.figma.com/community/file/1448316567876144434' target='_blank' rel='noopener' style='color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(56, 189, 248, 0.3);'>Indilate — Industry Manufacturing Website Template</a><br>• <a href='https://www.figma.com/community/file/1373340547305116049' target='_blank' rel='noopener' style='color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(56, 189, 248, 0.3);'>Industrial X — Industry Figma Template</a><br><br><strong>② ThemeForest (15–30 EUR, jednokratno)</strong> — gotov HTML sablon koji developer kupuje i prilagodava:<br>• <a href='https://themeforest.net/item/industry-factory-industrial-html-template/24383179' target='_blank' rel='noopener' style='color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(56, 189, 248, 0.3);'>Industry — Factory and Industrial HTML Template</a><br>• <a href='https://themeforest.net/item/megan-industrial-manufacturing-businesses-html-template/24053932' target='_blank' rel='noopener' style='color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(56, 189, 248, 0.3);'>Megan — Industrial and Manufacturing Bootstrap5</a><br><br>Na oba sajta mozete pogledati i druge primere:<br><a href='https://www.figma.com/community' target='_blank' rel='noopener' style='color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(56, 189, 248, 0.3);'>figma.com/community</a> &nbsp;·&nbsp; <a href='https://themeforest.net/search/industrial%20manufacturing' target='_blank' rel='noopener' style='color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(56, 189, 248, 0.3);'>themeforest.net/search/industrial</a><br><br><em>Preporuka: Odaberite 2–3 sablona koji vam se vizuelno dopadaju i podelite linkove sa developerom.</em>",
+              result: "Rezultat: vizuelni pravac sajta se definise za nekoliko sati umesto nekoliko nedelja, a developer dobija cvrstu osnovu za implementaciju.",
+              variant: "info"
+            }
+          ]
+        }
+      ]
+    };
+
+    // ============================================================
+    //  STATE
+    // ============================================================
+    const STORAGE_KEY = questionnaireData.meta.storageKey;
+    const ui = questionnaireData.ui;
+    const glossary = questionnaireData.glossary;
+    const sections = questionnaireData.sections;
+
+    let currentStep = 0;
+    let answers = {};
+    let inReview = false;
+
+    // ============================================================
+    //  INIT
+    // ============================================================
+    function init() {
+      // Header
+      document.getElementById('app-title').textContent = questionnaireData.meta.title;
+      document.getElementById('app-subtitle').textContent = questionnaireData.meta.subtitle;
+      document.getElementById('app-meta').textContent = `Popunjavanje traje približno ${questionnaireData.meta.estimatedTime}`;
+
+      // Setup modals
+      setupModals();
+
+      // Check draft
+      const draft = loadDraft();
+      const hasDraft = draft && Object.keys(draft.answers || {}).length > 0;
+
+      if (hasDraft) {
+        showDraftModal(draft);
+      } else {
+        startQuestionnaire();
+      }
+    }
+
+    // ============================================================
+    //  MODALS
+    // ============================================================
+    function setupModals() {
+      // Reset modal
+      document.getElementById('reset-title').textContent = ui.confirmResetTitle;
+      document.getElementById('reset-text').textContent = ui.confirmResetText;
+      document.getElementById('btn-reset-confirm').textContent = ui.confirmButton;
+      document.getElementById('btn-reset-cancel').textContent = ui.cancelButton;
+
+      document.getElementById('btn-reset-confirm').onclick = () => {
+        clearDraft();
+        answers = {};
+        currentStep = 0;
+        inReview = false;
+        document.getElementById('modal-reset').classList.add('hidden');
+        startQuestionnaire();
+      };
+      document.getElementById('btn-reset-cancel').onclick = () => {
+        document.getElementById('modal-reset').classList.add('hidden');
+      };
+    }
+
+    function showDraftModal(draft) {
+      document.getElementById('modal-title').textContent = ui.resumeDraftTitle;
+      document.getElementById('modal-text').textContent = ui.resumeDraftText;
+      document.getElementById('btn-modal-continue').textContent = ui.continueButton;
+      document.getElementById('btn-modal-restart').textContent = ui.startOverButton;
+
+      document.getElementById('btn-modal-continue').onclick = () => {
+        answers = draft.answers || {};
+        currentStep = typeof draft.step === 'number' ? draft.step : 0;
+        document.getElementById('modal-draft').classList.add('hidden');
+        startQuestionnaire();
+      };
+      document.getElementById('btn-modal-restart').onclick = () => {
+        clearDraft();
+        answers = {};
+        currentStep = 0;
+        document.getElementById('modal-draft').classList.add('hidden');
+        startQuestionnaire();
+      };
+
+      document.getElementById('modal-draft').classList.remove('hidden');
+    }
+
+    // ============================================================
+    //  START
+    // ============================================================
+    function startQuestionnaire() {
+      inReview = false;
+      document.getElementById('progress-wrap').classList.remove('hidden');
+      document.getElementById('nav-row').classList.remove('hidden');
+      document.getElementById('autosave-bar').classList.remove('hidden');
+      document.getElementById('autosave-text').textContent = ui.autosaveText;
+
+      document.getElementById('btn-prev').textContent = ui.prevButton;
+      document.getElementById('btn-prev').onclick = () => navigate(-1);
+      document.getElementById('btn-next').onclick = () => navigate(1);
+
+      renderStep(currentStep);
+    }
+
+    // ============================================================
+    //  RENDER STEP
+    // ============================================================
+    function renderStep(idx) {
+      const sec = sections[idx];
+
+      // Progress — reaches 100% at the last section
+      const pct = Math.round(((idx + 1) / sections.length) * 100);
+      document.getElementById('progress-fill').style.width = pct + '%';
+      document.getElementById('progress-section-name').textContent = sec.title;
+      document.getElementById('progress-step-label').textContent = `${idx + 1} / ${sections.length}`;
+
+      // Render card
+      let html = `<div class="section-card">
+    <div class="section-title">${esc(sec.title)}</div>
+    <p class="section-desc">${esc(sec.description)}</p>`;
+
+      for (const q of sec.questions) {
+        html += buildQuestion(q);
+      }
+      html += '</div>';
+
+      // Reset button below card
+      html += `<div style="text-align:right;margin-top:.75rem;">
+    <button id="btn-reset" style="background:transparent;border:none;color:var(--muted);font-size:.78rem;cursor:pointer;padding:0;" 
+      title="${esc(ui.confirmResetTitle)}">⚠ ${esc(ui.resetButton)}</button>
+  </div>`;
+
+      document.getElementById('main-area').innerHTML = html;
+
+      // Bind events
+      bindAll(sec);
+      updateConditionals(sec); // also calls markLastVisibleBlock()
+      renderAdvisoryBlocks(sec);
+      updateNavButtons();
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Reset button handler
+      document.getElementById('btn-reset').onclick = () => {
+        document.getElementById('modal-reset').classList.remove('hidden');
+      };
+    }
+
+    // ============================================================
+    //  BUILD QUESTION HTML
+    // ============================================================
+    function buildQuestion(q) {
+      const isConditional = !!q.conditional;
+      const hide = isConditional ? 'style="display:none"' : '';
+
+      let labelHtml = esc(q.label);
+      if (q.required) labelHtml += '<span class="q-required" aria-hidden="true">*</span>';
+      if (q.tooltipKey && glossary[q.tooltipKey]) {
+        const g = glossary[q.tooltipKey];
+        labelHtml += `<span class="tip-badge" tabindex="0">${esc(g.label)}<span class="tip-popup">${esc(g.short)}</span></span>`;
+      }
+
+      let html = `<div class="q-block" id="qb_${q.id}" data-qid="${q.id}" ${hide}>
+    <label class="q-label" for="${q.id}">${labelHtml}</label>`;
+
+      if (q.helpText) html += `<p class="q-hint">${esc(q.helpText)}</p>`;
+
+      html += buildInput(q);
+      html += `<span class="q-error-msg">${esc(ui.requiredMessage)}</span>`;
+      html += '</div>';
+      return html;
+    }
+
+    // ============================================================
+    //  BUILD INPUT
+    // ============================================================
+    function buildInput(q) {
+      const val = answers[q.id];
+
+      switch (q.type) {
+
+        case 'text':
+          return `<input type="text" id="${q.id}" name="${q.id}"
+        placeholder="${esc(q.placeholder || '')}"
+        value="${esc(val || '')}" />`;
+
+        case 'textarea': {
+          const taVal = val != null && val !== '' ? val : (q.defaultValue || '');
+          return `<textarea id="${q.id}" name="${q.id}"
+        rows="${q.rows || 4}"
+        placeholder="${esc(q.placeholder || '')}">${esc(taVal)}</textarea>`;
+        }
+
+        case 'number':
+          return `<input type="number" id="${q.id}" name="${q.id}"
+        placeholder="${esc(q.placeholder || '')}"
+        value="${val != null && val !== '' ? val : ''}"
+        ${q.min != null ? `min="${q.min}"` : ''} />`;
+
+        case 'date':
+          return `<input type="date" id="${q.id}" name="${q.id}"
+        value="${esc(val || '')}" />`;
+
+        case 'radio': {
+          const sel = val || '';
+          let out = '<div class="radio-group" role="radiogroup">';
+          for (const o of q.options) {
+            const chk = sel === o.value ? 'checked' : '';
+            out += `<label>
+          <input type="radio" name="${q.id}" value="${esc(o.value)}" ${chk} />
+          ${esc(o.label)}
+        </label>`;
+          }
+          return out + '</div>';
+        }
+
+        case 'checkbox_group': {
+          const sel = Array.isArray(val) ? val : [];
+          let out = '<div class="check-group">';
+          for (const o of q.options) {
+            const chk = sel.includes(o.value) ? 'checked' : '';
+            out += `<label>
+          <input type="checkbox" name="${q.id}" value="${esc(o.value)}" ${chk} />
+          ${esc(o.label)}
+        </label>`;
+          }
+          return out + '</div>';
+        }
+
+        case 'select': {
+          let out = `<select id="${q.id}" name="${q.id}">`;
+          for (const o of q.options) {
+            const sel2 = val === o.value ? 'selected' : '';
+            out += `<option value="${esc(o.value)}" ${sel2}>${esc(o.label)}</option>`;
+          }
+          return out + '</select>';
+        }
+
+        default:
+          return `<input type="text" id="${q.id}" name="${q.id}" value="${esc(val || '')}" />`;
+      }
+    }
+
+    // ============================================================
+    //  BIND EVENTS
+    // ============================================================
+    function bindAll(sec) {
+      for (const q of sec.questions) {
+        const onChange = () => {
+          saveAnswer(q, sec);
+        };
+
+        if (['text', 'textarea', 'number', 'date'].includes(q.type)) {
+          const el = document.getElementById(q.id);
+          if (el) el.addEventListener('input', onChange);
+
+        } else if (q.type === 'radio') {
+          document.querySelectorAll(`input[name="${q.id}"]`)
+            .forEach(el => el.addEventListener('change', onChange));
+
+        } else if (q.type === 'checkbox_group') {
+          document.querySelectorAll(`input[name="${q.id}"]`)
+            .forEach(el => el.addEventListener('change', onChange));
+
+        } else if (q.type === 'select') {
+          const el = document.getElementById(q.id);
+          if (el) el.addEventListener('change', onChange);
+        }
+      }
+    }
+
+    function saveAnswer(q, sec) {
+      if (q.type === 'checkbox_group') {
+        const vals = [];
+        document.querySelectorAll(`input[name="${q.id}"]:checked`)
+          .forEach(el => vals.push(el.value));
+        answers[q.id] = vals;
+      } else if (q.type === 'radio') {
+        const el = document.querySelector(`input[name="${q.id}"]:checked`);
+        answers[q.id] = el ? el.value : '';
+      } else {
+        const el = document.getElementById(q.id);
+        answers[q.id] = el ? el.value : '';
+      }
+      saveDraft();
+      updateConditionals(sec);
+      // Clear error on the block if user provides input
+      const block = document.getElementById(`qb_${q.id}`);
+      if (block) block.classList.remove('has-error');
+    }
+
+    // ============================================================
+    //  CONDITIONAL VISIBILITY
+    // ============================================================
+    function isCondMet(q) {
+      if (!q.conditional) return true;
+      const c = q.conditional;
+      const depVal = answers[c.dependsOn];
+
+      if (c.equals !== undefined) return depVal === c.equals;
+      if (c.includes !== undefined) return Array.isArray(depVal) && depVal.includes(c.includes);
+      if (c.oneOf !== undefined) {
+        const v = Array.isArray(depVal) ? depVal : (depVal ? [depVal] : []);
+        return c.oneOf.some(x => v.includes(x));
+      }
+      return false;
+    }
+
+    function updateConditionals(sec) {
+      for (const q of sec.questions) {
+        if (!q.conditional) continue;
+        const block = document.getElementById(`qb_${q.id}`);
+        if (!block) continue;
+        const met = isCondMet(q);
+        block.style.display = met ? '' : 'none';
+        if (!met) {
+          answers[q.id] = q.type === 'checkbox_group' ? [] : '';
+        }
+      }
+      markLastVisibleBlock();
+    }
+
+    // ============================================================
+    //  ADVISORY BLOCKS
+    // ============================================================
+    function renderAdvisoryBlocks(sec) {
+      if (!sec.advisoryBlocks || sec.advisoryBlocks.length === 0) return;
+      const card = document.querySelector('.section-card');
+      if (!card) return;
+
+      let html = '<div class="advisory-list">';
+      for (const block of sec.advisoryBlocks) {
+        html += `<div class="advisory-card" id="adv_${esc(block.id)}">
+      <div class="advisory-header">
+        <span class="advisory-badge">Dodatna opcija</span>
+        <span class="advisory-title">${esc(block.title)}</span>
+      </div>
+      <p class="advisory-body">${block.html ? block.body : esc(block.body).replace(/\n/g, '<br>')}</p>
+      <div class="advisory-result">${esc(block.result)}</div>
+    </div>`;
+      }
+      html += '</div>';
+      card.insertAdjacentHTML('beforeend', html);
+    }
+
+    function markLastVisibleBlock() {
+      const blocks = [...document.querySelectorAll('.q-block')];
+      blocks.forEach(b => b.classList.remove('is-last-visible'));
+      const visible = blocks.filter(b => b.style.display !== 'none');
+      if (visible.length) visible[visible.length - 1].classList.add('is-last-visible');
+    }
+
+    // ============================================================
+    //  VALIDATE
+    // ============================================================
+    function validateStep(idx) {
+      const sec = sections[idx];
+      let valid = true;
+
+      for (const q of sec.questions) {
+        if (!q.required) continue;
+        if (!isCondMet(q)) continue;
+
+        const val = answers[q.id];
+        const block = document.getElementById(`qb_${q.id}`);
+        const isEmpty = q.type === 'checkbox_group'
+          ? (!Array.isArray(val) || val.length === 0)
+          : (!val || val === '');
+
+        if (isEmpty) {
+          valid = false;
+          if (block) block.classList.add('has-error');
+        } else {
+          if (block) block.classList.remove('has-error');
+        }
+      }
+
+      if (!valid) {
+        const firstError = document.querySelector('.q-block.has-error');
+        if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return valid;
+    }
+
+    // ============================================================
+    //  NAVIGATE
+    // ============================================================
+    function navigate(dir) {
+      if (dir === 1) {
+        if (!validateStep(currentStep)) return;
+        if (currentStep < sections.length - 1) {
+          currentStep++;
+          saveDraft();
+          renderStep(currentStep);
+        } else {
+          saveDraft();
+          showReview();
+        }
+      } else {
+        if (inReview) {
+          inReview = false;
+          document.getElementById('progress-wrap').classList.remove('hidden');
+          renderStep(currentStep); // updateNavButtons() inside resets onclick
+          return;
+        }
+        if (currentStep > 0) {
+          currentStep--;
+          saveDraft();
+          renderStep(currentStep);
+        }
+      }
+    }
+
+    function updateNavButtons() {
+      const prev = document.getElementById('btn-prev');
+      const next = document.getElementById('btn-next');
+      prev.style.visibility = currentStep === 0 ? 'hidden' : 'visible';
+      next.textContent = currentStep === sections.length - 1 ? ui.reviewButton : ui.nextButton;
+      next.disabled = false;
+      next.onclick = () => navigate(1);
+    }
+
+    // ============================================================
+    //  REVIEW SCREEN
+    // ============================================================
+    function showReview() {
+      inReview = true;
+      document.getElementById('progress-wrap').classList.add('hidden');
+
+      const btnPrev = document.getElementById('btn-prev');
+      const btnNext = document.getElementById('btn-next');
+      btnPrev.style.visibility = 'visible';
+      btnNext.textContent = ui.exportHtmlButton;
+      btnNext.disabled = false;
+      btnNext.onclick = exportHTML;
+
+      let html = `<div class="section-card" id="review-card">
+    <div class="section-title" style="margin-bottom:.4rem;">${ui.reviewTitle}</div>
+    <p style="color:var(--muted);font-size:.85rem;margin-bottom:2rem;">
+      ${questionnaireData.meta.title} · ${fmtDate(new Date())}
+    </p>`;
+
+      for (const sec of sections) {
+        // Check if section has any answered/active questions
+        const activeQs = sec.questions.filter(q => !(q.conditional && !isCondMet(q)));
+        if (activeQs.length === 0) continue;
+
+        html += `<div class="review-section">
+      <div class="review-section-title">${esc(sec.title)}</div>`;
+
+        for (const q of activeQs) {
+          const raw = answers[q.id];
+          // Skip conditional with no value entirely from export
+          if (q.conditional && !isCondMet(q)) continue;
+          const hasValue = hasAnswer(q, raw);
+          const display = formatAnswerHtml(q, raw);
+
+          html += `<div class="review-row ${hasValue ? '' : 'review-empty'}">
+        <div class="review-q">${esc(q.exportLabel || q.label)}</div>
+        <div class="review-a">${display}</div>
+      </div>`;
+        }
+        html += '</div>';
+      }
+      html += '</div>';
+
+      // Action toolbar
+      html += `<div class="action-toolbar">
+    <button class="action-btn" onclick="exportHTML()" title="${ui.exportHtmlButton}">
+      <span class="action-icon">⬇</span> ${ui.exportHtmlButton}
+    </button>
+    <button class="action-btn" onclick="exportJSON()" title="${ui.exportJsonButton}">
+      <span class="action-icon">{ }</span> ${ui.exportJsonButton}
+    </button>
+    <label class="action-btn" title="${ui.importJsonButton}" style="cursor:pointer;">
+      <span class="action-icon">⬆</span> ${ui.importJsonButton}
+      <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="importJSON(event)" />
+    </label>
+    <button class="action-btn" onclick="printReport()" title="${ui.printButton}">
+      <span class="action-icon">🖨</span> ${ui.printButton}
+    </button>
+    <button class="action-btn" onclick="sendEmail()" title="${ui.emailButton}">
+      <span class="action-icon">✉</span> ${ui.emailButton}
+    </button>
+  </div>
+  <div style="background: rgba(56,189,248,0.1); border: 1px dashed var(--accent); border-radius: 8px; padding: 1rem; margin-top: 1.5rem; text-align: center;">
+    <p style="font-size: 0.85rem; color: var(--text); margin-bottom: 0.5rem; font-weight: 600;">
+      💡 Kako da sačuvate PDF?
+    </p>
+    <p style="font-size: 0.8rem; color: var(--muted); margin: 0;">
+      Nakon što kliknete na <strong>"${ui.printButton}"</strong>, otvoriće se prozor za štampu.<br>
+      U polju <strong>Odredište (Destination)</strong> izaberite opciju <strong>"Sačuvaj kao PDF" (Save as PDF)</strong>.
+    </p>
+  </div>`;
+
+      document.getElementById('main-area').innerHTML = html;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ============================================================
+    //  FORMAT HELPERS
+    // ============================================================
+    function hasAnswer(q, raw) {
+      if (q.type === 'checkbox_group') return Array.isArray(raw) && raw.length > 0;
+      return raw !== undefined && raw !== null && raw !== '';
+    }
+
+    function formatAnswerHtml(q, raw) {
+      if (q.type === 'checkbox_group') {
+        if (!Array.isArray(raw) || raw.length === 0)
+          return '<span class="ans-empty">Nije uneto</span>';
+        const labels = raw.map(v => {
+          const opt = (q.options || []).find(o => o.value === v);
+          return `<li>${esc(opt ? opt.label : v)}</li>`;
+        });
+        return `<ul class="ans-list">${labels.join('')}</ul>`;
+      }
+      if (q.type === 'radio' || q.type === 'select') {
+        if (!raw) return '<span class="ans-empty">Nije uneto</span>';
+        const opt = (q.options || []).find(o => o.value === raw);
+        return esc(opt ? opt.label : raw);
+      }
+      if (!hasAnswer(q, raw)) return '<span class="ans-empty">Nije uneto</span>';
+      return `<span class="ans-text">${esc(String(raw))}</span>`;
+    }
+
+    function formatAnswerPlain(q, raw) {
+      if (q.type === 'checkbox_group') {
+        if (!Array.isArray(raw) || raw.length === 0) return 'Nije uneto';
+        return raw.map(v => {
+          const opt = (q.options || []).find(o => o.value === v);
+          return opt ? opt.label : v;
+        }).join(', ');
+      }
+      if (q.type === 'radio' || q.type === 'select') {
+        if (!raw) return 'Nije uneto';
+        const opt = (q.options || []).find(o => o.value === raw);
+        return opt ? opt.label : raw;
+      }
+      if (!hasAnswer(q, raw)) return 'Nije uneto';
+      return String(raw);
+    }
+
+    function fmtDate(d) {
+      return d.toLocaleString('sr-Latn', {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit'
+      });
+    }
+
+    // ============================================================
+    //  EXPORT HTML
+    // ============================================================
+    function exportHTML() {
+      const now = new Date();
+      const dateStr = fmtDate(now);
+
+      let sectionsHtml = '';
+      for (const sec of sections) {
+        const activeQs = sec.questions.filter(q => !(q.conditional && !isCondMet(q)));
+        if (activeQs.length === 0) continue;
+
+        let rowsHtml = '';
+        for (const q of activeQs) {
+          const raw = answers[q.id];
+          if (q.conditional && !isCondMet(q)) continue;
+          const plain = formatAnswerPlain(q, raw);
+          const isEmpty = !hasAnswer(q, raw);
+
+          let ansHtml;
+          if (q.type === 'checkbox_group' && Array.isArray(raw) && raw.length > 0) {
+            const items = raw.map(v => {
+              const opt = (q.options || []).find(o => o.value === v);
+              return `<li>${opt ? opt.label : v}</li>`;
+            }).join('');
+            ansHtml = `<ul style="margin:4px 0 0 16px;padding:0;">${items}</ul>`;
+          } else {
+            ansHtml = isEmpty
+              ? `<span style="color:#9ca3af;font-style:italic;">Nije uneto</span>`
+              : `<span style="white-space:pre-wrap;">${plain.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</span>`;
+          }
+
+          rowsHtml += `<tr>
+        <td style="width:42%;padding:10px 14px;vertical-align:top;color:#6b7280;font-size:13px;border-bottom:1px solid #e5e7eb;">${q.exportLabel || q.label}</td>
+        <td style="padding:10px 14px;vertical-align:top;font-size:14px;border-bottom:1px solid #e5e7eb;">${ansHtml}</td>
+      </tr>`;
+        }
+
+        sectionsHtml += `
+      <div style="margin-bottom:36px;">
+        <div style="background:#f0f9ff;border-left:4px solid #0284c7;padding:10px 16px;margin-bottom:0;border-radius:4px 4px 0 0;">
+          <span style="font-size:13px;font-weight:700;color:#0284c7;text-transform:uppercase;letter-spacing:.06em;">${sec.title}</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:0 0 4px 4px;border:1px solid #e5e7eb;border-top:none;">
+          ${rowsHtml}
+        </table>
+      </div>`;
+      }
+
+      const doc = `<!DOCTYPE html>
+<html lang="sr-Latn">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>VEEV Pre-Discovery Upitnik – Odgovori</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+           background: #f8fafc; color: #1e293b; margin: 0; padding: 0; }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 40px 24px; }
+    h1 { font-size: 22px; font-weight: 800; margin: 0 0 4px; color: #0f172a; }
+    .subtitle { color: #64748b; font-size: 13px; margin: 0 0 6px; }
+    .meta-bar { display:flex; gap:16px; font-size:12px; color:#94a3b8; margin-bottom:32px; padding-bottom:20px; border-bottom:2px solid #e2e8f0; }
+    @media print {
+      body { background: #fff; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>${questionnaireData.meta.title}</h1>
+  <p class="subtitle">${questionnaireData.meta.subtitle}</p>
+  <div class="meta-bar">
+    <span>📅 Izvezeno: ${dateStr}</span>
+    <span>📋 Verzija: ${questionnaireData.meta.version}</span>
+  </div>
+  ${sectionsHtml}
+  <p style="font-size:11px;color:#cbd5e1;margin-top:40px;text-align:center;">
+    Generisano iz VEEV Pre-Discovery Upitnika · ${dateStr}
+  </p>
+</div>
+</body>
+</html>`;
+
+      downloadFile('veev-upitnik-odgovori.html', doc, 'text/html');
+    }
+
+    // ============================================================
+    //  EXPORT JSON
+    // ============================================================
+    function exportJSON() {
+      const payload = {
+        meta: {
+          exported: new Date().toISOString(),
+          appId: questionnaireData.meta.appId,
+          version: questionnaireData.meta.version
+        },
+        step: currentStep,
+        answers
+      };
+      downloadFile(
+        'veev-upitnik-draft.json',
+        JSON.stringify(payload, null, 2),
+        'application/json'
+      );
+    }
+
+    // ============================================================
+    //  IMPORT JSON
+    // ============================================================
+    function importJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (!data.answers) {
+            alert('Neispravan JSON fajl – nedostaje polje "answers".');
+            return;
+          }
+          answers = data.answers;
+          currentStep = typeof data.step === 'number' ? data.step : 0;
+          saveDraft();
+          inReview = false;
+          document.getElementById('progress-wrap').classList.remove('hidden');
+          renderStep(currentStep);
+        } catch {
+          alert('Greška pri čitanju JSON fajla. Proverite format fajla.');
+        }
+      };
+      reader.readAsText(file);
+      // Reset input so same file can be re-imported
+      event.target.value = '';
+    }
+
+    // ============================================================
+    //  PRINT
+    // ============================================================
+    function printReport() {
+      const oldTitle = document.title;
+      document.title = `VEEV-Pre-Discovery-Upitnik-Odgovori`;
+      window.print();
+      setTimeout(() => { document.title = oldTitle; }, 500);
+    }
+
+    // ============================================================
+    //  EMAIL (mailto)
+    // ============================================================
+    function sendEmail() {
+      const lines = [];
+      lines.push(questionnaireData.meta.title);
+      lines.push(questionnaireData.meta.subtitle);
+      lines.push('Datum: ' + fmtDate(new Date()));
+      lines.push('');
+      lines.push('='.repeat(60));
+
+      for (const sec of sections) {
+        const activeQs = sec.questions.filter(q => !(q.conditional && !isCondMet(q)));
+        if (activeQs.length === 0) continue;
+        lines.push('');
+        lines.push('── ' + sec.title.toUpperCase() + ' ──');
+        lines.push('');
+
+        for (const q of activeQs) {
+          if (q.conditional && !isCondMet(q)) continue;
+          const raw = answers[q.id];
+          lines.push((q.exportLabel || q.label) + ':');
+          lines.push('  ' + formatAnswerPlain(q, raw));
+          lines.push('');
+        }
+      }
+
+      const body = lines.join('\n');
+      const subject = encodeURIComponent(questionnaireData.meta.title + ' – Odgovori');
+      const bodyEnc = encodeURIComponent(body);
+      const email = questionnaireData.meta.ownerEmail || '';
+
+      const mailto = `mailto:${email}?subject=${subject}&body=${bodyEnc}`;
+      // mailto URLs are limited; open safely
+      const a = document.createElement('a');
+      a.href = mailto;
+      a.click();
+    }
+
+    // ============================================================
+    //  DOWNLOAD HELPER
+    // ============================================================
+    function downloadFile(filename, content, mime) {
+      const blob = new Blob([content], { type: mime + ';charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // ============================================================
+    //  LOCAL STORAGE
+    // ============================================================
+    function saveDraft() {
+      // Pulse animation trigger
+      const dot = document.querySelector('.autosave-dot');
+      if (dot) {
+        dot.classList.remove('pulsing');
+        void dot.offsetWidth; // Force reflow
+        dot.classList.add('pulsing');
+      }
+
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          answers,
+          step: currentStep,
+          savedAt: new Date().toISOString()
+        }));
+      } catch (e) { /* storage full */ }
+    }
+
+    function loadDraft() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : null;
+      } catch { return null; }
+    }
+
+    function clearDraft() {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+
+    // ============================================================
+    //  UTILS
+    // ============================================================
+    function esc(str) {
+      if (str == null) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // ============================================================
+    //  BOOT
+    // ============================================================
+    init();
+  </script>
+</body>
+
+</html>

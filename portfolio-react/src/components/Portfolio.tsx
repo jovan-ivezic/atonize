@@ -3,6 +3,7 @@ import { motion, useInView, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { FaExternalLinkAlt } from 'react-icons/fa';
 import projectsData from '../data/projects.json';
+import ProjectModal from './ProjectModal';
 
 interface Category {
   id: string;
@@ -19,10 +20,17 @@ interface Project {
   technologies: string[];
   hidden?: boolean;
   disabled?: boolean;
+  hasModal?: boolean;
+  gallery?: string[];
+  details?: {
+    role: string;
+    features: { title: string; description: string }[];
+  };
 }
 
 const Portfolio = () => {
   const [activeFilter, setActiveFilter] = useState<string>('all');
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
   const Motion = motion;
@@ -228,6 +236,17 @@ const Portfolio = () => {
                         </>
                       );
 
+                      if (project.hasModal) {
+                        return (
+                          <div
+                            onClick={() => setSelectedProject(project)}
+                            className="block cursor-pointer"
+                          >
+                            {linkContent}
+                          </div>
+                        );
+                      }
+
                       return isExternalLink ? (
                         <a
                           href={project.link}
@@ -262,6 +281,16 @@ const Portfolio = () => {
             <span className="font-bold">{visibleProjects.length}</span> projects
           </p>
         </Motion.div>
+
+        {/* Project Modal */}
+        <AnimatePresence>
+          {selectedProject && (
+            <ProjectModal
+              project={selectedProject}
+              onClose={() => setSelectedProject(null)}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </section>
   );
