@@ -1,0 +1,230 @@
+---
+title: "Introduction to React & JSX: How to Think in Components"
+date: "2025-06-19"
+category: "Engineering"
+slug: "introduction-to-react-and-jsx"
+icon: "⚛️"
+excerpt: "Learn how React's component model and JSX syntax work together to help you build scalable, maintainable UIs — and why thinking in components is the most important mindset shift for any modern front-end developer."
+series: "React Masterclass"
+seriesOrder: 1
+translationKey: "react-intro"
+---
+
+# Introduction to React & JSX: How to Think in Components
+
+> **TL;DR — Key Takeaways**
+> - React is a JavaScript library for building UIs out of small, reusable pieces called **components**
+> - **JSX** is a syntax extension that lets you write HTML-like markup directly inside JavaScript/TypeScript
+> - Thinking in components means breaking every UI into isolated, single-responsibility pieces
+> - Components accept **props** (inputs) and manage **state** (internal data)
+> - This mental model scales from a landing page button all the way to complex B2B SaaS dashboards
+
+---
+
+## What Is React and Why Do We Use It at Atonize?
+
+React was released by Meta in 2013 and has since become the most widely adopted UI library in the world. At Atonize, almost every client project — from marketing sites to multi-tenant SaaS platforms — runs on React (usually via [Next.js](https://nextjs.org)).
+
+The core promise is simple: **build your UI as a tree of components**, each responsible for one thing. When data changes, React efficiently updates only the parts of the page that need to change. No manual DOM manipulation. No spaghetti event listeners.
+
+For B2B SaaS products specifically, this is a game-changer. When you're building a dashboard with a data table, a sidebar, a notification panel, and a user settings modal all on the same screen — React's component model is what keeps that complexity manageable.
+
+---
+
+## What Is JSX?
+
+JSX (JavaScript XML) is the syntax you'll write in nearly every React file. It looks like HTML, but it's actually JavaScript under the hood.
+
+```tsx
+// A simple JSX expression
+const greeting = <h1 className="text-2xl font-bold">Hello, world!</h1>;
+```
+
+A few things to notice right away:
+
+- We use `className` instead of `class` (because `class` is a reserved word in JavaScript)
+- JSX gets compiled to `React.createElement()` calls by your bundler (Vite, Webpack, or Next.js)
+- You can embed any JavaScript expression inside JSX using curly braces `{}`
+
+```tsx
+const name = "Atonize";
+const element = <p>Welcome to {name.toUpperCase()}.</p>;
+// Renders: <p>Welcome to ATONIZE.</p>
+```
+
+JSX is not mandatory — you could write raw `React.createElement` calls — but nobody does. JSX is the practical standard.
+
+---
+
+## Your First Component: Thinking in Single Responsibility
+
+A React component is just a **function that returns JSX**. That's it.
+
+Here is a real-world example: a reusable `Badge` component you might use across a SaaS dashboard to label subscription plans.
+
+```tsx
+// components/ui/Badge.tsx
+interface BadgeProps {
+  label: string;
+  variant?: "free" | "pro" | "enterprise";
+}
+
+const variantStyles: Record<string, string> = {
+  free: "bg-gray-100 text-gray-600",
+  pro: "bg-blue-100 text-blue-700",
+  enterprise: "bg-violet-100 text-violet-700",
+};
+
+export function Badge({ label, variant = "free" }: BadgeProps) {
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${variantStyles[variant]}`}
+    >
+      {label}
+    </span>
+  );
+}
+```
+
+And here's how you use it:
+
+```tsx
+// In any page or parent component
+import { Badge } from "@/components/ui/Badge";
+
+export default function UserCard() {
+  return (
+    <div className="rounded-xl border border-gray-200 p-6 shadow-sm">
+      <p className="text-sm text-gray-500">Current Plan</p>
+      <Badge label="Pro" variant="pro" />
+    </div>
+  );
+}
+```
+
+Notice what we did here:
+
+- `Badge` has **one job**: render a styled label
+- It receives data via **props** (`label`, `variant`) — it doesn't decide what text to show
+- The parent (`UserCard`) is in charge of the data; `Badge` is in charge of the presentation
+
+This is the component mindset in practice.
+
+---
+
+## Props vs. State: The Two Sources of Truth
+
+Understanding the difference between props and state is the single most important concept in React.
+
+**Props:**
+- **What it is:** Data passed in from a parent
+- **Who controls it:** The parent component
+- **Can it change?** No (from inside the component)
+- **Analogy:** Function argument
+
+**State:**
+- **What it is:** Data managed inside the component
+- **Who controls it:** The component itself
+- **Can it change?** Yes, via `useState`
+- **Analogy:** Local variable that triggers a re-render
+
+A component should generally be either **"smart" (stateful)** or **"dumb" (presentational)** — mixing both responsibilities in the same component is where complexity starts to creep in. We'll explore this further in our article on [LINK_TO_STATE_MANAGEMENT_ARTICLE].
+
+---
+
+## How to Break Down a UI Into Components
+
+When you receive a design from a client, here is the mental process we follow at Atonize:
+
+1. **Draw boxes** around every distinct piece of UI — buttons, cards, navbars, form fields
+2. **Name each box** as a noun: `Sidebar`, `PlanCard`, `UserAvatar`, `NotificationBell`
+3. **Ask: does this piece change independently?** If yes, it probably needs its own component
+4. **Ask: is this piece reused elsewhere?** If yes, definitely extract it
+
+For example, a typical SaaS pricing page might decompose like this:
+
+```text
+<PricingPage>
+  ├── <PageHeader />
+  ├── <BillingToggle />        ← monthly / annual switch
+  └── <PricingGrid>
+        ├── <PlanCard plan="free" />
+        ├── <PlanCard plan="pro" />
+        └── <PlanCard plan="enterprise" />
+```
+
+Every `PlanCard` receives different data via props but shares the same structure. This is the power of component reuse.
+
+---
+
+## Common Pitfalls We See in Junior React Code
+
+### 1. Putting everything in one giant component
+
+The most common mistake. If your component file is 300+ lines long, it's doing too many things. Extract sub-components aggressively.
+
+### 2. Using array index as `key` in lists
+
+```tsx
+// ❌ Bad — causes subtle rendering bugs when list order changes
+items.map((item, index) => <Card key={index} {...item} />)
+
+// ✅ Good — use a stable unique identifier
+items.map((item) => <Card key={item.id} {...item} />)
+```
+
+### 3. Forgetting that JSX must return a single root element
+
+```tsx
+// ❌ This will throw an error
+return (
+  <h1>Title</h1>
+  <p>Paragraph</p>
+)
+
+// ✅ Wrap in a Fragment
+return (
+  <>
+    <h1>Title</h1>
+    <p>Paragraph</p>
+  </>
+)
+```
+
+### 4. Mutating props directly
+
+Props are read-only. Never try to change a prop inside a component — if you need to change data, lift that state up to the parent or use a state management solution. We cover this in depth in [LINK_TO_STATE_MANAGEMENT_ARTICLE].
+
+---
+
+## Where This Leads: The React Ecosystem
+
+Once you internalize the component model, the rest of the React ecosystem starts to make sense:
+
+- **Hooks** (`useState`, `useEffect`, `useContext`) — ways to add logic and side effects to components → [LINK_TO_HOOKS_ARTICLE]
+- **Next.js App Router** — wraps React in a full-stack framework with Server Components, routing, and data fetching → [LINK_TO_NEXTJS_INTRO_ARTICLE]
+- **State management** (Zustand, Redux Toolkit) — for sharing state across many components
+
+The component mindset is the foundation. Everything else builds on top of it.
+
+---
+
+## FAQ
+
+### What is the difference between React and Next.js?
+
+React is a UI library — it handles rendering components in the browser. Next.js is a full-stack framework built on top of React that adds routing, server-side rendering, API routes, and much more. At Atonize, we almost always use Next.js rather than plain React for client projects. Learn more in [LINK_TO_NEXTJS_INTRO_ARTICLE].
+
+### Do I need to know JavaScript well before learning React?
+
+Yes. You should be comfortable with ES6+ features: arrow functions, destructuring, spread operators, array methods (`map`, `filter`, `reduce`), and async/await. React doesn't hide JavaScript — it exposes it constantly.
+
+### Is JSX the same as HTML?
+
+Not quite. JSX looks like HTML but it compiles to JavaScript. The key differences: use `className` instead of `class`, `htmlFor` instead of `for`, and all tags must be closed (including self-closing ones like `<img />`). Expressions go in `{}` instead of `""`.
+
+### When should I create a new component vs. keeping code in the same file?
+
+A good rule of thumb: if a piece of JSX is used more than once, extract it. If a piece of JSX has its own independent state or logic, extract it. If a component file grows beyond ~150 lines, look for things to extract. When in doubt, err on the side of more components — you can always merge them later, but untangling a monolithic component is painful.
+
+

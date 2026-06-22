@@ -1,0 +1,259 @@
+---
+title: "React State Management & Lifecycle: useState and useEffect Explained"
+date: "2025-06-19"
+category: "Engineering"
+slug: "react-state-management-and-lifecycle"
+translationKey: "state-management-lifecycle"
+icon: "🔄"
+series: "React Masterclass"
+seriesOrder: 3
+excerpt: "Learn how useState and useEffect work under the hood, how to manage side effects safely, and how to avoid the most common memory leaks we've seen in production React and Next.js applications."
+---
+
+# React State Management & Lifecycle: useState and useEffect Explained
+
+> **TL;DR — Key Takeaways**
+> - **State** is data that, when changed, causes React to re-render a component
+> - `useState` is the primary hook for managing local component state
+> - `useEffect` runs side effects (API calls, subscriptions, timers) after rendering
+> - Every `useEffect` that sets up a resource should **clean it up** — this prevents memory leaks
+> - The dependency array in `useEffect` controls *when* it runs — getting this wrong is the #1 source of bugs
+
+---
+
+## Why State Exists: React's Reactivity Model
+
+In our [previous article](/insights/introduction-to-react-and-jsx), we covered how React builds UIs as a tree of components. But a static UI is just a brochure. Real applications respond to user input, fetch data from a server, and change over time.
+
+This is where **state** comes in.
+
+State is data that belongs to a component and, critically, when it changes, React automatically re-renders that component to reflect the new reality. You don't tell React *how* to update the DOM — you tell it *what the data looks like*, and React figures out the rest.
+
+This is the core of React's declarative model.
+
+---
+
+## useState: Managing Local State
+
+The `useState` hook gives a component its own internal memory.
+
+```tsx
+import { useState } from "react";
+
+export function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div className="flex items-center gap-4 p-6">
+      <button
+        onClick={() => setCount(count - 1)}
+        className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium hover:bg-gray-200"
+      >
+        −
+      </button>
+      <span className="text-2xl font-bold tabular-nums">{count}</span>
+      <button
+        onClick={() => setCount(count + 1)}
+        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+      >
+        +
+      </button>
+    </div>
+  );
+}
+```
+
+`useState(0)` returns a tuple: the current value and a setter function. When `setCount` is called, React schedules a re-render with the new value.
+
+### The Functional Update Pattern
+
+When your new state depends on the previous state, always use the functional form of the setter. This avoids stale closure bugs — a common issue in async code:
+
+```tsx
+// ❌ Risky — `count` might be stale inside async callbacks
+setCount(count + 1);
+
+// ✅ Safe — always operates on the latest value
+setCount((prev) => prev + 1);
+```
+
+In B2B SaaS products, this pattern is critical in scenarios like optimistic UI updates, where you're modifying state before a server response confirms the change.
+
+---
+
+## useEffect: Running Side Effects
+
+A **side effect** is anything that reaches outside the component's render cycle: fetching data, setting up a WebSocket connection, manipulating the browser title, starting a timer.
+
+`useEffect` is the hook that handles all of these.
+
+```tsx
+import { useState, useEffect } from "react";
+
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+}
+
+export function ProductList({ categoryId }: { categoryId: number }) {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchProducts() {
+      try {
+        setIsLoading(true);
+        const res = await fetch(`/api/products?category=${categoryId}`);
+        if (!res.ok) throw new Error("Failed to fetch products");
+        const data = await res.json();
+        if (!cancelled) setProducts(data);
+      } catch (err) {
+        if (!cancelled) setError("Could not load products. Please try again.");
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    fetchProducts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [categoryId]);
+
+  if (isLoading) return <p className="text-gray-500">Loading products...</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
+
+  return (
+    <ul className="divide-y divide-gray-100">
+      {products.map((product) => (
+        <li key={product.id} className="flex justify-between py-3">
+          <span>{product.name}</span>
+          <span className="font-medium">${product.price}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+This example demonstrates several production-level patterns at once. Let's break them down.
+
+---
+
+## The Dependency Array: React's Re-run Trigger
+
+The second argument to `useEffect` is the **dependency array**. It tells React when to re-run the effect.
+
+| Dependency array | When does the effect run? |
+|---|---|
+| Not provided | After *every* render |
+| `[]` (empty) | Only once, after the first render |
+| `[categoryId]` | After the first render, and whenever `categoryId` changes |
+
+In our `ProductList` example, we pass `[categoryId]`. This means: fetch products once on mount, and re-fetch whenever the user switches category. This is exactly what we want.
+
+Getting the dependency array wrong is the single most common `useEffect` bug. ESLint's `exhaustive-deps` rule (included in `eslint-plugin-react-hooks`) will warn you when you're missing dependencies — always keep it enabled.
+
+---
+
+## Cleanup Functions: Preventing Memory Leaks
+
+Notice the `return () => { cancelled = true; }` in our example. This is the **cleanup function**.
+
+When a component unmounts (is removed from the UI), or before the effect re-runs, React calls this cleanup function. Without it, an async operation that started before the unmount could still try to call `setProducts` on a component that no longer exists — a classic memory leak.
+
+Here are the three cleanup patterns you'll encounter most often in production:
+
+### Pattern 1: Cancelling async requests (as above)
+
+Use a `cancelled` boolean flag. When cleanup runs, set it to `true` so in-flight callbacks know to bail out.
+
+### Pattern 2: Clearing timers
+
+```tsx
+useEffect(() => {
+  const intervalId = setInterval(() => {
+    setTick((prev) => prev + 1);
+  }, 1000);
+
+  return () => clearInterval(intervalId);
+}, []);
+```
+
+### Pattern 3: Unsubscribing from event listeners
+
+```tsx
+useEffect(() => {
+  function handleResize() {
+    setWindowWidth(window.innerWidth);
+  }
+
+  window.addEventListener("resize", handleResize);
+  return () => window.removeEventListener("resize", handleResize);
+}, []);
+```
+
+Every effect that *sets something up* should *tear it down*. Without cleanup, these accumulate silently and degrade app performance over time — something we've had to debug in more than one inherited B2B codebase.
+
+---
+
+## Common Pitfalls & Zamke
+
+### 1. Infinite loops
+
+```tsx
+// ❌ This causes an infinite loop
+useEffect(() => {
+  setData(transform(data)); // updating state that's also a dependency
+}, [data]);
+
+// ✅ Compute the value inline instead
+const transformedData = useMemo(() => transform(data), [data]);
+```
+
+If your effect updates state that is also in the dependency array, you will get an infinite render loop. React re-renders → effect runs → state updates → React re-renders → ...
+
+### 2. Treating useEffect as a lifecycle method
+
+Coming from class components, it's tempting to think of `useEffect` as `componentDidMount` + `componentDidUpdate` + `componentWillUnmount`. It's not. Think of it instead as: **"synchronize this component with this external system."** The mental model shift changes how you structure effects entirely.
+
+### 3. Fetching data directly in useEffect in 2025+
+
+For production Next.js applications, we rarely use `useEffect` for data fetching anymore. Server Components with `async/await`, combined with libraries like SWR or TanStack Query, handle caching, deduplication, and revalidation far better. We'll cover this in depth in our [Next.js data fetching article](/insights/nextjs-data-fetching).
+
+---
+
+## Where This Leads
+
+Once you're comfortable with `useState` and `useEffect`, the natural next step is understanding how to share state across components without passing props five levels deep — the **prop drilling** problem. We cover that in [Component Communication: Props & Context API](/insights/component-communication-props-context).
+
+For performance-critical scenarios, the advanced hooks `useMemo` and `useCallback` build directly on these foundations. We explore those in [Advanced React Hooks](/insights/advanced-react-hooks).
+
+---
+
+## Frequently Asked Questions (FAQ)
+
+### What is the difference between state and props in React?
+
+Props are data passed *into* a component from its parent — they're read-only from the component's perspective. State is data that the component owns and manages internally. When either changes, the component re-renders. We covered this distinction in detail in our [Introduction to React & JSX](/insights/introduction-to-react-and-jsx).
+
+### Can I use multiple useState calls in one component?
+
+Yes, and this is the recommended approach. Separate unrelated state into separate `useState` calls rather than bundling everything into one object. This makes the code easier to read and avoids unnecessary re-renders when only one piece of state changes.
+
+### When should I use useEffect vs. event handlers?
+
+If the side effect is triggered by a user action (button click, form submit), put it in an event handler — not `useEffect`. Use `useEffect` only for effects that need to synchronize with something external after rendering: initial data fetches, subscriptions, and syncing with third-party libraries.
+
+### Why do I sometimes see stale data inside useEffect?
+
+This is a stale closure problem. The effect closes over the values of variables at the time it was created. If those variables change but aren't in the dependency array, the effect still sees the old values. The fix is to add the variable to the dependency array, or use the functional update form of state setters (`setCount(prev => prev + 1)`).
+
+---
+
+*Next in the Atonize React series: [Component Communication: Props & Context API](/insights/component-communication-props-context) — solving prop drilling and learning when Context is (and isn't) the right tool.*

@@ -1,0 +1,278 @@
+---
+title: "Globalni State Management u 2026: Zustand vs Redux Toolkit"
+date: "2025-06-19"
+category: "Engineering"
+slug: "globalni-state-management-2026"
+translationKey: "global-state-management-2026"
+icon: "🌐"
+excerpt: "Nauči kada zaista trebaš globalni state management, zašto je Redux postao teret, i kako Zustand nudi jednostavniju, ergonomičniju alternativu — sa realnim B2B SaaS patternima iz Atonize tima."
+series: "React Masterclass"
+seriesOrder: 6
+---
+
+# Globalni State Management u 2026: Zustand vs Redux Toolkit
+
+> **TL;DR — Ključni Uvidi**
+> - Globalni state je za podatke koji se dele između mnoštva nepovezanih komponenti — nije sve potrebno globalizovati
+> - Redux Toolkit je moćan ali opširan; ostaje industrijski standard za velike, složene enterprise aplikacije
+> - Zustand je minimalan, bez boilerplate-a i pokriva 90% realnih potreba za globalnim state-om uz delić složenosti
+> - Oba su kompatibilna sa React Server Components kada se koriste ispravno
+> - Najbolje rešenje za state management je ono koje odgovara veličini i složenosti tvog tima — nemoj preinžinjerirati
+
+---
+
+## Da li ti zaista treba globalni state?
+
+Pre nego što posegneš za bilo kojom bibliotekom za upravljanje state-om, postavi sebi pitanje: može li se problem rešiti alatima koje već imaš?
+
+Pokrili smo kompletan lokalni komunikacijski alat u ovoj seriji:
+- **Props i lifting state** za komponente sa zajedničkim pretkom → [Komunikacija između komponenti](/insights/component-communication-props-context)
+- **Context API** za retko promenljive globalne podatke poput autentikacije i teme → isti tekst
+- **Custom hook-ovi** za višekratnu stateful logiku → [Custom React Hook-ovi](/insights/custom-react-hooks)
+
+Biblioteke za globalni state stupaju na scenu kada ovi alati otkažu — konkretno kada:
+
+1. State treba da se deli između komponenti **bez zajedničkog pretka** (ili jednog koji je toliko visoko da izaziva rasprostranjene re-rendere)
+2. Logika state-a je dovoljno složena da zahteva **akcije, izvedene vrednosti i middleware**
+3. Trebaš **fine-grained pretplate** — komponente koje se re-renderuju samo kada se promeni određeni deo state-a
+
+Ako tvoj problem ne spada u jedan od ova tri slučaja, verovatno ti ne treba biblioteka za globalni state.
+
+---
+
+## Problem sa "klasičnim" Redux-om
+
+Redux sam po sebi nije problem — njegove osnovna ideje (jedan store, predvidiva ažuriranja state-a, čisti reducer-i) su zdravi i dobro skaliraju. Problem je bio boilerplate.
+
+Za jednostavan brojač, klasičan Redux je zahtevao:
+
+- Konstantu tipa akcije
+- Funkciju kreatora akcije
+- Funkciju reducer-a
+- Konfiguraciju store-a
+- `mapStateToProps` konekciju
+
+Pet fajlova i 50+ linija za nešto što `useState` rešava u dve. Ovo je teralo developere od Redux-a ka lakšim alternativama — i razlog zbog kojeg je Redux Toolkit kreiran.
+
+---
+
+## Redux Toolkit: Redux bez bola
+
+Redux Toolkit (RTK) je zvanični, moderan način pisanja Redux-a. Eliminiše boilerplate sa `createSlice` i uključuje RTK Query za data fetching.
+
+```tsx
+// store/cartSlice.ts
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+interface CartState {
+  items: CartItem[];
+}
+
+const initialState: CartState = { items: [] };
+
+export const cartSlice = createSlice({
+  name: "cart",
+  initialState,
+  reducers: {
+    addItem(state, action: PayloadAction<CartItem>) {
+      const existing = state.items.find((i) => i.id === action.payload.id);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        state.items.push(action.payload);
+      }
+    },
+    removeItem(state, action: PayloadAction<string>) {
+      state.items = state.items.filter((i) => i.id !== action.payload);
+    },
+    clearCart(state) {
+      state.items = [];
+    },
+  },
+});
+
+export const { addItem, removeItem, clearCart } = cartSlice.actions;
+
+// Izvedeni selektor
+export const selectCartTotal = (state: { cart: CartState }) =>
+  state.cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+```
+
+```tsx
+// store/index.ts
+import { configureStore } from "@reduxjs/toolkit";
+import { cartSlice } from "./cartSlice";
+
+export const store = configureStore({
+  reducer: { cart: cartSlice.reducer },
+});
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+```
+
+RTK je značajno bolji od klasičnog Redux-a. Ali i dalje zahteva postavljanje Provider-a, konfigurisanje store-a, pisanje tipiziranih hook-ova i razumevanje mentalnog modela slice/reducer/selektor. Za mnoge projekte, to je i dalje više nego što je potrebno.
+
+---
+
+## Zustand: Minimalan, Ergonomičan, Dovoljan
+
+Zustand je mala biblioteka za upravljanje state-om (~1kb) izgrađena na hook-ovima. Nema Provider-a, nema reducer-a, nema tipa akcije. Definišeš store kao jednu funkciju i konzumiraš ga direktno.
+
+Evo iste logike korpe u Zustand-u:
+
+```tsx
+// store/useCartStore.ts
+import { create } from "zustand";
+
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+interface CartStore {
+  items: CartItem[];
+  addItem: (item: CartItem) => void;
+  removeItem: (id: string) => void;
+  clearCart: () => void;
+  total: () => number;
+}
+
+export const useCartStore = create<CartStore>((set, get) => ({
+  items: [],
+
+  addItem: (item) =>
+    set((state) => {
+      const existing = state.items.find((i) => i.id === item.id);
+      if (existing) {
+        return {
+          items: state.items.map((i) =>
+            i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+          ),
+        };
+      }
+      return { items: [...state.items, item] };
+    }),
+
+  removeItem: (id) =>
+    set((state) => ({ items: state.items.filter((i) => i.id !== id) })),
+
+  clearCart: () => set({ items: [] }),
+
+  total: () =>
+    get().items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+}));
+```
+
+Konzumiranje u komponenti:
+
+```tsx
+// components/CartSummary.tsx
+import { useCartStore } from "@/store/useCartStore";
+
+export function CartSummary() {
+  const items = useCartStore((state) => state.items);
+  const total = useCartStore((state) => state.total());
+  const clearCart = useCartStore((state) => state.clearCart);
+
+  if (items.length === 0) {
+    return <p className="text-sm text-gray-500">Korpa je prazna.</p>;
+  }
+
+  return (
+    <div className="rounded-xl border border-gray-200 p-6 shadow-sm">
+      <ul className="divide-y divide-gray-100">
+        {items.map((item) => (
+          <li key={item.id} className="flex justify-between py-2 text-sm">
+            <span>{item.name} × {item.quantity}</span>
+            <span className="font-medium">{(item.price * item.quantity).toFixed(2)} RSD</span>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-4">
+        <span className="font-semibold">Ukupno</span>
+        <span className="text-lg font-bold">{total.toFixed(2)} RSD</span>
+      </div>
+      <button
+        onClick={clearCart}
+        className="mt-4 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50"
+      >
+        Isprazni korpu
+      </button>
+    </div>
+  );
+}
+```
+
+Primeti pattern selektora: `useCartStore((state) => state.items)`. Ovo je Zustand-ova fine-grained pretplata — `CartSummary` se re-renderuje samo kada se `items` promeni, ne kada se promeni bilo koji drugi deo store-a.
+
+---
+
+## Zustand vs Redux Toolkit: Pošteno poređenje
+
+| | Zustand | Redux Toolkit |
+|---|---|---|
+| **Veličina paketa** | ~1kb | ~11kb |
+| **Boilerplate** | Minimalan | Umeren |
+| **DevTools** | Putem middleware-a | Ugrađeni, odlični |
+| **Kriva učenja** | Veoma niska | Srednja |
+| **Middleware** | Jednostavan | Moćan (thunk, saga) |
+| **Najbolji za** | Male do srednje aplikacije, brza iteracija | Veliki timovi, složeni state, strogi paterni |
+| **React Server Components** | Samo klijent | Samo klijent |
+
+**Naš iskren stav u Atonize-u:** Za većinu B2B SaaS projekata — dashboard-i, CRM-ovi, katalog sistemi — Zustand pokriva sve što nam treba. Posežemo za Redux Toolkit-om kada uvodimo veliki tim kome koristе nametnutе konvencije, ili kada je postojeći klijentski codebase već na Redux-u.
+
+---
+
+## Česte Greške i Zamke
+
+### 1. Stavljanje svega u globalni state
+
+Nije svaki podatak za globalni store. Podaci sa servera (proizvodi, korisnici, porudžbine) bolje se upravljaju bibliotekom za data fetching poput TanStack Query. UI state specifičan za jedan feature (da li je modal otvoren?) pripada lokalnom `useState`. Globalni state je za zaista deljeni, klijentski state.
+
+### 2. Nekorišćenje selektora u Zustand-u
+
+```tsx
+// ❌ Pretplaćuje se na ceo store — re-renderuje pri bilo kojoj promeni
+const store = useCartStore();
+
+// ✅ Pretplaćuje se samo na ono što ova komponenta treba
+const items = useCartStore((state) => state.items);
+```
+
+Uvek prosleđuj selektor funkciju `useCartStore`-u. Bez nje, tvoja komponenta se re-renderuje svaki put kada se bilo šta u store-u promeni.
+
+### 3. Čuvanje izvedenih podataka umesto računanja
+
+Ne čuvaj `total` kao vrednost state-a koju ručno ažuriraš. Izračunaj je iz postojećeg state-a ili kao funkciju u store-u (kao što smo radili) ili direktno u komponenti. Zastareli izvedeni state je izvor suptilnih bugova.
+
+---
+
+## Često Postavljana Pitanja (FAQ)
+
+### Da li je Redux mrtav u 2026?
+
+Ne. Redux Toolkit je aktivno održavan i široko korišćen u enterprise aplikacijama. Ono što je umrlo je argument da je Redux *podrazumevani* izbor za sve React aplikacije. Danas, Context rešava jednostavne slučajeve, Zustand većinu srednje složenih, a Redux složene enterprise slučajeve. Svaki ima svoje mesto.
+
+### Može li Zustand da radi sa Next.js App Router-om?
+
+Da, uz jednu napomenu. Zustand store-ovi su isključivo klijentski — ne mogu da čuvaju state na serveru. U Next.js App Router-u, tvom Zustand store-u treba pristupati samo unutar Client Components (`"use client"`). Server Components direktno povlače podatke; Zustand store je za klijentski UI i interakcijski state.
+
+### Šta je sa Jotai i Recoil-om?
+
+Jotai i Recoil su biblioteke za state management zasnovane na atomima — definišeš individualne atome umesto jednog store objekta. Odlične su za visoko granularne pretplate i dobro rade u aplikacijama gde je state prirodno fragmentisan. U Atonize-u, smatramo da je Zustand-ov model jednog store-a lakši za razumevanje za većinu projekata, ali Jotai vredi istražiti za složene, fine-grained scenarije.
+
+### Kada koristiti TanStack Query umesto biblioteke za state management?
+
+Ako je tvoj "globalni state" zapravo podatak povučen sa servera — liste proizvoda, korisnički profili, porudžbine — koristi TanStack Query (ili SWR). Ove biblioteke rukuju keširanjem, revalidacijom, pozadinskim ponovnim povlačenjem i stanjima učitavanja/greške daleko bolje od bilo kog state management store-a. Zustand ili Redux rezerviši za zaista klijentski state koji nije vezan za serverski resurs.
+
+---

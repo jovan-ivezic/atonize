@@ -1,0 +1,301 @@
+---
+title: "Custom React Hook-ovi: Izvuci Logiku, Gradi Višekratne Apstrakcije"
+date: "2025-06-19"
+category: "Engineering"
+slug: "custom-react-hookovi"
+translationKey: "custom-react-hooks"
+icon: "🪝"
+excerpt: "Nauči kako da pišeš sopstvene custom hook-ove da bi izvukao višekratnu logiku iz komponenti, održao kod čistim i gradio apstrakcije koje razdvajaju junior od mid-level developera."
+series: "React Masterclass"
+seriesOrder: 5
+---
+
+# Custom React Hook-ovi: Izvuci Logiku, Gradi Višekratne Apstrakcije
+
+> **TL;DR — Ključni Uvidi**
+> - Custom hook je JavaScript funkcija čije ime počinje sa `use` i koja interno poziva druge hook-ove
+> - Omogućavaju ti da izvučeš stateful logiku iz komponenti i koristiš je bilo gde
+> - Custom hook-ovi ne dele state — svaki poziv kreira svoju nezavisnu instancu
+> - Primarni su alat za održavanje komponenti lean i fokusiranih na renderovanje
+> - Pisanje custom hook-ova je veština koja najjasnije razdvaja junior od mid-level React developera
+
+---
+
+## Zašto custom hook-ovi postoje
+
+Do sad u ovoj seriji, naučio si ugrađene hook-ove: `useState`, `useEffect`, `useCallback`, `useMemo`, `useRef` i `useContext`. Znaš kako svaki od njih radi individualno. Ali prave aplikacije ih kombinuju — ponekad u istom paternu, ponovljenom kroz desetak komponenti.
+
+Zamislimo da imaš pet različitih stranica koje sve povlače podatke sa API-ja. Svaka ima sopstveni `isLoading`, `error` i `data` state. Svaka ima isti `useEffect` sa istim cleanup paternom iz [State Management i Životni Ciklus](/insights/react-state-management-and-lifecycle). Kopiraš i lepiš istih 20 linija koda u svaku komponentu.
+
+Tačno to custom hook-ovi rešavaju.
+
+Custom hook ti omogućava da izvučeš tu ponovljenu logiku u jednu funkciju — i koristiš je jednom linijom koda bilo gde u aplikaciji.
+
+---
+
+## Anatomija custom hook-a
+
+Custom hook je samo funkcija koja:
+
+1. Ima ime koje počinje sa `use` (ovo nije opciono — React-ova lint pravila zavise od toga)
+2. Interno poziva jedan ili više ugrađenih hook-ova
+3. Vraća sve što konzument treba — vrednosti, setter-e, funkcije, ili bilo koju kombinaciju
+
+To je sve. Nema posebnog API-ja, nema registracije, nema klase za proširivanje. Samo funkcija.
+
+---
+
+## Primer 1: useFetch — Apstrakcija za povlačenje podataka
+
+Ovo je najčešći custom hook koji ćeš pisati u bilo kom B2B SaaS projektu. Umesto ponavljanja fetch + loading + error patterna u svakoj komponenti, jednom ga izvlačimo.
+
+```tsx
+// hooks/useFetch.ts
+import { useState, useEffect, useCallback } from "react";
+
+interface FetchState<T> {
+  data: T | null;
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => void;
+}
+
+export function useFetch<T>(url: string): FetchState<T> {
+  const [data, setData] = useState<T | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [trigger, setTrigger] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchData() {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP greška: ${res.status}`);
+        const json = await res.json();
+        if (!cancelled) setData(json);
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Nepoznata greška");
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    fetchData();
+    return () => { cancelled = true; };
+  }, [url, trigger]);
+
+  const refetch = useCallback(() => setTrigger((t) => t + 1), []);
+
+  return { data, isLoading, error, refetch };
+}
+```
+
+Sada svaka komponenta koja treba da povuče podatke koristi ovo umesto toga:
+
+```tsx
+// components/ProductDetail.tsx
+import { useFetch } from "@/hooks/useFetch";
+
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+}
+
+export function ProductDetail({ productId }: { productId: string }) {
+  const { data: product, isLoading, error, refetch } = useFetch<Product>(
+    `/api/products/${productId}`
+  );
+
+  if (isLoading) {
+    return (
+      <div className="animate-pulse rounded-xl bg-gray-100 p-6 h-48" />
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl border border-red-200 bg-red-50 p-6">
+        <p className="text-sm text-red-600">{error}</p>
+        <button
+          onClick={refetch}
+          className="mt-3 text-sm font-medium text-red-700 underline"
+        >
+          Pokušaj ponovo
+        </button>
+      </div>
+    );
+  }
+
+  if (!product) return null;
+
+  return (
+    <div className="rounded-xl border border-gray-200 p-6 shadow-sm">
+      <h2 className="text-xl font-semibold">{product.name}</h2>
+      <p className="mt-2 text-sm text-gray-600">{product.description}</p>
+      <p className="mt-4 text-lg font-bold">{product.price} RSD</p>
+    </div>
+  );
+}
+```
+
+Komponenta je sada 40 linija čiste logike renderovanja. Sva složenost fetch-a živi na jednom mestu — `useFetch.ts` — i može biti ažurirana jednom za sve konzumente.
+
+---
+
+## Primer 2: useDebounce — Kontrola frekvencije unosa
+
+U B2B aplikacijama, search input-i koji okidaju API pozive pri svakom pritisku tastera su čest problem sa performansama i troškovima. `useDebounce` hook odlaže ažuriranje vrednosti dok korisnik ne prestane da kuca.
+
+```tsx
+// hooks/useDebounce.ts
+import { useState, useEffect } from "react";
+
+export function useDebounce<T>(value: T, delay: number = 400): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+```
+
+Upotreba je jedna linija:
+
+```tsx
+// components/ProductSearch.tsx
+import { useState } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useFetch } from "@/hooks/useFetch";
+
+interface SearchResult {
+  id: string;
+  name: string;
+}
+
+export function ProductSearch() {
+  const [query, setQuery] = useState("");
+  const debouncedQuery = useDebounce(query, 400);
+
+  const { data: results, isLoading } = useFetch<SearchResult[]>(
+    `/api/products/search?q=${encodeURIComponent(debouncedQuery)}`
+  );
+
+  return (
+    <div className="space-y-3">
+      <input
+        type="search"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Pretraži proizvode..."
+        className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      {isLoading && <p className="text-xs text-gray-400">Pretraživanje...</p>}
+      {results && (
+        <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200">
+          {results.map((r) => (
+            <li key={r.id} className="px-4 py-2 text-sm">{r.name}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+```
+
+Primetimo da komponujemo dva custom hook-a — `useDebounce` i `useFetch` — zajedno. Ova mogućnost kompozicije je jedna od najmoćnijih osobina patterna custom hook-ova.
+
+---
+
+## Pravila custom hook-ova
+
+Custom hook-ovi prate ista pravila kao i ugrađeni hook-ovi:
+
+**Pravilo 1: Pozivaj hook-ove samo na najvišem nivou.** Nikada unutar petlji, uslova ili ugneždenih funkcija. React se oslanja na to da je redosled poziva hook-ova konzistentan između rendera.
+
+**Pravilo 2: Pozivaj hook-ove samo iz React funkcija.** Ili iz React komponente ili iz drugog custom hook-a. Nikada iz obične utility funkcije.
+
+**Pravilo 3: Prefiks `use` je obavezan.** Bez njega, React ne može da primeni gornja pravila putem ESLint-a, i drugi developeri neće znati da funkcija sadrži hook-ove.
+
+---
+
+## Šta čini dobar custom hook
+
+Nije svaka izvučena funkcija kandidat za hook. Evo testa koji primenjujemo u Atonize-u:
+
+**Izvuci u custom hook kada:**
+- Logika koristi jedan ili više ugrađenih hook-ova
+- Ista logika se pojavljuje u dve ili više komponenti
+- Logika je dovoljno složena da zamagli nameru renderovanja komponente
+- Logika ima sopstveno smisleno ime koje opisuje *šta radi*, a ne *kako radi* (`useProductSearch`, ne `useFilterAndDebounce`)
+
+**NE izvlači u custom hook kada:**
+- Logika je čista kalkulacija bez hook-ova (izvuci u regularnu utility funkciju umesto toga)
+- Koristila bi se samo na jednom mestu i nije posebno složena
+- Izvlačiš čisto radi izvlačenja — preuranjena apstrakcija je jednako štetna kao duplikacija
+
+---
+
+## Česte Greške i Zamke
+
+### 1. Pretpostavljanje da hook-ovi dele state
+
+Svaki poziv custom hook-a kreira sopstveni nezavisni state. Ako `ComponentA` i `ComponentB` oba pozivaju `useFetch("/api/products")`, svaki dobija sopstveni `data`, `isLoading` i `error` — ne dele jedan fetch. Za deljeni server state, koristi biblioteku za keširanje poput TanStack Query.
+
+### 2. Vraćanje nestabilnih referenci
+
+Ako tvoj hook vraća funkcije ili objekte, memoizuj ih — inače konzumenti koji ih prosleđuju `memo()`-u ili koriste kao `useEffect` zavisnosti imaće probleme:
+
+```tsx
+// ❌ Nova referenca na objekat pri svakom renderu
+return { data, isLoading, refetch };
+
+// ✅ Funkcije omotane u useCallback, objekat je ok jer konzumenti destrukturišu
+const refetch = useCallback(() => setTrigger(t => t + 1), []);
+return { data, isLoading, error, refetch };
+```
+
+### 3. Imenovanje hook-ova kao utility funkcija
+
+`useData`, `useHelper`, `useStuff` ne govore ništa. Imenuj hook-ove po domenskom konceptu koji enkapsuliraju: `useAuth`, `useCartTotal`, `useProductSearch`, `useWindowSize`. Dobro ime hook-a čini da komponenta čita kao obični engleski jezik.
+
+---
+
+## Kuda ovo vodi
+
+Custom hook-ovi su most između sirovih React primitiva i dobro arhitektuirane aplikacije. Kada tvoj tim izgradi deljenu biblioteku hook-ova — `useFetch`, `useDebounce`, `usePermissions`, `usePagination` — razvoj funkcionalnosti postaje dramatično brži i konzistentniji.
+
+U sledećem tekstu, izlazimo izvan samog React-a i gledamo kako upravljati state-om koji treba da se deli kroz celu aplikaciju — istražujemo [Globalni State Management u 2026. godini: Zustand vs Redux](/insights/global-state-management-2026).
+
+---
+
+## Često Postavljana Pitanja (FAQ)
+
+### Koja je razlika između custom hook-a i utility funkcije?
+
+Utility funkcija je čista funkcija bez hook-ova — prima ulaze i vraća izlaze. Custom hook sadrži jedan ili više ugrađenih hook-ova i time ima pristup React-ovom sistemu state-a i životnog ciklusa. Ako tvoja funkcija ne poziva nijedan hook, treba da bude regularna utility funkcija u `/utils` ili `/lib` folderu, ne hook.
+
+### Mogu li custom hook-ovi da vraćaju JSX?
+
+Tehnički da, ali ne bi trebalo. Hook koji vraća JSX je efektivno komponenta bez ugovora komponente. Ako trebaš da vratiš UI, napravi komponentu. Hook-ovi treba da vraćaju podatke, state i funkcije — ne markup.
+
+### Da li custom hook-ovi izazivaju re-rendere?
+
+Da, indirektno. Kada se state unutar custom hook-a promeni, komponenta koja koristi taj hook se re-renderuje — isto kao da je state definisan direktno u komponenti. Custom hook-ovi ne dodaju nikakav dodatni overhead re-rendera.
+
+### Gde da smestim fajlove custom hook-ova u Next.js projektu?
+
+Koristimo top-level `/hooks` direktorijum za deljene hook-ove koji se koriste kroz sve feature-e, i smještamo hook-ove specifične za feature pored komponente koja ih primarno koristi. Na primer, `useProductSearch` bi mogao da živi u `/features/catalog/hooks/useProductSearch.ts` umesto u globalnom `/hooks` folderu.
+
+---

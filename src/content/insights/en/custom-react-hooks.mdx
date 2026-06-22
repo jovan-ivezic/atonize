@@ -1,0 +1,301 @@
+---
+title: "Custom React Hooks: Extract Logic, Build Reusable Abstractions"
+date: "2025-06-19"
+category: "Engineering"
+slug: "custom-react-hooks"
+translationKey: "custom-react-hooks"
+icon: "🪝"
+excerpt: "Learn how to write your own custom React hooks to extract reusable logic from components, keep your codebase DRY, and build the kind of clean abstractions that separate junior from mid-level developers."
+series: "React Masterclass"
+seriesOrder: 5
+---
+
+# Custom React Hooks: Extract Logic, Build Reusable Abstractions
+
+> **TL;DR — Key Takeaways**
+> - A custom hook is a JavaScript function whose name starts with `use` and that calls other hooks internally
+> - They let you extract stateful logic from components and reuse it anywhere
+> - Custom hooks do not share state — each call creates its own independent instance
+> - They are the primary tool for keeping components lean and focused on rendering
+> - Writing custom hooks is the skill that most clearly separates junior from mid-level React developers
+
+---
+
+## Why Custom Hooks Exist
+
+By now in this series, you've learned the built-in hooks: `useState`, `useEffect`, `useCallback`, `useMemo`, `useRef`, and `useContext`. You know how they work individually. But real applications combine them — sometimes in the same pattern, repeated across a dozen components.
+
+Imagine you have five different pages that all fetch data from an API. Each one has its own `isLoading`, `error`, and `data` state. Each one has the same `useEffect` with the same cleanup pattern from [State Management & Lifecycle](/insights/react-state-management-and-lifecycle). You're copy-pasting the same 20 lines of code into every component.
+
+This is exactly what custom hooks solve.
+
+A custom hook lets you extract that repeated logic into a single function — and reuse it with one line of code anywhere in your app.
+
+---
+
+## The Anatomy of a Custom Hook
+
+A custom hook is just a function that:
+
+1. Has a name starting with `use` (this is not optional — React's linting rules depend on it)
+2. Calls one or more built-in hooks internally
+3. Returns whatever the consumer needs — values, setters, functions, or any combination
+
+That's it. No special API, no registration, no class to extend. Just a function.
+
+---
+
+## Example 1: useFetch — Data Fetching Abstraction
+
+This is the most common custom hook you'll write in any B2B SaaS project. Instead of repeating the fetch + loading + error pattern in every component, we extract it once.
+
+```tsx
+// hooks/useFetch.ts
+import { useState, useEffect, useCallback } from "react";
+
+interface FetchState<T> {
+  data: T | null;
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => void;
+}
+
+export function useFetch<T>(url: string): FetchState<T> {
+  const [data, setData] = useState<T | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [trigger, setTrigger] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchData() {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+        const json = await res.json();
+        if (!cancelled) setData(json);
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Unknown error");
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    fetchData();
+    return () => { cancelled = true; };
+  }, [url, trigger]);
+
+  const refetch = useCallback(() => setTrigger((t) => t + 1), []);
+
+  return { data, isLoading, error, refetch };
+}
+```
+
+Now every component that needs to fetch data uses this instead:
+
+```tsx
+// components/ProductDetail.tsx
+import { useFetch } from "@/hooks/useFetch";
+
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+}
+
+export function ProductDetail({ productId }: { productId: string }) {
+  const { data: product, isLoading, error, refetch } = useFetch<Product>(
+    `/api/products/${productId}`
+  );
+
+  if (isLoading) {
+    return (
+      <div className="animate-pulse rounded-xl bg-gray-100 p-6 h-48" />
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl border border-red-200 bg-red-50 p-6">
+        <p className="text-sm text-red-600">{error}</p>
+        <button
+          onClick={refetch}
+          className="mt-3 text-sm font-medium text-red-700 underline"
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
+
+  if (!product) return null;
+
+  return (
+    <div className="rounded-xl border border-gray-200 p-6 shadow-sm">
+      <h2 className="text-xl font-semibold">{product.name}</h2>
+      <p className="mt-2 text-sm text-gray-600">{product.description}</p>
+      <p className="mt-4 text-lg font-bold">${product.price}</p>
+    </div>
+  );
+}
+```
+
+The component is now 40 lines of pure rendering logic. All the fetch complexity lives in one place — `useFetch.ts` — and can be updated once for every consumer.
+
+---
+
+## Example 2: useDebounce — Controlling Input Frequency
+
+In B2B applications, search inputs that trigger API calls on every keystroke are a common performance and cost problem. A `useDebounce` hook delays the value update until the user stops typing.
+
+```tsx
+// hooks/useDebounce.ts
+import { useState, useEffect } from "react";
+
+export function useDebounce<T>(value: T, delay: number = 400): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+```
+
+Usage is one line:
+
+```tsx
+// components/ProductSearch.tsx
+import { useState } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useFetch } from "@/hooks/useFetch";
+
+interface SearchResult {
+  id: string;
+  name: string;
+}
+
+export function ProductSearch() {
+  const [query, setQuery] = useState("");
+  const debouncedQuery = useDebounce(query, 400);
+
+  const { data: results, isLoading } = useFetch<SearchResult[]>(
+    `/api/products/search?q=${encodeURIComponent(debouncedQuery)}`
+  );
+
+  return (
+    <div className="space-y-3">
+      <input
+        type="search"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search products..."
+        className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      {isLoading && <p className="text-xs text-gray-400">Searching...</p>}
+      {results && (
+        <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200">
+          {results.map((r) => (
+            <li key={r.id} className="px-4 py-2 text-sm">{r.name}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+```
+
+Notice we're also composing two custom hooks — `useDebounce` and `useFetch` — together. This composability is one of the most powerful properties of the custom hook pattern.
+
+---
+
+## The Rules of Custom Hooks
+
+Custom hooks follow the same rules as built-in hooks:
+
+**Rule 1: Only call hooks at the top level.** Never inside loops, conditions, or nested functions. React relies on the order of hook calls being consistent between renders.
+
+**Rule 2: Only call hooks from React functions.** Either from a React component or from another custom hook. Never from a regular utility function.
+
+**Rule 3: The `use` prefix is mandatory.** Without it, React can't enforce the rules above via ESLint, and other developers won't know the function contains hooks.
+
+---
+
+## What Makes a Good Custom Hook
+
+Not every extracted function should be a hook. Here is the test we apply at Atonize:
+
+**Extract to a custom hook when:**
+- The logic uses one or more built-in hooks
+- The same logic appears in two or more components
+- The logic is complex enough to obscure the component's rendering intent
+- The logic has its own meaningful name that describes *what it does*, not *how it works* (`useProductSearch`, not `useFilterAndDebounce`)
+
+**Do NOT extract to a custom hook when:**
+- The logic is pure computation with no hooks (extract to a regular utility function instead)
+- It would only ever be used in one place and isn't particularly complex
+- You're extracting purely for the sake of it — premature abstraction is as harmful as duplication
+
+---
+
+## Common Pitfalls
+
+### 1. Assuming hooks share state
+
+Each call to a custom hook creates its own independent state. If `ComponentA` and `ComponentB` both call `useFetch("/api/products")`, they each get their own `data`, `isLoading`, and `error` — they don't share a single fetch. For shared server state, use a caching library like TanStack Query.
+
+### 2. Returning unstable references
+
+If your hook returns functions or objects, memoize them — otherwise consumers that pass them to `memo()` or use them as `useEffect` dependencies will have problems:
+
+```tsx
+// ❌ New object reference on every render
+return { data, isLoading, refetch };
+
+// ✅ Functions wrapped in useCallback, object is fine since consumers destructure
+const refetch = useCallback(() => setTrigger(t => t + 1), []);
+return { data, isLoading, error, refetch };
+```
+
+### 3. Naming hooks like utilities
+
+`useData`, `useHelper`, `useStuff` tell you nothing. Name hooks after the domain concept they encapsulate: `useAuth`, `useCartTotal`, `useProductSearch`, `useWindowSize`. A good hook name makes a component read like plain English.
+
+---
+
+## Where This Leads
+
+Custom hooks are the bridge between raw React primitives and a well-architected application. Once your team builds a shared library of hooks — `useFetch`, `useDebounce`, `usePermissions`, `usePagination` — feature development becomes dramatically faster and more consistent.
+
+In the next article, we move beyond React itself and look at how to manage state that needs to be shared across the entire application — exploring [Global State Management in 2026: Zustand vs Redux](/insights/global-state-management-2026).
+
+---
+
+## Frequently Asked Questions (FAQ)
+
+### What is the difference between a custom hook and a utility function?
+
+A utility function is a pure function with no hooks — it takes inputs and returns outputs. A custom hook contains one or more built-in hooks and therefore has access to React's state and lifecycle system. If your function doesn't call any hooks, it should be a regular utility function in a `/utils` or `/lib` folder, not a hook.
+
+### Can custom hooks return JSX?
+
+Technically yes, but you shouldn't. A hook that returns JSX is effectively a component without the component contract. If you need to return UI, create a component. Hooks should return data, state, and functions — not markup.
+
+### Do custom hooks cause re-renders?
+
+Yes, indirectly. When state inside a custom hook changes, the component using that hook re-renders — the same as if the state was defined directly in the component. Custom hooks don't add any extra re-render overhead.
+
+### Where should I put custom hook files in a Next.js project?
+
+We use a top-level `/hooks` directory for shared hooks used across features, and co-locate feature-specific hooks next to the component that primarily uses them. For example, `useProductSearch` might live in `/features/catalog/hooks/useProductSearch.ts` rather than the global `/hooks` folder.
+
+---

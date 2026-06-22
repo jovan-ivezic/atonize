@@ -1,0 +1,107 @@
+{
+  "Navbar": {
+    "work": "Work",
+    "insights": "Insights",
+    "about": "About",
+    "contact": "Contact"
+  },
+  "Hero": {
+    "greeting": "Welcome to",
+    "role": "End-to-End Web Solutions.",
+    "description": "We specialize in building scalable, accessible, and highly optimized custom web applications, advanced B2B platforms, and technical SEO solutions.",
+    "cta_projects": "View Case Studies",
+    "cta_contact": "Get in Touch"
+  },
+  "About": {
+    "title_first": "About",
+    "title_gradient": "Atonize",
+    "role": "Full-Service Web Agency",
+    "p1": "At Atonize, we build <strong>high-performance web applications</strong> and digital solutions that drive business growth.",
+    "p2": "We specialize in <strong>Full-Stack Development, Modern Front-End Architecture, and Custom CRM Systems</strong>. Our focus is on delivering scalable, maintainable, and highly optimized platforms.",
+    "p3": "With deep expertise in <strong>Technical SEO and Digital Strategy</strong>, we ensure that every technical solution is aligned with your business visibility and overarching goals.",
+    "p4": "From the initial website inquiry all the way through custom administration panels to end-to-end production tracking, we handle the <strong>entire digital pipeline</strong>.",
+    "p5": "We work in a <strong>structured and responsible manner</strong>, committed to quality, efficiency, and continuous product improvement.",
+    "stats": {
+      "exp_years": "Years Expertise",
+      "projects": "Projects Delivered",
+      "seo_years": "Years in SEO",
+      "commitment": "Commitment"
+    }
+  },
+  "AboutFounder": {
+    "title_first": "About the",
+    "title_gradient": "Founder",
+    "role": "Lead Full-Stack Engineer",
+    "p1": "My name is Jovan Ivezić and I have <strong>13+ years of experience</strong> in developing and leading complex web projects, web applications, and single-page applications (SPAs).",
+    "p2": "I specialize in <strong>JavaScript, React, Next.js, and modern architectures</strong>. Over the years, I have successfully operated an agency and worked as a Team Lead, making crucial architectural decisions for enterprise systems.",
+    "p3": "In addition to technical development, I bring <strong>strong expertise in Technical SEO and Digital Strategy</strong>, allowing me to view software architecture in the context of business performance.",
+    "p4": "My passion lies in <strong>building things from scratch</strong>, from the database and API layer all the way to beautiful, intuitive user interfaces.",
+    "p5": "Atonize is my next step towards bringing <strong>end-to-end technical excellence</strong> directly to businesses.",
+    "stats": {
+      "exp_years": "Years Experience",
+      "projects": "Projects Completed",
+      "seo_years": "Years in SEO",
+      "commitment": "Dedication"
+    }
+  },
+  "Services": {
+    "title_first": "Our",
+    "title_gradient": "Services",
+    "description": "Comprehensive digital solutions tailored to your business needs.",
+    "footer_note": "Building robust architectures and delivering measurable business results."
+  },
+  "Portfolio": {
+    "title_first": "Featured",
+    "title_gradient": "Case Studies",
+    "description": "A selection of our recent full-stack solutions and B2B platforms."
+  },
+  "Contact": {
+    "title_first": "Get In",
+    "title_gradient": "Touch",
+    "description": "Have a project in mind or need a technical consultation? Feel free to reach out!",
+    "connect": "Connect with us",
+    "cta_text": "Looking for a dedicated technical partner?",
+    "cta_button": "Let's Work Together",
+    "info": {
+      "email": "Email",
+      "phone": "Phone",
+      "location": "Location"
+    },
+    "form": {
+      "name_label": "Your Name",
+      "name_placeholder": "John Doe",
+      "name_error": "Name must be at least 2 characters.",
+      "email_label": "Your Email",
+      "email_placeholder": "john@example.com",
+      "email_error": "Please enter a valid email address.",
+      "message_label": "Project Details",
+      "message_placeholder": "Tell us about your project, goals, and timeline...",
+      "message_error": "Message must be at least 10 characters.",
+      "submit": "Send Message",
+      "submitting": "Sending...",
+      "success_title": "Message Sent!",
+      "success_message": "Thank you for reaching out. We will get back to you shortly.",
+      "error_title": "Something went wrong",
+      "error_message": "We couldn't send your message. Please try emailing us directly."
+    }
+  },
+  "Insights": {
+    "title": "Insights",
+    "description": "Here we share our thoughts on full-stack development, software architecture, and technical SEO.",
+    "filters": {
+      "latest": "Latest",
+      "engineering": "Engineering",
+      "product": "Product",
+      "design": "Design"
+    },
+    "search": "Search",
+    "coming_soon": "First Article Coming Soon",
+    "announcement": "Announcement",
+    "series": "Series:"
+  },
+  "Footer": {
+    "made_with": "Made with",
+    "by": "by Atonize",
+    "rights": "All rights reserved."
+  }
+}

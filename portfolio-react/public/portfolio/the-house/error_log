@@ -1,3 +1,0 @@
-[23-Aug-2019 06:59:46 UTC] PHP Fatal error:  Call to undefined function get_header() in /home/mgap/atonize.com/portfolio/the-house/index.php on line 14
-[23-Aug-2019 06:59:52 UTC] PHP Fatal error:  Call to undefined function get_header() in /home/mgap/atonize.com/portfolio/the-house/index.php on line 14
-[29-Oct-2020 00:09:34 UTC] PHP Fatal error:  Call to undefined function get_header() in /home/mgap/atonize.com/portfolio/the-house/index.php on line 14

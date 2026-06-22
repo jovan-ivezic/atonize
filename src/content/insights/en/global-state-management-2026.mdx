@@ -1,0 +1,278 @@
+---
+title: "Global State Management in 2026: Zustand vs Redux Toolkit"
+date: "2025-06-19"
+category: "Engineering"
+slug: "global-state-management-2026"
+translationKey: "global-state-management-2026"
+icon: "🌐"
+excerpt: "Learn when you actually need global state management, why Redux became a pain point, and how Zustand offers a simpler, more ergonomic alternative — with real-world B2B SaaS patterns from the Atonize team."
+series: "React Masterclass"
+seriesOrder: 6
+---
+
+# Global State Management in 2026: Zustand vs Redux Toolkit
+
+> **TL;DR — Key Takeaways**
+> - Global state is for data shared across many disconnected components — not everything needs it
+> - Redux Toolkit is powerful but verbose; it remains the industry standard for large, complex enterprise apps
+> - Zustand is minimal, boilerplate-free, and covers 90% of real-world global state needs with a fraction of the complexity
+> - Both are compatible with React Server Components when used correctly
+> - The best state management solution is the one that fits your team's scale and complexity — don't over-engineer
+
+---
+
+## Do You Actually Need Global State?
+
+Before reaching for any state management library, ask yourself this: can the problem be solved with the tools you already have?
+
+We covered the full local communication toolkit in this series:
+- **Props & lifting state** for components with a common ancestor → [Component Communication](/insights/component-communication-props-context)
+- **Context API** for low-frequency global data like auth and theme → same article
+- **Custom hooks** for reusable stateful logic → [Custom React Hooks](/insights/custom-react-hooks)
+
+Global state libraries step in when these break down — specifically when:
+
+1. State needs to be shared between components with **no common ancestor** (or one so high it causes widespread re-renders)
+2. State logic is complex enough to need **actions, derived values, and middleware**
+3. You need **fine-grained subscriptions** — components that re-render only when a specific slice of state changes
+
+If your problem doesn't fit one of these three cases, you probably don't need a global state library.
+
+---
+
+## The Problem With "Classic" Redux
+
+Redux itself is not the problem — its core ideas (single store, predictable state updates, pure reducers) are sound and scale well. The problem was the boilerplate.
+
+For a simple counter, classic Redux required:
+
+- An action type constant
+- An action creator function
+- A reducer function
+- A store configuration
+- A `mapStateToProps` connection
+
+Five files and 50+ lines for something `useState` handles in two. This drove developers away from Redux and toward lighter alternatives — and it's why Redux Toolkit was created.
+
+---
+
+## Redux Toolkit: Redux Without the Pain
+
+Redux Toolkit (RTK) is the official, modern way to write Redux. It eliminates boilerplate with `createSlice` and includes RTK Query for data fetching.
+
+```tsx
+// store/cartSlice.ts
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+interface CartState {
+  items: CartItem[];
+}
+
+const initialState: CartState = { items: [] };
+
+export const cartSlice = createSlice({
+  name: "cart",
+  initialState,
+  reducers: {
+    addItem(state, action: PayloadAction<CartItem>) {
+      const existing = state.items.find((i) => i.id === action.payload.id);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        state.items.push(action.payload);
+      }
+    },
+    removeItem(state, action: PayloadAction<string>) {
+      state.items = state.items.filter((i) => i.id !== action.payload);
+    },
+    clearCart(state) {
+      state.items = [];
+    },
+  },
+});
+
+export const { addItem, removeItem, clearCart } = cartSlice.actions;
+
+// Derived selector
+export const selectCartTotal = (state: { cart: CartState }) =>
+  state.cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+```
+
+```tsx
+// store/index.ts
+import { configureStore } from "@reduxjs/toolkit";
+import { cartSlice } from "./cartSlice";
+
+export const store = configureStore({
+  reducer: { cart: cartSlice.reducer },
+});
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+```
+
+RTK is significantly better than classic Redux. But it still requires setting up a Provider, configuring the store, writing typed hooks, and understanding the slice/reducer/selector mental model. For many projects, that's still more than necessary.
+
+---
+
+## Zustand: Minimal, Ergonomic, Enough
+
+Zustand is a tiny state management library (~1kb) built on hooks. There is no Provider, no reducer, no action type. You define a store as a single function and consume it directly.
+
+Here is the same cart logic in Zustand:
+
+```tsx
+// store/useCartStore.ts
+import { create } from "zustand";
+
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+interface CartStore {
+  items: CartItem[];
+  addItem: (item: CartItem) => void;
+  removeItem: (id: string) => void;
+  clearCart: () => void;
+  total: () => number;
+}
+
+export const useCartStore = create<CartStore>((set, get) => ({
+  items: [],
+
+  addItem: (item) =>
+    set((state) => {
+      const existing = state.items.find((i) => i.id === item.id);
+      if (existing) {
+        return {
+          items: state.items.map((i) =>
+            i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+          ),
+        };
+      }
+      return { items: [...state.items, item] };
+    }),
+
+  removeItem: (id) =>
+    set((state) => ({ items: state.items.filter((i) => i.id !== id) })),
+
+  clearCart: () => set({ items: [] }),
+
+  total: () =>
+    get().items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+}));
+```
+
+Consuming it in a component:
+
+```tsx
+// components/CartSummary.tsx
+import { useCartStore } from "@/store/useCartStore";
+
+export function CartSummary() {
+  const items = useCartStore((state) => state.items);
+  const total = useCartStore((state) => state.total());
+  const clearCart = useCartStore((state) => state.clearCart);
+
+  if (items.length === 0) {
+    return <p className="text-sm text-gray-500">Your cart is empty.</p>;
+  }
+
+  return (
+    <div className="rounded-xl border border-gray-200 p-6 shadow-sm">
+      <ul className="divide-y divide-gray-100">
+        {items.map((item) => (
+          <li key={item.id} className="flex justify-between py-2 text-sm">
+            <span>{item.name} × {item.quantity}</span>
+            <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-4">
+        <span className="font-semibold">Total</span>
+        <span className="text-lg font-bold">${total.toFixed(2)}</span>
+      </div>
+      <button
+        onClick={clearCart}
+        className="mt-4 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50"
+      >
+        Clear cart
+      </button>
+    </div>
+  );
+}
+```
+
+Notice the selector pattern: `useCartStore((state) => state.items)`. This is Zustand's fine-grained subscription — `CartSummary` only re-renders when `items` changes, not when any other part of the store changes.
+
+---
+
+## Zustand vs Redux Toolkit: The Honest Comparison
+
+| | Zustand | Redux Toolkit |
+|---|---|---|
+| **Bundle size** | ~1kb | ~11kb |
+| **Boilerplate** | Minimal | Moderate |
+| **DevTools** | Via middleware | Built-in, excellent |
+| **Learning curve** | Very low | Medium |
+| **Middleware** | Simple | Powerful (thunk, saga) |
+| **Best for** | Small-to-medium apps, fast iteration | Large teams, complex state, strict patterns |
+| **React Server Components** | Client-only | Client-only |
+
+**Our honest take at Atonize:** For the majority of B2B SaaS projects — dashboards, CRMs, catalog systems — Zustand covers everything we need. We reach for Redux Toolkit when onboarding a large team that benefits from enforced conventions, or when a client's existing codebase is already on Redux.
+
+---
+
+## Common Pitfalls
+
+### 1. Putting everything in global state
+
+Not every piece of data belongs in a global store. Server data (products, users, orders) is better handled by a data-fetching library like TanStack Query. UI state specific to one feature (is a modal open?) belongs in local `useState`. Global state is for genuinely shared, client-side state.
+
+### 2. Not using selectors in Zustand
+
+```tsx
+// ❌ Subscribes to the entire store — re-renders on any change
+const store = useCartStore();
+
+// ✅ Subscribes only to what this component needs
+const items = useCartStore((state) => state.items);
+```
+
+Always pass a selector function to `useCartStore`. Without it, your component re-renders whenever anything in the store changes.
+
+### 3. Storing derived data instead of computing it
+
+Don't store `total` as a state value that you update manually. Compute it from existing state either as a function in the store (as we did) or directly in the component. Stale derived state is a source of subtle bugs.
+
+---
+
+## Frequently Asked Questions (FAQ)
+
+### Is Redux dead in 2026?
+
+No. Redux Toolkit is actively maintained and widely used in enterprise applications. What died is the argument that Redux is the *default* choice for all React apps. Today, Context handles simple cases, Zustand handles most medium cases, and Redux handles complex enterprise cases. Each has its place.
+
+### Can Zustand work with Next.js App Router?
+
+Yes, with one caveat. Zustand stores are client-side only — they can't hold state on the server. In Next.js App Router, your Zustand store should only be accessed inside Client Components (`"use client"`). Server Components fetch data directly; the Zustand store is for client-side UI and interaction state.
+
+### What about Jotai and Recoil?
+
+Jotai and Recoil are atom-based state libraries — you define individual atoms rather than a single store object. They're excellent for highly granular subscriptions and work well in apps where state is naturally fragmented. At Atonize, we've found Zustand's single-store model easier to reason about for most projects, but Jotai is worth exploring for complex, fine-grained scenarios.
+
+### When should I use TanStack Query instead of a state management library?
+
+If your "global state" is actually data fetched from a server — product lists, user profiles, orders — use TanStack Query (or SWR). These libraries handle caching, revalidation, background refetching, and loading/error states far better than any state management store. Reserve Zustand or Redux for genuinely client-side state that isn't tied to a server resource.
+
+---

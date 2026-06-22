@@ -1,0 +1,304 @@
+---
+title: "Komunikacija između React komponenti: Props, Lifting State i Context API"
+date: "2025-06-19"
+category: "Engineering"
+slug: "komunikacija-izmedju-komponenti-props-context"
+translationKey: "component-communication"
+icon: "🔗"
+series: "React Masterclass"
+seriesOrder: 2
+excerpt: "Nauči kako podaci teku između React komponenti, zašto prop drilling postaje problem u većim aplikacijama i kako Context API to rešava — sa realnim B2B SaaS primerima i TypeScript patternima koje koristimo u Atonize-u."
+---
+
+# Komunikacija između React komponenti: Props, Lifting State i Context API
+
+> **TL;DR — Ključni Uvidi**
+> - Podaci u React-u teku **nadole** — od roditelja ka detetu putem props-a
+> - Kada sibling komponente treba da dele state, **podignuti ga** do njihovog zajedničkog pretka
+> - Prosleđivanje props-a kroz mnogo slojeva komponenti zove se **prop drilling** — bolno je i ne skalira
+> - **Context API** rešava prop drilling tako što čini podatke dostupnim bilo kojoj komponenti u podstablu
+> - Context nije zamena za pravo upravljanje state-om — koristi ga za zaista globalne podatke (tema, autentikacija, lokalizacija)
+
+---
+
+## Kako podaci teku u React-u
+
+React ima strogi, predvidivi tok podataka: **odozgo nadole, od roditelja ka detetu**. Roditeljska komponenta prosleđuje podatke svojoj deci putem props-a. Deca ne mogu da guraju podatke nazad gore — mogu samo da pozivaju funkcije koje im je roditelj prosleđuje.
+
+Ovo ograničenje je feature, ne bug. Čini aplikacije lakšim za razumevanje, debugging i testiranje. Ali stvara pravi problem kako stablo komponenti raste.
+
+---
+
+## Lifting State Up: Prvo rešenje
+
+Zamislimo da gradimo stranicu sa filterom proizvoda za B2B katalog. Komponenta `SearchBar` hvata korisnikov upit, a komponenta `ProductGrid` prikazuje filtrirane rezultate. Obe su deca `CatalogPage`-a. Kako upit iz `SearchBar`-a dospeva do `ProductGrid`-a?
+
+Odgovor je **lifting state up** — pomeri state do najbližeg zajedničkog pretka.
+
+```tsx
+// app/catalog/page.tsx
+"use client";
+
+import { useState } from "react";
+import { SearchBar } from "@/components/SearchBar";
+import { ProductGrid } from "@/components/ProductGrid";
+
+export default function CatalogPage() {
+  const [query, setQuery] = useState("");
+
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-8">
+      <SearchBar value={query} onChange={setQuery} />
+      <ProductGrid query={query} />
+    </div>
+  );
+}
+```
+
+```tsx
+// components/SearchBar.tsx
+interface SearchBarProps {
+  value: string;
+  onChange: (value: string) => void;
+}
+
+export function SearchBar({ value, onChange }: SearchBarProps) {
+  return (
+    <input
+      type="search"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder="Pretraži proizvode..."
+      className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+  );
+}
+```
+
+`CatalogPage` poseduje state. `SearchBar` ga prima kao prop i poziva `onChange` kada korisnik kuca. `ProductGrid` prima `query` kao prop i filtrira u skladu s tim. Čisto, prativo, testabilno.
+
+Ovo funkcioniše sjajno — dok stablo komponenti ne postane duboko.
+
+---
+
+## Problem Prop Drillinga
+
+Kako aplikacije rastu, često je potrebno prosleđivati podatke kroz komponente koje ih zapravo ne koriste — samo ih dalje prenose. Ovo je **prop drilling**.
+
+```tsx
+// ❌ UserAvatar treba `userId` ali Layout i Sidebar ga ne koriste
+<AppLayout userId={userId}>
+  <Sidebar userId={userId}>
+    <NavigationMenu userId={userId}>
+      <UserAvatar userId={userId} />
+    </NavigationMenu>
+  </Sidebar>
+</AppLayout>
+```
+
+Svaka međukomponenta postaje vezana za podatke koje ne koristi. Dodavanje ili uklanjanje props-a znači dirati svaki sloj. Upravo ovaj problem Context API je dizajniran da reši.
+
+---
+
+## Context API: Globalni podaci bez drillinga
+
+Context ti omogućava da emituješ podatke bilo kojoj komponenti u podstablu bez prosleđivanja kroz svaki nivo.
+
+Evo realnog patterna koji koristimo u Atonize-u: auth context koji čini trenutnog korisnika dostupnim bilo gde u aplikaciji.
+
+### Korak 1: Kreiraj context
+
+```tsx
+// context/AuthContext.tsx
+"use client";
+
+import { createContext, useContext, useState, ReactNode } from "react";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: "admin" | "manager" | "viewer";
+}
+
+interface AuthContextValue {
+  user: User | null;
+  login: (user: User) => void;
+  logout: () => void;
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+
+  function login(user: User) {
+    setUser(user);
+  }
+
+  function logout() {
+    setUser(null);
+  }
+
+  return (
+    <AuthContext.Provider value={{ user, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth(): AuthContextValue {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth mora biti korišćen unutar AuthProvider-a");
+  }
+  return context;
+}
+```
+
+### Korak 2: Omotaj aplikaciju provajderom
+
+```tsx
+// app/layout.tsx
+import { AuthProvider } from "@/context/AuthContext";
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="sr">
+      <body>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+### Korak 3: Konzumiraj bilo gde, bez drillinga
+
+```tsx
+// components/UserAvatar.tsx
+import { useAuth } from "@/context/AuthContext";
+
+export function UserAvatar() {
+  const { user, logout } = useAuth();
+
+  if (!user) return null;
+
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-medium text-white">
+        {user.name.charAt(0)}
+      </div>
+      <div className="hidden md:block">
+        <p className="text-sm font-medium">{user.name}</p>
+        <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+      </div>
+      <button
+        onClick={logout}
+        className="text-xs text-gray-400 hover:text-gray-600"
+      >
+        Odjavi se
+      </button>
+    </div>
+  );
+}
+```
+
+`UserAvatar` dobija podatke o korisniku direktno iz context-a. `AppLayout`, `Sidebar` i `NavigationMenu` uopšte ne moraju da znaju za `userId`.
+
+---
+
+## Kada koristiti Context (a kada ne)
+
+Context je moćan, ali ima svoju cenu: **svaka komponenta koja konzumira context ponovo se renderuje kada se vrednost tog context-a promeni**. Koristi ga za podatke koji su zaista globalni i koji se retko menjaju.
+
+| Dobri slučajevi za Context | Loši slučajevi za Context |
+|---|---|
+| Trenutno ulogovani korisnik | Lista proizvoda (često se menja) |
+| Aktivna tema (svetla/tamna) | UI state specifičan za jednu funkcionalnost |
+| Trenutni jezik / lokalizacija | Podaci sa servera (koristi SWR ili TanStack Query) |
+| Feature flags | Vrednosti koje se često ažuriraju |
+
+Za podatke koji se često menjaju i dele se između mnogo komponenti — recimo korpa koja se ažurira pri svakom dodavanju/uklanjanju, ili broj notifikacija u realnom vremenu — potrbaćeš namensku biblioteku za upravljanje state-om. Obrađujemo Zustand i njegove prednosti nad Redux-om u [Globalni State Management u 2026. godini](/insights/globalni-state-management-2026).
+
+---
+
+## Česte Greške i Zamke
+
+### 1. Jedan ogromni context za sve
+
+```tsx
+// ❌ Izbegavaj — jedna promena u bilo kom delu re-renderuje sve što konzumira ovaj context
+const AppContext = createContext({ user, theme, cart, notifications, filters });
+
+// ✅ Podeli po domenima — komponente se pretplaćuju samo na ono što im treba
+const AuthContext = createContext({ user });
+const ThemeContext = createContext({ theme });
+const CartContext = createContext({ cart });
+```
+
+### 2. Izostavljanje null provere u custom hook-ovima
+
+Uvek baci opisnu grešku kada se context hook koristi van svog provajdera. Ovo štedi sate debugginga:
+
+```tsx
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth mora biti korišćen unutar <AuthProvider>");
+  }
+  return context;
+}
+```
+
+### 3. Inline objekat kao vrednost context-a
+
+```tsx
+// ❌ Kreira novi objekat pri svakom renderu, izazivajući re-render svih konzumenata
+<AuthContext.Provider value={{ user, login, logout }}>
+
+// ✅ Memoizuj vrednost (ili je drži stabilnom putem useState/useReducer)
+const value = useMemo(() => ({ user, login, logout }), [user]);
+<AuthContext.Provider value={value}>
+```
+
+Dublje zaronimo u strategije memoizacije u [Napredni React Hook-ovi: useMemo, useCallback i useRef](/insights/napredni-react-hookovi).
+
+---
+
+## Kompletan komunikacijski alat
+
+U ovom trenutku u seriji, imaš kompletnu sliku lokalnih komunikacijskih paterna:
+
+- **Props** — za direktni tok podataka roditelj-dete
+- **Lifting state** — za sibling komponente koje dele zajedničkog pretka
+- **Callback props** — za komunikaciju dete-roditelj (`onChange`, `onSubmit`)
+- **Context API** — za podatke dostupne celom podstablu bez drillinga
+
+Kada ovo nije dovoljno — kada trebaš state koji se deli između potpuno nepovezanih delova aplikacije, ili kada ti trebaju fine-grained pretplate — tu na scenu stupa globalni state management. Sledeće u seriji: [Globalni State Management u 2026. godini](/insights/globalni-state-management-2026).
+
+---
+
+## Često Postavljana Pitanja (FAQ)
+
+### Šta je prop drilling i zašto je problem?
+
+Prop drilling je pattern prosleđivanja props-a kroz više slojeva komponenti koje same ne koriste te podatke — samo ih dalje prenose. Problem je što stvara nepotrebno vezivanje: svaka međukomponenta mora biti ažurirana ako se prop promeni, što čini kod težim za refaktorisanje i održavanje.
+
+### Da li je Context API rešenje za state management?
+
+Ne sasvim. Context je mehanizam za *distribuciju* podataka — čini podatke dostupnim kroz stablo komponenti. State management se odnosi na to kako se podaci čuvaju, ažuriraju i izvode. I dalje ti treba `useState` ili `useReducer` za upravljanje stvarnim state-om; Context samo uklanja potrebu za prosleđivanjem kroz props.
+
+### Da li korišćenje Context-a uzrokuje probleme sa performansama?
+
+Može. Svaka komponenta koja konzumira vrednost context-a re-renderuje se kada se ta vrednost promeni. Za visokofrekventna ažuriranja (pozicija skrola, podaci u realnom vremenu), ovo može postati skupo. Strategije za ublažavanje uključuju razdvajanje context-a po domenima, memoizaciju vrednosti context-a i korišćenje eksternih biblioteka poput Zustand-a koje nude granularnije pretplate.
+
+### Kada koristiti Context, a kada biblioteku poput Zustand-a?
+
+Koristi Context za retko promenljive, zaista globalne podatke: autentikacija, tema, lokalizacija. Koristi Zustand (ili sličnu biblioteku) kada ti treba: state koji dele mnoge nepovezane komponente, česta ažuriranja bez re-renderovanja svega, ili kompleksnija logika state-a sa akcijama i izvedenim vrednostima.
+
+---
+
+*Sledeće u Atonize React seriji: [Napredni React Hook-ovi: useMemo, useCallback i useRef](/insights/napredni-react-hookovi) — paterni optimizacije performansi koje primenjujemo na svakom produkcijskom projektu.*

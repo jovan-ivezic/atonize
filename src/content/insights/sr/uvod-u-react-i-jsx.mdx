@@ -1,0 +1,230 @@
+---
+title: "Uvod u React i JSX: Kako razmišljati u komponentama"
+date: "2025-06-19"
+category: "Engineering"
+slug: "uvod-u-react-i-jsx"
+icon: "⚛️"
+excerpt: "Nauči kako React-ov model komponenti i JSX sintaksa zajedno omogućavaju izgradnju skalabilnih, lako održivih UI-ova — i zašto je razmišljanje u komponentama najvažniji mentalni pomak za svakog modernog front-end developera."
+series: "React Masterclass"
+seriesOrder: 1
+translationKey: "react-intro"
+---
+
+# Uvod u React i JSX: Kako razmišljati u komponentama
+
+> **TL;DR — Ključni Uvidi**
+> - React je JavaScript biblioteka za izgradnju UI-a od malih, višekratno upotrebljivih delova koji se zovu **komponente**
+> - **JSX** je sintaksna ekstenzija koja ti omogućava da pišeš HTML-like markup direktno unutar JavaScript/TypeScript koda
+> - Razmišljanje u komponentama znači da svaki UI razbijamo na izolovane delove sa jednom jedinom odgovornošću
+> - Komponente primaju **props** (ulazne podatke) i upravljaju **state-om** (internim podacima)
+> - Ovaj mentalni model skalira od dugmeta na landing page-u pa sve do kompleksnih B2B SaaS dashboard-a
+
+---
+
+## Šta je React i zašto ga koristimo u Atonize-u?
+
+React je Meta objavila 2013. godine, i od tada je postala najšire korišćena UI biblioteka na svetu. U Atonize-u, gotovo svaki klijentski projekat — od marketing sajtova do multi-tenant SaaS platformi — radi na React-u (najčešće kroz [Next.js](https://nextjs.org)).
+
+Osnovna ideja je jednostavna: **gradi UI kao stablo komponenti**, pri čemu je svaka odgovorna za jednu stvar. Kada se podaci promene, React efikasno ažurira samo one delove stranice koji su se zapravo promenili. Bez ručnog manipulisanja DOM-om. Bez špagetastih event listener-a.
+
+Za B2B SaaS proizvode konkretno, ovo menja pravila igre. Kada gradiš dashboard sa data tabelom, sidebar-om, notification panelom i modal-om za korisničke postavke — sve na jednom ekranu — React-ov model komponenti je ono što drži tu kompleksnost pod kontrolom.
+
+---
+
+## Šta je JSX?
+
+JSX (JavaScript XML) je sintaksa koju ćeš pisati u gotovo svakom React fajlu. Izgleda kao HTML, ali je u suštini JavaScript.
+
+```tsx
+// Jednostavan JSX izraz
+const greeting = <h1 className="text-2xl font-bold">Zdravo, svete!</h1>;
+```
+
+Nekoliko stvari koje odmah treba primetiti:
+
+- Koristimo `className` umesto `class` (jer je `class` rezervisana reč u JavaScript-u)
+- JSX se kompajlira u `React.createElement()` pozive od strane tvog bundler-a (Vite, Webpack ili Next.js)
+- Bilo koji JavaScript izraz možeš ubaciti unutar JSX-a koristeći vitičaste zagrade `{}`
+
+```tsx
+const name = "Atonize";
+const element = <p>Dobrodošli na {name.toUpperCase()}.</p>;
+// Renderuje: <p>Dobrodošli na ATONIZE.</p>
+```
+
+JSX nije obavezan — mogao bi pisati čiste `React.createElement` pozive — ali to niko ne radi. JSX je de facto standard u praksi.
+
+---
+
+## Tvoja prva komponenta: razmišljanje kroz princip jedne odgovornosti
+
+React komponenta je samo **funkcija koja vraća JSX**. To je sve.
+
+Evo realnog primera: višekratno upotrebljiva `Badge` komponenta kakvu bismo mogli koristiti kroz ceo SaaS dashboard za označavanje korisničkih planova pretplate.
+
+```tsx
+// components/ui/Badge.tsx
+interface BadgeProps {
+  label: string;
+  variant?: "free" | "pro" | "enterprise";
+}
+
+const variantStyles: Record<string, string> = {
+  free: "bg-gray-100 text-gray-600",
+  pro: "bg-blue-100 text-blue-700",
+  enterprise: "bg-violet-100 text-violet-700",
+};
+
+export function Badge({ label, variant = "free" }: BadgeProps) {
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${variantStyles[variant]}`}
+    >
+      {label}
+    </span>
+  );
+}
+```
+
+A ovako je koristimo:
+
+```tsx
+// U bilo kojoj stranici ili parent komponenti
+import { Badge } from "@/components/ui/Badge";
+
+export default function UserCard() {
+  return (
+    <div className="rounded-xl border border-gray-200 p-6 shadow-sm">
+      <p className="text-sm text-gray-500">Trenutni plan</p>
+      <Badge label="Pro" variant="pro" />
+    </div>
+  );
+}
+```
+
+Primetimo šta smo ovde uradili:
+
+- `Badge` ima **jedan zadatak**: da renderuje stilizovanu oznaku
+- Prima podatke putem **props-a** (`label`, `variant`) — ne odlučuje sama koji tekst prikazuje
+- Roditelj (`UserCard`) je zadužen za podatke; `Badge` je zadužen za prezentaciju
+
+Ovo je mentalni model komponenti u praksi.
+
+---
+
+## Props vs. State: Dva izvora istine
+
+Razumevanje razlike između props-a i state-a je najvažniji koncept u React-u.
+
+**Props:**
+- **Šta je:** Podaci prosleđeni od roditelja
+- **Ko ih kontroliše:** Roditeljska komponenta
+- **Može li da se menja?** Ne (iznutra komponente)
+- **Analogija:** Argument funkcije
+
+**State:**
+- **Šta je:** Podaci kojima komponenta interno upravlja
+- **Ko ih kontroliše:** Sama komponenta
+- **Može li da se menja?** Da, putem `useState`
+- **Analogija:** Lokalna promenljiva koja okida re-render
+
+Komponenta bi generalno trebalo da bude ili **"pametna" (stateful)** ili **"glupa" (prezentaciona)** — mešanje obe odgovornosti u istoj komponenti je tačka gde kompleksnost počinje da raste. Ovo ćemo detaljno istražiti u našem tekstu o [LINK_TO_STATE_MANAGEMENT_ARTICLE].
+
+---
+
+## Kako razbiti UI na komponente
+
+Kada dobijemo dizajn od klijenta, evo mentalnog procesa koji pratimo u Atonize-u:
+
+1. **Nacrtaj kutije** oko svakog zasebnog dela UI-a — dugmad, kartice, navbar-ovi, polja forme
+2. **Imenuj svaku kutiju** kao imenicu: `Sidebar`, `PlanCard`, `UserAvatar`, `NotificationBell`
+3. **Pitaj: da li se ovaj deo menja nezavisno?** Ako da, verovatno mu treba sopstvena komponenta
+4. **Pitaj: da li se ovaj deo koristi na više mesta?** Ako da, definitivno ga izvuci
+
+Na primer, tipična SaaS stranica sa cenama mogla bi da se razbije ovako:
+
+```text
+<PricingPage>
+  ├── <PageHeader />
+  ├── <BillingToggle />        ← mesečni / godišnji prebacivač
+  └── <PricingGrid>
+        ├── <PlanCard plan="free" />
+        ├── <PlanCard plan="pro" />
+        └── <PlanCard plan="enterprise" />
+```
+
+Svaki `PlanCard` prima drugačije podatke putem props-a, ali deli istu strukturu. To je snaga ponovne upotrebe komponenti.
+
+---
+
+## Česte Greške i Zamke u Junior React Kodu
+
+### 1. Stavljanje svega u jednu ogromnu komponentu
+
+Najčešća greška u razvoju web aplikacija. Ako tvoj fajl komponente ima 300+ linija, ona radi previše toga. Agresivno izvlači pod-komponente.
+
+### 2. Korišćenje indeksa niza kao `key`-a u listama
+
+```tsx
+// ❌ Loše — izaziva suptilne rendering bugove kada se redosled liste promeni
+items.map((item, index) => <Card key={index} {...item} />)
+
+// ✅ Dobro — koristi stabilan jedinstveni identifikator
+items.map((item) => <Card key={item.id} {...item} />)
+```
+
+### 3. Zaboravljanje da JSX mora da vrati jedan korenski element
+
+```tsx
+// ❌ Ovo će baciti grešku
+return (
+  <h1>Naslov</h1>
+  <p>Paragraf</p>
+)
+
+// ✅ Omotaj u Fragment
+return (
+  <>
+    <h1>Naslov</h1>
+    <p>Paragraf</p>
+  </>
+)
+```
+
+### 4. Direktna mutacija props-a
+
+Props su read-only. Nikada ne pokušavaj da menjaš prop unutar komponente — ako trebaš da menjaš podatke, "podignuti" state na roditelja ili koristiti rešenje za upravljanje state-om. Ovo detaljno obrađujemo u [LINK_TO_STATE_MANAGEMENT_ARTICLE].
+
+---
+
+## Kuda ovo vodi: React ekosistem
+
+Kada internalizuješ model komponenti, ostatak React ekosistema počinje da ima smisla:
+
+- **Hooks** (`useState`, `useEffect`, `useContext`) — načini da dodaš logiku i side efekte komponentama → [LINK_TO_HOOKS_ARTICLE]
+- **Next.js App Router** — obmotava React u full-stack framework sa Server Components, rutiranjem i data fetchingom → [LINK_TO_NEXTJS_INTRO_ARTICLE]
+- **State management** (Zustand, Redux Toolkit) — za deljenje state-a između velikog broja komponenti
+
+Mentalni model komponenti je temelj. Sve ostalo se nadograđuje na njega.
+
+---
+
+## Često Postavljana Pitanja (FAQ)
+
+### Koja je razlika između React-a i Next.js-a?
+
+React je UI biblioteka — bavi se renderovanjem komponenti u browseru. Next.js je full-stack framework izgrađen na vrhu React-a koji dodaje rutiranje, server-side rendering, API rute i mnogo više. U Atonize-u, skoro uvek koristimo Next.js umesto čistog React-a za klijentske projekte. Saznaj više u [LINK_TO_NEXTJS_INTRO_ARTICLE].
+
+### Da li moram dobro da znam JavaScript pre učenja React-a?
+
+Da. Treba da se snalaziš sa ES6+ funkcionalnostima: arrow funkcije, destrukturiranje, spread operatori, array metode (`map`, `filter`, `reduce`), i async/await. React ne skriva JavaScript — konstantno ga izlaže.
+
+### Da li je JSX isto što i HTML?
+
+Nije sasvim. JSX izgleda kao HTML, ali se kompajlira u JavaScript. Ključne razlike: koristi `className` umesto `class`, `htmlFor` umesto `for`, i svi tagovi moraju biti zatvoreni (uključujući self-closing kao što je `<img />`). Izrazi idu u `{}` umesto u `""`.
+
+### Kada treba da napravim novu komponentu, a kada da ostavim kod u istom fajlu?
+
+Dobro pravilo palca: ako se neki JSX koristi više od jednom — izvuci ga. Ako ima sopstveni nezavisni state ili logiku — izvuci ga. Ako fajl komponente naraste iznad ~150 linija — traži šta možeš da izdvojiš. U slučaju sumnje, greši na stranu više komponenti — uvek ih možeš spojiti kasnije, ali rasplitanje monolitne komponente je bolno.
+
+

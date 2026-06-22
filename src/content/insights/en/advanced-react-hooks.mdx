@@ -1,0 +1,324 @@
+---
+title: "Advanced React Hooks: useMemo, useCallback & useRef Explained"
+date: "2025-06-19"
+category: "Engineering"
+slug: "advanced-react-hooks"
+translationKey: "advanced-react-hooks"
+icon: "⚡"
+excerpt: "Learn when and how to use useMemo, useCallback, and useRef to eliminate unnecessary re-renders, stabilize references, and interact with the DOM directly — performance patterns we apply on every production React and Next.js project."
+series: "React Masterclass"
+seriesOrder: 4
+---
+
+# Advanced React Hooks: useMemo, useCallback & useRef Explained
+
+> **TL;DR — Key Takeaways**
+> - `useMemo` caches the **result** of an expensive computation between renders
+> - `useCallback` caches a **function reference** so it doesn't get recreated on every render
+> - `useRef` holds a mutable value that persists across renders **without triggering a re-render**
+> - These hooks are optimization tools — reach for them only when you have a measured performance problem
+> - The most common mistake is overusing them, which adds complexity without benefit
+
+---
+
+## Why Performance Optimization Matters in React
+
+React is fast by default. But as your application scales — more components, more data, more interactivity — you'll start to notice sluggishness in specific places: a filter that lags when typing, a list that re-renders entirely when an unrelated state changes, a callback that breaks memoization in a child component.
+
+In [Component Communication: Props & Context API](/insights/component-communication-props-context), we touched on memoizing Context values to prevent unnecessary re-renders. This article goes deeper: the three hooks that give you fine-grained control over React's rendering behavior.
+
+---
+
+## Understanding Re-renders First
+
+Before reaching for optimization hooks, it's worth understanding *when* React re-renders a component:
+
+1. Its own state changes
+2. Its parent re-renders (even if the props didn't change)
+3. A context it consumes changes
+
+Point 2 is the source of most performance issues. Every time a parent re-renders, all its children re-render too — by default. In a deep component tree, this cascades.
+
+The optimization hooks break this cascade by giving React stable references to compare.
+
+---
+
+## useMemo: Caching Expensive Computations
+
+`useMemo` memoizes the **return value** of a function. React only recomputes it when one of its dependencies changes.
+
+```tsx
+import { useMemo, useState } from "react";
+
+interface Product {
+  id: number;
+  name: string;
+  category: string;
+  price: number;
+  inStock: boolean;
+}
+
+interface ProductTableProps {
+  products: Product[];
+}
+
+export function ProductTable({ products }: ProductTableProps) {
+  const [search, setSearch] = useState("");
+  const [showInStockOnly, setShowInStockOnly] = useState(false);
+
+  const filteredProducts = useMemo(() => {
+    return products
+      .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
+      .filter((p) => (showInStockOnly ? p.inStock : true));
+  }, [products, search, showInStockOnly]);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-4">
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search products..."
+          className="rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={showInStockOnly}
+            onChange={(e) => setShowInStockOnly(e.target.checked)}
+            className="rounded"
+          />
+          In stock only
+        </label>
+      </div>
+
+      <p className="text-sm text-gray-500">{filteredProducts.length} results</p>
+
+      <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200">
+        {filteredProducts.map((product) => (
+          <li key={product.id} className="flex items-center justify-between px-4 py-3">
+            <span className="font-medium">{product.name}</span>
+            <span className="text-sm text-gray-500">${product.price}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+Without `useMemo`, the filter logic would run on every keystroke *and* on every unrelated state change in the parent. With `useMemo`, React skips the recomputation unless `products`, `search`, or `showInStockOnly` actually change.
+
+### When useMemo is worth it
+
+- Filtering or sorting large arrays (hundreds of items or more)
+- Complex derived data (aggregations, groupings, chart data)
+- Expensive mathematical computations
+
+### When useMemo is NOT worth it
+
+- Simple property access or basic arithmetic
+- Arrays or objects with just a few items
+- Anywhere you haven't measured a real performance problem
+
+The overhead of `useMemo` itself (storing the cached value, comparing dependencies) can exceed the cost of just recomputing a cheap operation.
+
+---
+
+## useCallback: Stabilizing Function References
+
+In JavaScript, a function defined inside a component body is recreated on every render. This matters when you pass that function as a prop to a memoized child component — a new function reference means the child sees a "changed" prop and re-renders, defeating the purpose of memoization.
+
+`useCallback` returns a **stable function reference** that only changes when its dependencies change.
+
+```tsx
+import { useCallback, useState, memo } from "react";
+
+interface ActionButtonProps {
+  onAction: () => void;
+  label: string;
+}
+
+// memo() prevents re-render if props haven't changed
+const ActionButton = memo(function ActionButton({ onAction, label }: ActionButtonProps) {
+  console.log(`Rendering: ${label}`);
+  return (
+    <button
+      onClick={onAction}
+      className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+    >
+      {label}
+    </button>
+  );
+});
+
+export function ProductActions({ productId }: { productId: string }) {
+  const [status, setStatus] = useState<string | null>(null);
+
+  const handleApprove = useCallback(async () => {
+    await fetch(`/api/products/${productId}/approve`, { method: "POST" });
+    setStatus("approved");
+  }, [productId]);
+
+  const handleReject = useCallback(async () => {
+    await fetch(`/api/products/${productId}/reject`, { method: "POST" });
+    setStatus("rejected");
+  }, [productId]);
+
+  return (
+    <div className="flex items-center gap-3">
+      <ActionButton onAction={handleApprove} label="Approve" />
+      <ActionButton onAction={handleReject} label="Reject" />
+      {status && (
+        <span className="text-sm capitalize text-gray-500">Status: {status}</span>
+      )}
+    </div>
+  );
+}
+```
+
+`useCallback` and `memo` work as a pair. `memo` prevents child re-renders when props are the same — but only if the props are actually stable. `useCallback` ensures the function prop is stable. Without one, the other doesn't help.
+
+---
+
+## useRef: Mutable Values Without Re-renders
+
+`useRef` creates a mutable container — an object with a `.current` property — that persists for the full lifetime of the component. Unlike state, changing `.current` does **not** trigger a re-render.
+
+This makes `useRef` the right tool for two distinct use cases:
+
+### Use case 1: Accessing DOM elements directly
+
+```tsx
+import { useRef, useEffect } from "react";
+
+export function AutoFocusInput() {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  return (
+    <input
+      ref={inputRef}
+      type="text"
+      placeholder="This focuses automatically..."
+      className="rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+  );
+}
+```
+
+### Use case 2: Storing values that shouldn't trigger re-renders
+
+```tsx
+import { useRef, useEffect, useState } from "react";
+
+export function StopwatchButton() {
+  const [isRunning, setIsRunning] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (isRunning) {
+      intervalRef.current = setInterval(() => {
+        setElapsed((prev) => prev + 1);
+      }, 1000);
+    } else {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    }
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [isRunning]);
+
+  return (
+    <div className="flex items-center gap-4">
+      <span className="text-2xl font-mono tabular-nums">{elapsed}s</span>
+      <button
+        onClick={() => setIsRunning((prev) => !prev)}
+        className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white"
+      >
+        {isRunning ? "Stop" : "Start"}
+      </button>
+      <button
+        onClick={() => { setElapsed(0); setIsRunning(false); }}
+        className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium"
+      >
+        Reset
+      </button>
+    </div>
+  );
+}
+```
+
+`intervalRef` stores the interval ID without causing a re-render when it changes. If we used `useState` for the interval ID, every tick would cause a double re-render.
+
+---
+
+## Common Pitfalls
+
+### 1. Premature optimization
+
+This is the cardinal sin. Adding `useMemo` and `useCallback` everywhere "just in case" adds cognitive overhead and rarely helps. Profile first with React DevTools, optimize second.
+
+### 2. Missing dependencies
+
+Just like `useEffect`, both `useMemo` and `useCallback` have dependency arrays. Missing a dependency means your cached value becomes stale. Keep `eslint-plugin-react-hooks` enabled — it catches this.
+
+### 3. Thinking useRef replaces useState
+
+If you update a ref and expect the UI to reflect that change, nothing will happen — refs don't trigger re-renders. Use state for anything that should be visible to the user; use refs for values that exist to coordinate behavior behind the scenes.
+
+### 4. Recreating objects in useMemo dependencies
+
+```tsx
+// ❌ `filters` is a new object on every render — useMemo always recomputes
+const filters = { category, minPrice, maxPrice };
+const filtered = useMemo(() => applyFilters(products, filters), [products, filters]);
+
+// ✅ Use primitive values as dependencies directly
+const filtered = useMemo(
+  () => applyFilters(products, { category, minPrice, maxPrice }),
+  [products, category, minPrice, maxPrice]
+);
+```
+
+---
+
+## The Decision Framework
+
+When facing a performance issue in a React component, we follow this order at Atonize:
+
+1. **Measure first** — use React DevTools Profiler to confirm which component is slow and why
+2. **Memoize the component** with `memo()` if it re-renders with identical props
+3. **Stabilize callback props** with `useCallback` if they're breaking `memo()`
+4. **Cache expensive computations** with `useMemo` if a derivation is genuinely costly
+5. **Consider architecture** — sometimes the real fix is restructuring the component tree, not adding hooks
+
+For state shared across many components that causes widespread re-renders, the solution is often a better state management strategy rather than more memoization. We cover that in [Global State Management in 2026](/insights/global-state-management-2026).
+
+---
+
+## Frequently Asked Questions (FAQ)
+
+### What is the difference between useMemo and useCallback?
+
+`useMemo` caches the *result* of calling a function — use it for expensive computed values. `useCallback` caches the *function itself* — use it when passing callbacks as props to memoized child components. `useCallback(fn, deps)` is essentially equivalent to `useMemo(() => fn, deps)`.
+
+### Should I wrap every function in useCallback?
+
+No. Only use `useCallback` when the function is passed as a prop to a component wrapped in `memo()`, or when it's listed as a dependency in another hook's dependency array and you need a stable reference. Wrapping every function adds overhead and noise.
+
+### Can useRef store any type of value?
+
+Yes. While the most visible use case is storing DOM element references, `useRef` can hold any mutable value: timer IDs, previous state values, counters, WebSocket instances — anything you want to persist across renders without triggering a re-render.
+
+### How do I know if my component actually needs optimization?
+
+Use the React DevTools Profiler to record interactions and look for components that render more than expected, or whose render time is disproportionately high. Don't optimize by instinct — optimize by data.
+
+---

@@ -1,0 +1,142 @@
+---
+title: "Rešavanje 404 grešaka u Next.js i18n: Pattern za dinamičke slugove"
+date: "2026-06-19"
+category: "Engineering"
+slug: "dinamicko-i18n-rutiranje-nextjs"
+icon: "🌍"
+excerpt: "Kako rešiti čest problem gde promena jezika puca na prevedenim dinamičkim rutama u Next.js App Router arhitekturi."
+translationKey: "dynamic-i18n-routing"
+---
+
+Ukoliko gradite višejezičnu aplikaciju u Next.js-u (App Router) koristeći biblioteke poput `next-intl`, verovatno ste naišli na ovaj tačan scenario:
+
+Čitate tekst na `/en/insights/how-to-code`. Kliknete na language switcher kako biste prešli na srpski jezik. Switcher poslušno menja URL u `/sr/uvidi/how-to-code`.
+
+Rezultat? **404 Not Found** stranica.
+
+Zašto? Zato što srpski prevod tog članka ima lokalizovan slug: `/sr/uvidi/kako-kodirati`. Standardni language switcher zamenjuje samo prefiks jezika, potpuno nesvestan da i dinamički `[slug]` segment URL-a mora biti preveden.
+
+Evo paterna koji mi u Atonize-u koristimo kako bismo ovo rešili čisto, bez prop-drilling-a ili guranja komplikovane logike za pretragu URL-ova unutar Header komponente.
+
+## Arhitektura Rešenja
+
+Cilj je jednostavan: Server Component (koji dohvata članak) zna tačne prevedene slugove. Language Switcher (koji se obično nalazi daleko u layout-u ili navigaciji) treba te informacije kako bi generisao tačan `href`.
+
+Ovu razliku premošćavamo koristeći običan React Context.
+
+### 1. Globalni State (Context)
+
+Prvo, kreiramo `AlternateLocalesContext` koji će čuvati tačne putanje za naše dinamičke rute.
+
+```tsx
+'use client';
+
+import { createContext, useContext, useState } from 'react';
+
+type Alternates = Record<string, { slug: string }>;
+
+interface ContextType {
+  alternates: Alternates;
+  setAlternates: (val: Alternates) => void;
+}
+
+const AlternateLocalesContext = createContext<ContextType | undefined>(undefined);
+
+export function AlternateLocalesProvider({ children }) {
+  const [alternates, setAlternates] = useState<Alternates>({});
+  return (
+    <AlternateLocalesContext.Provider value={{ alternates, setAlternates }}>
+      {children}
+    </AlternateLocalesContext.Provider>
+  );
+}
+```
+
+### 2. Komponenta za Registraciju
+
+Zatim kreiramo "zero-markup" klijentsku komponentu. Njen jedini posao je da primi podatke od servera i upiše ih u naš Context.
+
+```tsx
+'use client';
+
+import { useEffect } from 'react';
+import { useAlternateLocalesContext } from './AlternateLocalesContext';
+
+export function AlternateLocalesRegister({ alternates }) {
+  const { setAlternates } = useAlternateLocalesContext();
+
+  useEffect(() => {
+    setAlternates(alternates);
+    return () => setAlternates({}); // Čišćenje prilikom unmount-a
+  }, [alternates, setAlternates]);
+
+  return null;
+}
+```
+
+### 3. Server Komponenta (Page)
+
+Unutar tvoje dinamičke rute (npr. `app/[locale]/insights/[slug]/page.tsx`), dohvataš trenutni post i njegove prevode. Zatim jednostavno ubaciš registar komponentu u JSX.
+
+```tsx
+export default async function PostPage({ params }) {
+  const { locale, slug } = await params;
+  const post = getPostBySlug(slug, locale);
+  
+  // Pronađi prevod na osnovu deljenog ID-a (translationKey)
+  const otherLocale = locale === 'en' ? 'sr' : 'en';
+  const otherPost = getPostByTranslationKey(post.meta.translationKey, otherLocale);
+
+  const alternates = {
+    [locale]: { slug: post.slug },
+    [otherLocale]: { slug: otherPost?.slug || post.slug }
+  };
+
+  return (
+    <>
+      <AlternateLocalesRegister alternates={alternates} />
+      <article>
+        <h1>{post.meta.title}</h1>
+        {/* Sadržaj posta */}
+      </article>
+    </>
+  );
+}
+```
+
+### 4. Language Switcher
+
+Na kraju, language switcher samo čita ovaj kontekst. Ako željeni jezik ima registrovan alternativni slug, on ga koristi. Ako ne, fallback-uje na trenutne parametre URL-a.
+
+```tsx
+'use client';
+
+import { useAlternateLocalesContext } from '../context/AlternateLocalesContext';
+import { useRouter, usePathname } from '../i18n/routing';
+
+export default function LanguageSwitcher() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { alternates } = useAlternateLocalesContext();
+
+  const switchLanguage = (nextLocale: string) => {
+    // Potraži tačan slug za željeni jezik
+    const nextParams = alternates[nextLocale] || {};
+    
+    router.replace(
+      { pathname, params: nextParams }, 
+      { locale: nextLocale }
+    );
+  };
+
+  return (
+    <button onClick={() => switchLanguage('sr')}>SR</button>
+  );
+}
+```
+
+## Zašto je ovaj pristup dobar?
+
+Ovaj pattern je visoko modularan. Layout i header ostaju čisti i generički. Page komponenta zadržava potpunu kontrolu nad dohvatanjem svojih podataka. Ako kasnije odlučiš da prebaciš podatke sa MDX fajlova na neki Headless CMS ili bazu podataka, arhitektura klijenta ostaje apsolutno ista.
+
+Ovo je zapravo čist React u svom najboljem izdanju: jednosmeran tok podataka (unidirectional data flow) i jasna separacija odgovornosti.

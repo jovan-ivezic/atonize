@@ -1,0 +1,259 @@
+---
+title: "React State Management i Životni Ciklus: useState i useEffect"
+date: "2025-06-19"
+category: "Engineering"
+slug: "react-state-management-i-zivotni-ciklus"
+translationKey: "state-management-lifecycle"
+icon: "🔄"
+series: "React Masterclass"
+seriesOrder: 3
+excerpt: "Nauči kako useState i useEffect funkcionišu ispod haube, kako bezbedno upravljati side efektima i kako izbeći najčešće memory leak-ove koje smo viđali u produkcijskim React i Next.js aplikacijama."
+---
+
+# React State Management i Životni Ciklus: useState i useEffect
+
+> **TL;DR — Ključni Uvidi**
+> - **State** je podatak koji, kada se promeni, tera React da ponovo renderuje komponentu
+> - `useState` je primarni hook za upravljanje lokalnim state-om komponente
+> - `useEffect` pokreće side efekte (API pozivi, pretplate, tajmeri) nakon renderovanja
+> - Svaki `useEffect` koji nešto postavlja treba i da **počisti** — to sprečava memory leak-ove
+> - Niz zavisnosti u `useEffect`-u kontroliše *kada* se pokreće — pogrešno postavljanje je izvor greške broj jedan
+
+---
+
+## Zašto State postoji: React-ov model reaktivnosti
+
+U [prethodnom tekstu](/insights/uvod-u-react-i-jsx) smo obradili kako React gradi UI kao stablo komponenti. Ali statični UI je samo brošura. Prave aplikacije reaguju na korisnikove akcije, povlače podatke sa servera i menjaju se tokom vremena.
+
+Tu na scenu stupa **state**.
+
+State su podaci koji pripadaju komponenti i, što je ključno, kada se promene, React automatski ponovo renderuje tu komponentu kako bi odrazila novu stvarnost. Ne govoriš React-u *kako* da ažurira DOM — govoriš mu *kako podaci izgledaju*, a React se sam snalazi sa ostalom.
+
+Ovo je srž React-ovog deklarativnog modela.
+
+---
+
+## useState: Upravljanje lokalnim state-om
+
+Hook `useState` daje komponenti njenu sopstvenu internu memoriju.
+
+```tsx
+import { useState } from "react";
+
+export function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div className="flex items-center gap-4 p-6">
+      <button
+        onClick={() => setCount(count - 1)}
+        className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium hover:bg-gray-200"
+      >
+        −
+      </button>
+      <span className="text-2xl font-bold tabular-nums">{count}</span>
+      <button
+        onClick={() => setCount(count + 1)}
+        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+      >
+        +
+      </button>
+    </div>
+  );
+}
+```
+
+`useState(0)` vraća tuple: trenutnu vrednost i setter funkciju. Kada se pozove `setCount`, React zakazuje novi render sa novom vrednošću.
+
+### Pattern funkcionalnog ažuriranja
+
+Kada novi state zavisi od prethodnog, uvek koristi funkcionalnu formu setter-a. Ovo izbegava bugove sa zastarelim closure-ima — čest problem u async kodu:
+
+```tsx
+// ❌ Rizično — `count` može biti zastareo unutar async callback-ova
+setCount(count + 1);
+
+// ✅ Bezbedno — uvek operišemo sa najnovijom vrednošću
+setCount((prev) => prev + 1);
+```
+
+U B2B SaaS proizvodima, ovaj pattern je kritičan u scenarijima kao što je optimistički UI update, gde modifikuješ state pre nego što server potvrdi promenu.
+
+---
+
+## useEffect: Pokretanje side efekata
+
+**Side efekat** je sve ono što seže izvan ciklusa renderovanja komponente: povlačenje podataka, postavljanje WebSocket konekcije, menjanje naslova browsera, pokretanje tajmera.
+
+`useEffect` je hook koji sve to obrađuje.
+
+```tsx
+import { useState, useEffect } from "react";
+
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+}
+
+export function ProductList({ categoryId }: { categoryId: number }) {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchProducts() {
+      try {
+        setIsLoading(true);
+        const res = await fetch(`/api/products?category=${categoryId}`);
+        if (!res.ok) throw new Error("Neuspešno povlačenje proizvoda");
+        const data = await res.json();
+        if (!cancelled) setProducts(data);
+      } catch (err) {
+        if (!cancelled) setError("Nije moguće učitati proizvode. Pokušaj ponovo.");
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    fetchProducts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [categoryId]);
+
+  if (isLoading) return <p className="text-gray-500">Učitavanje proizvoda...</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
+
+  return (
+    <ul className="divide-y divide-gray-100">
+      {products.map((product) => (
+        <li key={product.id} className="flex justify-between py-3">
+          <span>{product.name}</span>
+          <span className="font-medium">{product.price} RSD</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+Ovaj primer demonstrira nekoliko produkcijskih paterna odjednom. Hajde da ih rastavimo.
+
+---
+
+## Niz zavisnosti: React-ov okidač za ponovno pokretanje
+
+Drugi argument `useEffect`-u je **niz zavisnosti**. Govori React-u kada da ponovo pokrene efekat.
+
+| Niz zavisnosti | Kada se efekat pokreće? |
+|---|---|
+| Nije prosleđen | Nakon *svakog* rendera |
+| `[]` (prazan) | Samo jednom, nakon prvog rendera |
+| `[categoryId]` | Nakon prvog rendera, i svaki put kada se `categoryId` promeni |
+
+U našem `ProductList` primeru, prosleđujemo `[categoryId]`. Ovo znači: povuci proizvode jednom pri mount-ovanju, i ponovo povuci svaki put kada korisnik promeni kategoriju. Tačno ono što želimo.
+
+Pogrešno postavljanje niza zavisnosti je najčešći bug u `useEffect`-u. ESLint-ovo pravilo `exhaustive-deps` (uključeno u `eslint-plugin-react-hooks`) će te upozoriti kada ti nedostaju zavisnosti — uvek ga drži uključenim.
+
+---
+
+## Cleanup funkcije: Sprečavanje memory leak-ova
+
+Primeti `return () => { cancelled = true; }` u našem primeru. Ovo je **cleanup funkcija**.
+
+Kada se komponenta unmount-uje (ukloni iz UI-a), ili pre nego što se efekat ponovo pokrene, React poziva ovu cleanup funkciju. Bez nje, async operacija koja je startovana pre unmount-a mogla bi i dalje da pokušava da pozove `setProducts` na komponenti koja više ne postoji — klasičan memory leak.
+
+Evo tri cleanup patterna koja ćeš najčešće sresti u produkciji:
+
+### Pattern 1: Otkazivanje async zahteva (kao gore)
+
+Koristi boolean zastavicu `cancelled`. Kada se cleanup pokrene, postavi je na `true` kako bi in-flight callback-ovi znali da odustanu.
+
+### Pattern 2: Brisanje tajmera
+
+```tsx
+useEffect(() => {
+  const intervalId = setInterval(() => {
+    setTick((prev) => prev + 1);
+  }, 1000);
+
+  return () => clearInterval(intervalId);
+}, []);
+```
+
+### Pattern 3: Otpretplaćivanje od event listener-a
+
+```tsx
+useEffect(() => {
+  function handleResize() {
+    setWindowWidth(window.innerWidth);
+  }
+
+  window.addEventListener("resize", handleResize);
+  return () => window.removeEventListener("resize", handleResize);
+}, []);
+```
+
+Svaki efekat koji nešto *postavlja* treba i da to *počisti*. Bez cleanup-a, ove stvari se tiho akumuliraju i degradiraju performanse aplikacije tokom vremena — nešto što smo morali da debugujemo u više od jednog nasledjenog B2B projekta.
+
+---
+
+## Česte Greške i Zamke
+
+### 1. Beskonačne petlje
+
+```tsx
+// ❌ Ovo izaziva beskonačnu petlju
+useEffect(() => {
+  setData(transform(data)); // ažuriramo state koji je i zavisnost
+}, [data]);
+
+// ✅ Izračunaj vrednost inline umesto toga
+const transformedData = useMemo(() => transform(data), [data]);
+```
+
+Ako tvoj efekat ažurira state koji se nalazi i u nizu zavisnosti, dobićeš beskonačnu render petlju. React re-renderuje → efekat se pokreće → state se ažurira → React re-renderuje → ...
+
+### 2. Tretiranje useEffect-a kao lifecycle metode
+
+Dolazeći iz class komponenti, primamljivo je misliti o `useEffect`-u kao `componentDidMount` + `componentDidUpdate` + `componentWillUnmount`. Nije. Umesto toga, razmišljaj o njemu kao: **"sinhronizuj ovu komponentu sa ovim eksternim sistemom."** Ovaj mentalni pomak u potpunosti menja kako strukturiraš efekte.
+
+### 3. Povlačenje podataka direktno u useEffect-u u 2025+
+
+Za produkcijske Next.js aplikacije, retko koristimo `useEffect` za data fetching. Server Components sa `async/await`, u kombinaciji sa bibliotekama kao što su SWR ili TanStack Query, daleko bolje upravljaju keširanjem, deduplikacijom i revalidacijom. Ovo ćemo detaljno obraditi u našem tekstu o [Next.js data fetching-u](/insights/nextjs-data-fetching).
+
+---
+
+## Kuda ovo vodi
+
+Kada se udobno snađeš sa `useState` i `useEffect`, prirodni sledeći korak je razumevanje kako deliti state između komponenti bez prosleđivanja props-a pet nivoa duboko — problem poznat kao **prop drilling**. Obrađujemo to u [Komunikacija između komponenti: Props i Context API](/insights/komunikacija-izmedju-komponenti-props-context).
+
+Za scenarije gde su performanse kritične, napredni hookovi `useMemo` i `useCallback` direktno se nadograđuju na ove temelje. Istražujemo ih u [Napredni React Hook-ovi](/insights/napredni-react-hookovi).
+
+---
+
+## Često Postavljana Pitanja (FAQ)
+
+### Koja je razlika između state-a i props-a u React-u?
+
+Props su podaci koji se prosleđuju *u* komponentu od njenog roditelja — sa perspektive komponente, oni su read-only. State su podaci kojima komponenta sama vlada i kojima interno upravlja. Kada se bilo koji od njih promeni, komponenta se ponovo renderuje. Ovu razliku smo detaljno obradili u [Uvodu u React i JSX](/insights/uvod-u-react-i-jsx).
+
+### Mogu li koristiti više useState poziva u jednoj komponenti?
+
+Da, i to je preporučeni pristup. Odvojene, nepovezane delove state-a stavi u odvojene `useState` pozive umesto da sve pakuješ u jedan objekat. Ovo olakšava čitanje koda i izbegava nepotrebne re-rendere kada se promeni samo jedan deo state-a.
+
+### Kada koristiti useEffect, a kada event handler-e?
+
+Ako je side efekat pokrenut korisničkom akcijom (klik na dugme, submit forme), stavi ga u event handler — ne u `useEffect`. Koristi `useEffect` samo za efekte koji treba da se sinhronizuju sa nečim eksternim nakon renderovanja: inicijalno povlačenje podataka, pretplate i sinhronizacija sa bibliotekama trećih strana.
+
+### Zašto ponekad vidim zastarele podatke unutar useEffect-a?
+
+Ovo je problem zastarelih closure-a. Efekat zatvara vrednosti promenljivih u trenutku kada je kreiran. Ako se te promenljive promene, a nisu u nizu zavisnosti, efekat i dalje vidi stare vrednosti. Rešenje je dodati promenljivu u niz zavisnosti, ili koristiti funkcionalnu formu state setter-a (`setCount(prev => prev + 1)`).
+
+---
+
+*Sledeće u Atonize React seriji: [Komunikacija između komponenti: Props i Context API](/insights/komunikacija-izmedju-komponenti-props-context) — rešavamo prop drilling i učimo kada Context jeste (i nije) pravi alat.*

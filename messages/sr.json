@@ -1,0 +1,107 @@
+{
+  "Navbar": {
+    "work": "Projekti",
+    "insights": "Uvidi",
+    "about": "O Nama",
+    "contact": "Kontakt"
+  },
+  "Hero": {
+    "greeting": "Dobrodošli u",
+    "role": "End-to-End Web Rešenja.",
+    "description": "Specijalizovani smo za izgradnju skalabilnih, brzih i visoko optimizovanih web aplikacija, naprednih B2B platformi i vrhunskih SEO rešenja.",
+    "cta_projects": "Naši Projekti",
+    "cta_contact": "Kontaktirajte Nas"
+  },
+  "About": {
+    "title_first": "O",
+    "title_gradient": "Nama",
+    "role": "Full-Service Web Agencija",
+    "p1": "Mi u Atonize gradimo <strong>high-performance web aplikacije</strong> i digitalna rešenja koja direktno unapređuju vaše poslovanje.",
+    "p2": "Naša specijalnost je <strong>Full-Stack razvoj, moderna Front-End arhitektura i namenski CRM sistemi</strong>. Fokusirani smo na isporuku skalabilnih, održivih i visoko optimizovanih platformi.",
+    "p3": "Sa dubokom ekspertizom u <strong>tehničkom SEO-u i digitalnoj strategiji</strong>, osiguravamo da svako tehničko rešenje bude maksimalno usklađeno sa vašom vidljivošću na pretraživačima i poslovnim ciljevima.",
+    "p4": "Od inicijalnog upita na sajtu, preko custom administracionih panela, pa sve do praćenja proizvodnje, pokrivamo <strong>kompletan digitalni proces od početka do kraja</strong>.",
+    "p5": "Naš rad je <strong>visoko strukturiran i odgovoran</strong>, sa jasnim fokusom na kvalitet, efikasnost i konstantno unapređenje proizvoda.",
+    "stats": {
+      "exp_years": "Godina Iskustva",
+      "projects": "Isporučenih Projekata",
+      "seo_years": "Godina u SEO",
+      "commitment": "Posvećenost"
+    }
+  },
+  "AboutFounder": {
+    "title_first": "O",
+    "title_gradient": "Osnivaču",
+    "role": "Lead Full-Stack Inženjer",
+    "p1": "Moje ime je Jovan Ivezić i imam <strong>preko 13 godina iskustva</strong> u razvoju i vođenju kompleksnih web projekata, aplikacija i SPA rešenja.",
+    "p2": "Moja specijalnost su <strong>JavaScript, React, Next.js i moderne arhitekture</strong>. Tokom godina sam uspešno vodio agenciju i radio kao Team Lead, donoseći ključne arhitektonske odluke za enterprise sisteme.",
+    "p3": "Pored tehničkog razvoja, donosim <strong>snažnu ekspertizu u tehničkom SEO-u i digitalnoj strategiji</strong>, što mi omogućava da sagledam softversku arhitekturu kroz prizmu poslovnih rezultata.",
+    "p4": "Moja strast je <strong>izgradnja sistema od nule</strong>, počevši od baze podataka i API sloja, pa sve do prelepih i intuitivnih korisničkih interfejsa.",
+    "p5": "Atonize je moj sledeći korak ka direktnom donošenju <strong>end-to-end tehničke izvrsnosti</strong> biznisima.",
+    "stats": {
+      "exp_years": "Godina Iskustva",
+      "projects": "Završenih Projekata",
+      "seo_years": "Godina u SEO",
+      "commitment": "Posvećenost"
+    }
+  },
+  "Services": {
+    "title_first": "Naše",
+    "title_gradient": "Usluge",
+    "description": "Sveobuhvatna digitalna rešenja skrojena prema vašim poslovnim potrebama.",
+    "footer_note": "Gradimo robusne arhitekture i isporučujemo merljive poslovne rezultate."
+  },
+  "Portfolio": {
+    "title_first": "Istaknuti",
+    "title_gradient": "Case Studies",
+    "description": "Pregled naših nedavnih full-stack rešenja i B2B platformi."
+  },
+  "Contact": {
+    "title_first": "Stupimo u",
+    "title_gradient": "Kontakt",
+    "description": "Imate projekat na umu ili vam je potrebna tehnička konsultacija? Slobodno nam se obratite!",
+    "connect": "Povežite se sa nama",
+    "cta_text": "Tražite pouzdanog tehničkog partnera?",
+    "cta_button": "Započnimo Saradnju",
+    "info": {
+      "email": "Email",
+      "phone": "Telefon",
+      "location": "Lokacija"
+    },
+    "form": {
+      "name_label": "Vaše Ime",
+      "name_placeholder": "Petar Petrović",
+      "name_error": "Ime mora imati barem 2 karaktera.",
+      "email_label": "Vaša Email Adresa",
+      "email_placeholder": "petar@primer.rs",
+      "email_error": "Unesite ispravnu email adresu.",
+      "message_label": "Detalji Projekta",
+      "message_placeholder": "Recite nam više o vašem projektu, ciljevima i rokovima...",
+      "message_error": "Poruka mora imati barem 10 karaktera.",
+      "submit": "Pošalji Poruku",
+      "submitting": "Slanje...",
+      "success_title": "Poruka je poslata!",
+      "success_message": "Hvala vam na javljanju. Odgovorićemo vam u najkraćem roku.",
+      "error_title": "Došlo je do greške",
+      "error_message": "Nismo uspeli da pošaljemo poruku. Molimo vas da nam pošaljete email direktno."
+    }
+  },
+  "Insights": {
+    "title": "Insights",
+    "description": "Ovde delimo naša razmišljanja i iskustva o full-stack razvoju, softverskoj arhitekturi i tehničkom SEO-u.",
+    "filters": {
+      "latest": "Najnovije",
+      "engineering": "Inženjering",
+      "product": "Proizvod",
+      "design": "Dizajn"
+    },
+    "search": "Pretraga",
+    "coming_soon": "Prvi članak uskoro",
+    "announcement": "Obaveštenje",
+    "series": "Serijal:"
+  },
+  "Footer": {
+    "made_with": "Napravljeno sa",
+    "by": "od strane Atonize",
+    "rights": "Sva prava zadržana."
+  }
+}

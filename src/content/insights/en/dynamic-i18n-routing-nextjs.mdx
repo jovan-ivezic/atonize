@@ -1,0 +1,142 @@
+---
+title: "Solving 404s in Next.js i18n: Dynamic Slug Translation Pattern"
+date: "2026-06-19"
+category: "Engineering"
+slug: "dynamic-i18n-routing-nextjs"
+icon: "🌍"
+excerpt: "How to fix the common issue where language switchers break on translated dynamic routes in Next.js App Router."
+translationKey: "dynamic-i18n-routing"
+---
+
+If you are building a multilingual application in Next.js (App Router) using libraries like `next-intl`, you have likely encountered this exact scenario:
+
+You are reading an article at `/en/insights/how-to-code`. You click the language switcher to switch to Serbian. The switcher obediently changes the URL to `/sr/uvidi/how-to-code`. 
+
+The result? A **404 Not Found** page. 
+
+Why? Because the Serbian translation of that article has a localized slug: `/sr/uvidi/kako-kodirati`. The standard language switcher only replaces the locale prefix, completely unaware that the dynamic `[slug]` segment needs translation too.
+
+Here is the pattern we use at Atonize to solve this cleanly without prop-drilling or messy URL lookups inside the Header component.
+
+## The Architecture of the Solution
+
+The goal is simple: the Server Component (which fetches the article) knows what the translated slugs are. The Language Switcher (usually located far away in a layout or navbar) needs that information to build the correct `href`. 
+
+We bridge this gap using a simple React Context.
+
+### 1. The Global State (Context)
+
+First, we create an `AlternateLocalesContext` to hold the exact paths for our dynamic routes.
+
+```tsx
+'use client';
+
+import { createContext, useContext, useState } from 'react';
+
+type Alternates = Record<string, { slug: string }>;
+
+interface ContextType {
+  alternates: Alternates;
+  setAlternates: (val: Alternates) => void;
+}
+
+const AlternateLocalesContext = createContext<ContextType | undefined>(undefined);
+
+export function AlternateLocalesProvider({ children }) {
+  const [alternates, setAlternates] = useState<Alternates>({});
+  return (
+    <AlternateLocalesContext.Provider value={{ alternates, setAlternates }}>
+      {children}
+    </AlternateLocalesContext.Provider>
+  );
+}
+```
+
+### 2. The Register Component
+
+We create a "zero-markup" client component. Its only job is to receive the data from the server and inject it into our Context.
+
+```tsx
+'use client';
+
+import { useEffect } from 'react';
+import { useAlternateLocalesContext } from './AlternateLocalesContext';
+
+export function AlternateLocalesRegister({ alternates }) {
+  const { setAlternates } = useAlternateLocalesContext();
+
+  useEffect(() => {
+    setAlternates(alternates);
+    return () => setAlternates({}); // Cleanup on unmount
+  }, [alternates, setAlternates]);
+
+  return null;
+}
+```
+
+### 3. The Server Component (Page)
+
+Inside your dynamic route (e.g., `app/[locale]/insights/[slug]/page.tsx`), you fetch the current post and its translations. Then, you simply drop the register component into the JSX.
+
+```tsx
+export default async function PostPage({ params }) {
+  const { locale, slug } = await params;
+  const post = getPostBySlug(slug, locale);
+  
+  // Find the translated version based on a shared ID
+  const otherLocale = locale === 'en' ? 'sr' : 'en';
+  const otherPost = getPostByTranslationKey(post.meta.translationKey, otherLocale);
+
+  const alternates = {
+    [locale]: { slug: post.slug },
+    [otherLocale]: { slug: otherPost?.slug || post.slug }
+  };
+
+  return (
+    <>
+      <AlternateLocalesRegister alternates={alternates} />
+      <article>
+        <h1>{post.meta.title}</h1>
+        {/* Post content */}
+      </article>
+    </>
+  );
+}
+```
+
+### 4. The Language Switcher
+
+Finally, the language switcher simply reads from this context. If the target language has a registered alternate slug, it uses it. If not, it falls back to the current URL parameters.
+
+```tsx
+'use client';
+
+import { useAlternateLocalesContext } from '../context/AlternateLocalesContext';
+import { useRouter, usePathname } from '../i18n/routing';
+
+export default function LanguageSwitcher() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { alternates } = useAlternateLocalesContext();
+
+  const switchLanguage = (nextLocale: string) => {
+    // Look up the exact slug for the target language
+    const nextParams = alternates[nextLocale] || {};
+    
+    router.replace(
+      { pathname, params: nextParams }, 
+      { locale: nextLocale }
+    );
+  };
+
+  return (
+    <button onClick={() => switchLanguage('sr')}>SR</button>
+  );
+}
+```
+
+## Why This Approach Wins
+
+This pattern is highly decoupled. The layout and header remain clean and generic. The page component retains full control over its data fetching. If you later migrate from MDX files to a Headless CMS or a database, the architecture remains exactly the same. 
+
+It’s just native React doing what it does best: unidirectional data flow and clean separation of concerns.

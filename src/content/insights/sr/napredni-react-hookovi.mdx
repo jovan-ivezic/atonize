@@ -1,0 +1,324 @@
+---
+title: "Napredni React Hook-ovi: useMemo, useCallback i useRef"
+date: "2025-06-19"
+category: "Engineering"
+slug: "napredni-react-hookovi"
+translationKey: "advanced-react-hooks"
+icon: "⚡"
+excerpt: "Nauči kada i kako koristiti useMemo, useCallback i useRef da eliminišeš nepotrebne re-rendere, stabilizuješ reference i direktno komuniciraš sa DOM-om — paterni optimizacije koje primenjujemo na svakom produkcijskom React i Next.js projektu."
+series: "React Masterclass"
+seriesOrder: 4
+---
+
+# Napredni React Hook-ovi: useMemo, useCallback i useRef
+
+> **TL;DR — Ključni Uvidi**
+> - `useMemo` kešira **rezultat** skupe kalkulacije između rendera
+> - `useCallback` kešira **referencu na funkciju** da se ne bi kreirala iznova pri svakom renderu
+> - `useRef` čuva mutatabilnu vrednost koja opstaje između rendera **bez pokretanja re-rendera**
+> - Ovi hook-ovi su alati za optimizaciju — posegni za njima samo kada imaš izmereni problem sa performansama
+> - Najčešća greška je preterana upotreba, koja dodaje kompleksnost bez ikakve koristi
+
+---
+
+## Zašto je optimizacija performansi važna u React-u
+
+React je po defaultu brz. Ali kako tvoja aplikacija skalira — više komponenti, više podataka, više interaktivnosti — počećeš da primećuješ usporavanje na određenim mestima: filter koji kasni pri kucanju, lista koja se re-renderuje u celosti kada se promeni nepovezani state, callback koji kvari memoizaciju u child komponenti.
+
+U [Komunikacija između komponenti: Props i Context API](/insights/component-communication-props-context), dotakli smo se memoizacije vrednosti Context-a kako bismo sprečili nepotrebne re-rendere. Ovaj tekst ide dublje: tri hook-a koja ti daju preciznu kontrolu nad React-ovim ponašanjem pri renderovanju.
+
+---
+
+## Prvo razumeti re-rendere
+
+Pre nego što posegneš za hook-ovima za optimizaciju, vredi razumeti *kada* React re-renderuje komponentu:
+
+1. Njen sopstveni state se promeni
+2. Njen roditelj se re-renderuje (čak i ako se props nije promenio)
+3. Context koji konzumira se promeni
+
+Tačka 2 je izvor većine problema sa performansama. Svaki put kada se roditelj re-renderuje, sva njegova deca se re-renderuju — po defaultu. U dubokom stablu komponenti, ovo se kaskadno širi.
+
+Hook-ovi za optimizaciju razbijaju ovu kaskadu dajući React-u stabilne reference za poređenje.
+
+---
+
+## useMemo: Keširanje skupih kalkulacija
+
+`useMemo` memoizuje **povratnu vrednost** funkcije. React je ponovo izračunava samo kada se jedna od njenih zavisnosti promeni.
+
+```tsx
+import { useMemo, useState } from "react";
+
+interface Product {
+  id: number;
+  name: string;
+  category: string;
+  price: number;
+  inStock: boolean;
+}
+
+interface ProductTableProps {
+  products: Product[];
+}
+
+export function ProductTable({ products }: ProductTableProps) {
+  const [search, setSearch] = useState("");
+  const [showInStockOnly, setShowInStockOnly] = useState(false);
+
+  const filteredProducts = useMemo(() => {
+    return products
+      .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
+      .filter((p) => (showInStockOnly ? p.inStock : true));
+  }, [products, search, showInStockOnly]);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-4">
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Pretraži proizvode..."
+          className="rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={showInStockOnly}
+            onChange={(e) => setShowInStockOnly(e.target.checked)}
+            className="rounded"
+          />
+          Samo na stanju
+        </label>
+      </div>
+
+      <p className="text-sm text-gray-500">{filteredProducts.length} rezultata</p>
+
+      <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200">
+        {filteredProducts.map((product) => (
+          <li key={product.id} className="flex items-center justify-between px-4 py-3">
+            <span className="font-medium">{product.name}</span>
+            <span className="text-sm text-gray-500">{product.price} RSD</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+Bez `useMemo`, logika filtriranja bi se izvršavala pri svakom pritisku tastera *i* pri svakoj nepovezanoj promeni state-a u roditelju. Sa `useMemo`, React preskače ponovni izračun osim ako se `products`, `search` ili `showInStockOnly` zaista promene.
+
+### Kada useMemo ima smisla
+
+- Filtriranje ili sortiranje velikih nizova (stotine stavki ili više)
+- Kompleksni izvedeni podaci (agregacije, grupisanja, podaci za grafikone)
+- Skupe matematičke kalkulacije
+
+### Kada useMemo NEMA smisla
+
+- Jednostavan pristup properti-ju ili osnovna aritmetika
+- Nizovi ili objekti sa svega nekoliko stavki
+- Bilo gde gde nisi izmerio stvarni problem sa performansama
+
+Overhead samog `useMemo` (čuvanje keširane vrednosti, poređenje zavisnosti) može premašiti cenu ponovnog izračunavanja jeftine operacije.
+
+---
+
+## useCallback: Stabilizacija referenci na funkcije
+
+U JavaScript-u, funkcija definisana unutar tela komponente se kreira iznova pri svakom renderu. Ovo je važno kada tu funkciju prosleđuješ kao prop memoizovanoj child komponenti — nova referenca na funkciju znači da child vidi "promenjeni" prop i re-renderuje se, čime se poništava svrha memoizacije.
+
+`useCallback` vraća **stabilnu referencu na funkciju** koja se menja samo kada se promene njene zavisnosti.
+
+```tsx
+import { useCallback, useState, memo } from "react";
+
+interface ActionButtonProps {
+  onAction: () => void;
+  label: string;
+}
+
+// memo() sprečava re-render ako se props nije promenio
+const ActionButton = memo(function ActionButton({ onAction, label }: ActionButtonProps) {
+  console.log(`Renderovanje: ${label}`);
+  return (
+    <button
+      onClick={onAction}
+      className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+    >
+      {label}
+    </button>
+  );
+});
+
+export function ProductActions({ productId }: { productId: string }) {
+  const [status, setStatus] = useState<string | null>(null);
+
+  const handleApprove = useCallback(async () => {
+    await fetch(`/api/products/${productId}/approve`, { method: "POST" });
+    setStatus("odobreno");
+  }, [productId]);
+
+  const handleReject = useCallback(async () => {
+    await fetch(`/api/products/${productId}/reject`, { method: "POST" });
+    setStatus("odbijeno");
+  }, [productId]);
+
+  return (
+    <div className="flex items-center gap-3">
+      <ActionButton onAction={handleApprove} label="Odobri" />
+      <ActionButton onAction={handleReject} label="Odbij" />
+      {status && (
+        <span className="text-sm capitalize text-gray-500">Status: {status}</span>
+      )}
+    </div>
+  );
+}
+```
+
+`useCallback` i `memo` funkcionišu kao par. `memo` sprečava re-render child-a kada su props-i isti — ali samo ako su props-i zaista stabilni. `useCallback` osigurava da je funkcija kao prop stabilna. Bez jednog, drugi ne pomaže.
+
+---
+
+## useRef: Mutatabilne vrednosti bez re-rendera
+
+`useRef` kreira mutatabilni kontejner — objekat sa `.current` propertijem — koji opstaje tokom celog životnog veka komponente. Za razliku od state-a, promena `.current` **ne pokreće re-render**.
+
+Ovo čini `useRef` pravim alatom za dva različita slučaja upotrebe:
+
+### Slučaj 1: Direktan pristup DOM elementima
+
+```tsx
+import { useRef, useEffect } from "react";
+
+export function AutoFocusInput() {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  return (
+    <input
+      ref={inputRef}
+      type="text"
+      placeholder="Ovo se automatski fokusira..."
+      className="rounded-lg border border-gray-300 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+  );
+}
+```
+
+### Slučaj 2: Čuvanje vrednosti koje ne treba da okidaju re-render
+
+```tsx
+import { useRef, useEffect, useState } from "react";
+
+export function StopwatchButton() {
+  const [isRunning, setIsRunning] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (isRunning) {
+      intervalRef.current = setInterval(() => {
+        setElapsed((prev) => prev + 1);
+      }, 1000);
+    } else {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    }
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [isRunning]);
+
+  return (
+    <div className="flex items-center gap-4">
+      <span className="text-2xl font-mono tabular-nums">{elapsed}s</span>
+      <button
+        onClick={() => setIsRunning((prev) => !prev)}
+        className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white"
+      >
+        {isRunning ? "Zaustavi" : "Pokreni"}
+      </button>
+      <button
+        onClick={() => { setElapsed(0); setIsRunning(false); }}
+        className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium"
+      >
+        Resetuj
+      </button>
+    </div>
+  );
+}
+```
+
+`intervalRef` čuva ID intervala bez izazivanja re-rendera kada se promeni. Da smo koristili `useState` za ID intervala, svaki tick bi izazvao dupli re-render.
+
+---
+
+## Česte Greške i Zamke
+
+### 1. Preuranjena optimizacija
+
+Ovo je kardinalni greh. Dodavanje `useMemo` i `useCallback` svuda "za svaki slučaj" dodaje kognitivni overhead i retko pomaže. Prvo meri profilisanjem u React DevTools, tek onda optimizuj.
+
+### 2. Nedostajuće zavisnosti
+
+Baš kao `useEffect`, i `useMemo` i `useCallback` imaju nizove zavisnosti. Nedostajuća zavisnost znači da tvoja keširana vrednost postaje zastarela. Drži `eslint-plugin-react-hooks` uključenim — hvata ovo automatski.
+
+### 3. Mišljenje da useRef zamenjuje useState
+
+Ako ažuriraš ref i očekuješ da UI odrazi tu promenu, neće se ništa dogoditi — ref-ovi ne okidaju re-rendere. Koristi state za sve što treba biti vidljivo korisniku; koristi ref-ove za vrednosti koje postoje da koordinišu ponašanje iza scene.
+
+### 4. Kreiranje objekata unutar zavisnosti useMemo
+
+```tsx
+// ❌ `filters` je novi objekat pri svakom renderu — useMemo uvek ponovo izračunava
+const filters = { category, minPrice, maxPrice };
+const filtered = useMemo(() => applyFilters(products, filters), [products, filters]);
+
+// ✅ Koristi primitivne vrednosti direktno kao zavisnosti
+const filtered = useMemo(
+  () => applyFilters(products, { category, minPrice, maxPrice }),
+  [products, category, minPrice, maxPrice]
+);
+```
+
+---
+
+## Okvir za donošenje odluka
+
+Kada se suočimo sa problemom performansi u React komponenti, sledimo ovaj redosled u Atonize-u:
+
+1. **Prvo izmeri** — koristi React DevTools Profiler da potvrdiš koja komponenta je spora i zašto
+2. **Memoizuj komponentu** sa `memo()` ako se re-renderuje sa identičnim props-ima
+3. **Stabilizuj callback props-e** sa `useCallback` ako kvare `memo()`
+4. **Keširaj skupe kalkulacije** sa `useMemo` ako je neka derivacija zaista skupa
+5. **Razmotri arhitekturu** — ponekad je pravo rešenje restrukturiranje stabla komponenti, ne dodavanje hook-ova
+
+Za state koji se deli između mnogo komponenti i izaziva rasprostranjene re-rendere, rešenje je često bolja strategija upravljanja state-om umesto više memoizacije. Obrađujemo to u [Globalni State Management u 2026. godini](/insights/global-state-management-2026).
+
+---
+
+## Često Postavljana Pitanja (FAQ)
+
+### Koja je razlika između useMemo i useCallback?
+
+`useMemo` kešira *rezultat* pozivanja funkcije — koristi ga za skupe izračunate vrednosti. `useCallback` kešira *samu funkciju* — koristi ga kada prosleđuješ callback-ove kao props memoizovanim child komponentama. `useCallback(fn, deps)` je u suštini ekvivalentno sa `useMemo(() => fn, deps)`.
+
+### Da li treba da omotam svaku funkciju u useCallback?
+
+Ne. Koristi `useCallback` samo kada se funkcija prosleđuje kao prop komponenti omotanoj u `memo()`, ili kada je navedena kao zavisnost u nizu zavisnosti drugog hook-a i potrebna ti je stabilna referenca. Omotavanje svake funkcije dodaje overhead i buku u kodu.
+
+### Može li useRef čuvati bilo koji tip vrednosti?
+
+Da. Iako je najvidljiviji slučaj upotrebe čuvanje referenci na DOM elemente, `useRef` može da čuva bilo koju mutatabilnu vrednost: ID-jeve tajmera, prethodne vrednosti state-a, brojače, WebSocket instance — sve što želiš da opstane između rendera bez pokretanja re-rendera.
+
+### Kako da znam da li moja komponenta zaista treba optimizaciju?
+
+Koristi React DevTools Profiler da snimiš interakcije i potražiš komponente koje se renderuju češće nego što bi trebalo, ili čije vreme renderovanja je nesrazmerno visoko. Ne optimizuj po instinktu — optimizuj na osnovu podataka.
+
+---

@@ -1,0 +1,392 @@
+[
+  {
+    "id": 23,
+    "title": "VEEV B2B Platform",
+    "description": "Architected and developed a comprehensive B2B web application, e-commerce catalog, and a custom CRM/CMS platform for an international railway vehicle components manufacturer. The platform was designed for high performance, multilinguality, and seamless lead generation.",
+    "category": "b2b",
+    "image": "/portfolio/images/gallery/veev/veev-1.webp",
+    "link": "https://www.veevrailway.com/",
+    "technologies": [
+      "Next.js 16",
+      "React 19",
+      "MySQL",
+      "Tailwind CSS"
+    ],
+    "hasModal": true,
+    "gallery": [
+      "/portfolio/images/gallery/veev/veev-1.webp",
+      "/portfolio/images/gallery/veev/veev-2.webp",
+      "/portfolio/images/gallery/veev/veev-3.webp",
+      "/portfolio/images/gallery/veev/veev-4.webp",
+      "/portfolio/images/gallery/veev/veev-5.webp",
+      "/portfolio/images/gallery/veev/veev-6.webp",
+      "/portfolio/images/gallery/veev/veev-7.webp",
+      "/portfolio/images/gallery/veev/veev-8.webp",
+      "/portfolio/images/gallery/veev/veev-9.webp",
+      "/portfolio/images/gallery/veev/veev-10.webp",
+      "/portfolio/images/gallery/veev/veev-11.webp"
+    ],
+    "details": {
+      "role": "Lead Full-Stack Developer",
+      "features": [
+        {
+          "title": "🎨 End-to-End UX/UI Design",
+          "description": "Independently led the product design phase, translating complex B2B requirements into functional wireframes. Solely responsible for designing and implementing the final 'Industrial Midnight' visual identity and user interface from scratch, ensuring a premium user experience."
+        },
+        {
+          "title": "📊 Custom CRM & CMS Dashboard",
+          "description": "Built a secure, bespoke Admin Panel from scratch to manage the entire sales pipeline, RFQ submissions, and product catalog. Automated Lead Management and engineered a custom session-tracking module."
+        },
+        {
+          "title": "🎯 Advanced Tracking, Analytics & GDPR Compliance",
+          "description": "Integrated GTM and GA4 with a custom analytics layer for accurate conversion and lead tracking. Ensured compliance using Dynamic Consent Mode v2 and engineered a self-service GDPR portal."
+        },
+        {
+          "title": "🚀 High-Performance B2B RFQ System",
+          "description": "Developed a multi-step RFQ form utilizing React Hook Form and Zod for robust validation. Designed a dedicated customer-facing tracking system, allowing clients to independently monitor their RFQ submissions."
+        },
+        {
+          "title": "📈 Comprehensive SEO & Digital Strategy",
+          "description": "Spearheaded the digital marketing strategy by conducting deep competitor research and B2B keyword analysis. Implemented dynamic Next.js Metadata, JSON-LD structured data, and semantic HTML."
+        },
+        {
+          "title": "⚙️ Modern Architecture & Performance",
+          "description": "Leveraged Server-Side Rendering (SSR) and Incremental Static Regeneration (ISR) combined with Cloudflare CDN caching to achieve Lighthouse scores of 90+. Designed a scalable relational MySQL schema and built infrastructure for a multi-language experience."
+        }
+      ]
+    }
+  },
+  {
+    "id": 1,
+    "title": "Dating App",
+    "description": "Led front-end team in building a dating platform from scratch with vanilla JavaScript and custom modular architecture (no frameworks). Delivered public landing, member portal with profiles and galleries, real-time chat, matching and search, admin dashboard, and payment integration.",
+    "category": "other",
+    "image": "/portfolio/images/gallery/openrelationship.jpg",
+    "link": "https://openrelationship.com",
+    "technologies": [
+      "JavaScript",
+      "Single Page App",
+      "Admin Panel",
+      "Real-time Chat",
+      "Payment Integration"
+    ]
+  },
+  {
+    "id": 22,
+    "title": "Ljetovanje.com - Travel & Flight Affiliate Comparison Startup",
+    "description": "Built Ljetovanje.com from the ground up as an independent, data-driven startup venture. At its core, the entire business model revolves around heavy data orchestration—aggregating, standardizing, and presenting massive datasets to end-users.",
+    "category": "saas",
+    "image": "/portfolio/images/gallery/ljetovanje.webp",
+    "link": "https://www.ljetovanje.com",
+    "technologies": [
+      "Next.js 15",
+      "React 18",
+      "TypeScript",
+      "Tailwind CSS v4",
+      "Node.js",
+      "MySQL"
+    ],
+    "hasModal": true,
+    "details": {
+      "role": "Co-Founder & Full-Stack Developer",
+      "features": [
+        {
+          "title": "🎯 Project Overview & Business Strategy",
+          "description": "Built Ljetovanje.com from the ground up as an independent, data-driven startup venture. At its core, the entire business model revolves around heavy data orchestration—aggregating, standardizing, and presenting massive datasets (flights, accommodations, activities) to end-users. I was responsible for the complete lifecycle of the project, from conceptualizing this data-centric business strategy and designing the user journey, to executing the full-stack technical architecture."
+        },
+        {
+          "title": "🚀 End-to-End Ownership",
+          "description": "Concepted the entire business model based on affiliate marketing, designing the complete user journey to maximize conversions and user retention."
+        },
+        {
+          "title": "🎨 Bespoke UI/UX Design",
+          "description": "Crafted a custom, scalable design system using Tailwind CSS, focusing on a premium look-and-feel, modern aesthetics, and intuitive interactions that rival established global competitors."
+        },
+        {
+          "title": "📈 SEO-First Strategy",
+          "description": "Developed a robust, conceptual SEO strategy to drive organic traffic, utilizing programmatic destination pages, intelligent routing, and localized targeting to build deep topical authority."
+        },
+        {
+          "title": "⚙️ Complex B2B API Integrations",
+          "description": "Engineered direct, real-time data pipelines using the Aviasales API for live flight aggregation and the Stay22 API for dynamic accommodation mapping. Successfully parsed and standardized complex, disparate data feeds into a single, unified user experience."
+        },
+        {
+          "title": "💻 Advanced Frontend Engineering",
+          "description": "Handled complex application state, asynchronous data fetching, and intelligent routing across different user funnels using Next.js App Router and React Context. Developed highly interactive tools such as dynamic price calendars and multi-step search grids."
+        },
+        {
+          "title": "🗄️ Custom CMS & Database Architecture",
+          "description": "Engineered a complete proprietary Content Management System (CMS) from scratch. This custom admin panel provides total internal control over the platform's MySQL database, managing destinations, flights, hotels, and blog content without off-the-shelf constraints."
+        },
+        {
+          "title": "📊 Bespoke Analytics Engine",
+          "description": "Designed and implemented a custom event-tracking system tracking the entire user funnel directly into the database. Built a SaaS-grade Audience Insights dashboard that processes live activity feeds via highly optimized, asynchronous SQL queries for real-time business intelligence."
+        }
+      ]
+    },
+    "gallery": [
+      "/portfolio/images/gallery/ljetovanje-1.webp",
+      "/portfolio/images/gallery/ljetovanje-2.webp",
+      "/portfolio/images/gallery/ljetovanje-3.webp",
+      "/portfolio/images/gallery/ljetovanje-4.webp"
+    ]
+  },
+  {
+    "id": 2,
+    "title": "Restaurant Theme",
+    "description": "Wordpress theme for restaurants with online menu and reservation system.",
+    "category": "wordpress",
+    "image": "/portfolio/images/gallery/restaurant.jpg",
+    "link": "/portfolio/restaurant-theme/home.html",
+    "technologies": [
+      "WordPress",
+      "PHP",
+      "JavaScript",
+      "CSS"
+    ]
+  },
+  {
+    "id": 21,
+    "title": "Task Manager",
+    "description": "Task management application built with React and TypeScript. Create, edit, and organize your tasks with priority levels and categories.",
+    "category": "saas",
+    "image": "https://dummyimage.com/800x450/0284c7/ffffff&text=Task+Manager",
+    "link": "/tasks",
+    "technologies": [
+      "React",
+      "TypeScript",
+      "Context API",
+      "Local Storage"
+    ]
+  },
+  {
+    "id": 3,
+    "title": "Knight Services",
+    "description": "Professional website for roof repair and maintenance services.",
+    "category": "other",
+    "image": "/portfolio/images/gallery/knightservices.jpg",
+    "link": "/portfolio/knightservices",
+    "technologies": [
+      "WordPress",
+      "PHP",
+      "JavaScript"
+    ],
+    "hidden": true
+  },
+  {
+    "id": 4,
+    "title": "Wedding Day",
+    "description": "Elegant website for online wedding invitations with RSVP functionality.",
+    "category": "wordpress",
+    "image": "/portfolio/images/gallery/wedding-day.jpg",
+    "link": "/portfolio/wedding-day/home.html",
+    "technologies": [
+      "WordPress",
+      "JavaScript",
+      "CSS"
+    ]
+  },
+  {
+    "id": 5,
+    "title": "At Medics",
+    "description": "Modern website for medical institution with patient portal.",
+    "category": "other",
+    "image": "/portfolio/images/gallery/at-medics.jpg",
+    "link": "/portfolio/at-medics/home.html",
+    "technologies": [
+      "HTML5",
+      "CSS3",
+      "JavaScript"
+    ]
+  },
+  {
+    "id": 6,
+    "title": "School Space",
+    "description": "Community-based social enterprise platform for education.",
+    "category": "other",
+    "image": "/portfolio/images/gallery/school-space.jpg",
+    "link": "/portfolio/school-space/home.html",
+    "technologies": [
+      "HTML5",
+      "CSS3",
+      "JavaScript"
+    ]
+  },
+  {
+    "id": 7,
+    "title": "Alriyada",
+    "description": "RTL website for internet service provider from Libya.",
+    "category": "rtl",
+    "image": "/portfolio/images/gallery/alriyada.jpg",
+    "link": "/portfolio/alriyada/home.html",
+    "technologies": [
+      "HTML5",
+      "CSS3 RTL",
+      "JavaScript"
+    ]
+  },
+  {
+    "id": 8,
+    "title": "Wedding Mania",
+    "description": "Colorful and fun website for wedding invitations.",
+    "category": "wordpress",
+    "image": "/portfolio/images/gallery/wedding-mania.jpg",
+    "link": "/portfolio/wedding-mania/home.html",
+    "technologies": [
+      "WordPress",
+      "JavaScript"
+    ]
+  },
+  {
+    "id": 9,
+    "title": "Joe Kroll Builder",
+    "description": "Professional website for house building company.",
+    "category": "other",
+    "image": "/portfolio/images/gallery/joekroll.jpg",
+    "link": "/portfolio/joekrollbuilder/",
+    "technologies": [
+      "WordPress",
+      "PHP"
+    ],
+    "hidden": true
+  },
+  {
+    "id": 10,
+    "title": "Smaragd",
+    "description": "Beautiful website for wedding decoration company.",
+    "category": "other",
+    "image": "/portfolio/images/gallery/smaragd.jpg",
+    "link": "/portfolio/smaragd/index.html",
+    "technologies": [
+      "HTML5",
+      "CSS3",
+      "JavaScript"
+    ]
+  },
+  {
+    "id": 11,
+    "title": "DMVF Architects",
+    "description": "Minimalist portfolio website for architecture firm.",
+    "category": "other",
+    "image": "/portfolio/images/gallery/dmvf.jpg",
+    "link": "http://dmvf.ie/",
+    "technologies": [
+      "WordPress",
+      "Custom Theme"
+    ]
+  },
+  {
+    "id": 12,
+    "title": "Central Bank of Libya",
+    "description": "Official RTL website for the central bank with secure portal.",
+    "category": "rtl",
+    "image": "/portfolio/images/gallery/cbl.jpg",
+    "link": "/portfolio/cbl/build/home.html",
+    "technologies": [
+      "HTML5",
+      "CSS3 RTL",
+      "JavaScript"
+    ]
+  },
+  {
+    "id": 13,
+    "title": "Wedding Star",
+    "description": "Romantic website template for wedding invitations.",
+    "category": "wordpress",
+    "image": "/portfolio/images/gallery/wedding-star.jpg",
+    "link": "/portfolio/wedding-star/home.html",
+    "technologies": [
+      "WordPress",
+      "JavaScript"
+    ]
+  },
+  {
+    "id": 14,
+    "title": "The House London",
+    "description": "Interactive website featuring custom CSS animations.",
+    "category": "animation",
+    "image": "/portfolio/images/gallery/thehouse.jpg",
+    "link": "/portfolio/the-house/index.html",
+    "technologies": [
+      "HTML5",
+      "CSS3 Animations",
+      "JavaScript"
+    ]
+  },
+  {
+    "id": 15,
+    "title": "Valentino Pastry Shop",
+    "description": "Delightful website for Italian pastry shop.",
+    "category": "other",
+    "image": "/portfolio/images/gallery/valentino.jpg",
+    "link": "https://www.valentinotorte.com/",
+    "technologies": [
+      "WordPress",
+      "WooCommerce"
+    ]
+  },
+  {
+    "id": 16,
+    "title": "IBSL",
+    "description": "Professional WordPress theme for charity organizations.",
+    "category": "wordpress",
+    "image": "/portfolio/images/gallery/ibsl.jpg",
+    "link": "/portfolio/ibsl/home.html",
+    "technologies": [
+      "WordPress",
+      "Custom Theme",
+      "PHP"
+    ]
+  },
+  {
+    "id": 17,
+    "title": "Cloud Nexus IT",
+    "description": "Corporate website for cyber security solutions provider.",
+    "category": "other",
+    "image": "/portfolio/images/gallery/cloud-nexus.jpg",
+    "link": "http://www.cloudnexusit.com/",
+    "technologies": [
+      "WordPress",
+      "Security Features"
+    ],
+    "hidden": true
+  },
+  {
+    "id": 18,
+    "title": "Kentucky to the World",
+    "description": "Website for non-profit organization promoting Kentucky globally.",
+    "category": "other",
+    "image": "/portfolio/images/gallery/kentucky.jpg",
+    "link": "http://kentuckytotheworld.org/",
+    "technologies": [
+      "WordPress",
+      "Donation System"
+    ]
+  },
+  {
+    "id": 19,
+    "title": "Khulisa",
+    "description": "Impactful website for charity organization.",
+    "category": "other",
+    "image": "/portfolio/images/gallery/khulisa.jpg",
+    "link": "/portfolio/khulisa/home.html",
+    "technologies": [
+      "HTML5",
+      "CSS3",
+      "JavaScript"
+    ]
+  },
+  {
+    "id": 20,
+    "title": "Easy Offices",
+    "description": "Office space search and booking platform.",
+    "category": "other",
+    "image": "/portfolio/images/gallery/easyoffices.jpg",
+    "link": "/portfolio/easyoffices/home.html",
+    "technologies": [
+      "HTML5",
+      "CSS3",
+      "JavaScript"
+    ]
+  }
+]

@@ -1,24 +1,31 @@
-# Personal notes and ideas
-app-ideas.md
-
-# Dependencies
-node_modules/
-
 # Logs
+logs
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# OS files
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Deployment config (sadrži osetljive podatke)
+deploy.config.sh
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
 .DS_Store
-Thumbs.db
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Environment variables
-.env
-.env.local
-.env.*.local
+.next
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+public/portfolio/*
+!public/portfolio/images/
