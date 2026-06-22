@@ -62,13 +62,13 @@ export default async function CategoryPage({ params }: { params: Promise<{ local
             <Link href="/insights" className="text-gray-400 hover:text-gray-900 pb-4 -mb-[18px] whitespace-nowrap transition-colors">{t('filters.latest')}</Link>
             
             {/* Dinamički izlistavamo sve kategorije iz i18n */}
-            <Link href="/insights/category/engineering" className={`pb-4 -mb-[18px] whitespace-nowrap transition-colors ${categorySlug === 'engineering' ? 'text-gray-900 border-b-2 border-yellow-400' : 'text-gray-400 hover:text-gray-900'}`}>
+            <Link href={{ pathname: '/insights/category/[categorySlug]', params: { categorySlug: 'engineering' } }} className={`pb-4 -mb-[18px] whitespace-nowrap transition-colors ${categorySlug === 'engineering' ? 'text-gray-900 border-b-2 border-yellow-400' : 'text-gray-400 hover:text-gray-900'}`}>
               {t('filters.engineering')}
             </Link>
-            <Link href="/insights/category/product" className={`pb-4 -mb-[18px] whitespace-nowrap transition-colors ${categorySlug === 'product' ? 'text-gray-900 border-b-2 border-yellow-400' : 'text-gray-400 hover:text-gray-900'}`}>
+            <Link href={{ pathname: '/insights/category/[categorySlug]', params: { categorySlug: 'product' } }} className={`pb-4 -mb-[18px] whitespace-nowrap transition-colors ${categorySlug === 'product' ? 'text-gray-900 border-b-2 border-yellow-400' : 'text-gray-400 hover:text-gray-900'}`}>
               {t('filters.product')}
             </Link>
-            <Link href="/insights/category/design" className={`pb-4 -mb-[18px] whitespace-nowrap transition-colors ${categorySlug === 'design' ? 'text-gray-900 border-b-2 border-yellow-400' : 'text-gray-400 hover:text-gray-900'}`}>
+            <Link href={{ pathname: '/insights/category/[categorySlug]', params: { categorySlug: 'design' } }} className={`pb-4 -mb-[18px] whitespace-nowrap transition-colors ${categorySlug === 'design' ? 'text-gray-900 border-b-2 border-yellow-400' : 'text-gray-400 hover:text-gray-900'}`}>
               {t('filters.design')}
             </Link>
           </div>
@@ -81,7 +81,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ local
             const bgColor = colors[index % colors.length];
             
             return (
-              <Link key={post.slug} href={`/insights/${post.slug}`} className="group block bg-white border border-gray-100 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300">
+              <Link key={post.slug} href={{ pathname: '/insights/[slug]', params: { slug: post.slug } }} className="group block bg-white border border-gray-100 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300">
                 <div className={`${bgColor} h-48 flex items-center justify-center p-8 relative overflow-hidden`}>
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
                   <span className="text-6xl opacity-90 group-hover:scale-110 transition-transform duration-300">{post.icon || '📝'}</span>

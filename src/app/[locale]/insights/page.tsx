@@ -29,9 +29,9 @@ export default async function Insights({ params }: { params: Promise<{ locale: s
         <div className="flex flex-col md:flex-row justify-between items-center border-b border-gray-200 pb-4 mb-8">
           <div className="flex gap-6 overflow-x-auto w-full md:w-auto pb-4 md:pb-0 scrollbar-hide text-sm font-medium">
             <Link href="/insights" className="text-gray-900 border-b-2 border-yellow-400 pb-4 -mb-[18px] whitespace-nowrap">{t('filters.latest')}</Link>
-            <Link href="/insights/category/engineering" className="text-gray-400 hover:text-gray-900 pb-4 -mb-[18px] whitespace-nowrap transition-colors">{t('filters.engineering')}</Link>
-            <Link href="/insights/category/product" className="text-gray-400 hover:text-gray-900 pb-4 -mb-[18px] whitespace-nowrap transition-colors">{t('filters.product')}</Link>
-            <Link href="/insights/category/design" className="text-gray-400 hover:text-gray-900 pb-4 -mb-[18px] whitespace-nowrap transition-colors">{t('filters.design')}</Link>
+            <Link href={{ pathname: '/insights/category/[categorySlug]', params: { categorySlug: 'engineering' } }} className="text-gray-400 hover:text-gray-900 pb-4 -mb-[18px] whitespace-nowrap transition-colors">{t('filters.engineering')}</Link>
+            <Link href={{ pathname: '/insights/category/[categorySlug]', params: { categorySlug: 'product' } }} className="text-gray-400 hover:text-gray-900 pb-4 -mb-[18px] whitespace-nowrap transition-colors">{t('filters.product')}</Link>
+            <Link href={{ pathname: '/insights/category/[categorySlug]', params: { categorySlug: 'design' } }} className="text-gray-400 hover:text-gray-900 pb-4 -mb-[18px] whitespace-nowrap transition-colors">{t('filters.design')}</Link>
           </div>
           
           <div className="relative mt-4 md:mt-0 w-full md:w-auto">
@@ -56,7 +56,7 @@ export default async function Insights({ params }: { params: Promise<{ locale: s
             const bgColor = colors[index % colors.length];
             
             return (
-              <Link key={post.slug} href={`/insights/${post.slug}`} className="group block bg-white border border-gray-100 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300">
+              <Link key={post.slug} href={{ pathname: '/insights/[slug]', params: { slug: post.slug } }} className="group block bg-white border border-gray-100 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300">
                 <div className={`${bgColor} h-48 flex items-center justify-center p-8 relative overflow-hidden`}>
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
                   <span className="text-6xl opacity-90 group-hover:scale-110 transition-transform duration-300">{post.icon || '📝'}</span>
@@ -73,7 +73,7 @@ export default async function Insights({ params }: { params: Promise<{ locale: s
               </Link>
             );
           }) : (
-            <Link href={`/insights/coming-soon`} className="group block bg-white border border-gray-100 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300">
+            <Link href={{ pathname: '/insights/[slug]', params: { slug: 'coming-soon' } }} className="group block bg-white border border-gray-100 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300">
               <div className="bg-[#facc15] h-48 flex items-center justify-center p-8">
                 <span className="text-6xl opacity-90 group-hover:scale-110 transition-transform duration-300">⏳</span>
               </div>

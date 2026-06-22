@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, data });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Validation failed', details: error.errors }, { status: 400 });
+      return NextResponse.json({ error: 'Validation failed', details: (error as any).errors }, { status: 400 });
     }
     
     console.error('Contact API Error:', error);

@@ -244,7 +244,7 @@ const Portfolio = () => {
                           {linkContent}
                         </a>
                       ) : (
-                        <Link href={linkTo} className="block">
+                        <Link href={linkTo as any} className="block">
                           {linkContent}
                         </Link>
                       );

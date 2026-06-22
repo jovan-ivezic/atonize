@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 import rehypePrettyCode from 'rehype-pretty-code';
 import remarkGfm from 'remark-gfm';
 
-const mdxOptions = {
+const mdxOptions: any = {
   mdxOptions: {
     remarkPlugins: [remarkGfm],
     rehypePlugins: [

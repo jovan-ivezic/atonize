@@ -63,7 +63,7 @@ const Navbar = () => {
           {/* Logo */}
           <Motion.div whileHover={{ scale: 1.05 }}>
             <Link
-              href="/#home"
+              href={"/#home" as any}
               className="text-headline-md font-headline-md text-primary tracking-tight"
               onClick={(e) => scrollToSection(e, '/#home')}
             >
