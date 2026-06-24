@@ -174,7 +174,7 @@ const Portfolio = () => {
                         <h3 className="font-headline-md text-headline-md text-secondary">
                           {project.title}
                         </h3>
-                        <p className="text-on-surface-variant font-body-md leading-relaxed">
+                        <p className="text-on-surface-variant font-body-md leading-relaxed line-clamp-3">
                           {project.description}
                         </p>
                       </div>
@@ -216,37 +216,20 @@ const Portfolio = () => {
                             <h3 className="font-headline-md text-headline-md group-hover:text-primary transition-colors">
                               {project.title}
                             </h3>
-                            <p className="text-on-surface-variant font-body-md leading-relaxed">
+                            <p className="text-on-surface-variant font-body-md leading-relaxed line-clamp-3">
                               {project.description}
                             </p>
                           </div>
                         </>
                       );
 
-                      if (project.hasModal) {
-                        return (
-                          <div
-                            onClick={() => setSelectedProject(project)}
-                            className="block cursor-pointer"
-                          >
-                            {linkContent}
-                          </div>
-                        );
-                      }
-
-                      return isExternalLink ? (
-                        <a
-                          href={project.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block"
+                      return (
+                        <div
+                          onClick={() => setSelectedProject(project)}
+                          className="block cursor-pointer"
                         >
                           {linkContent}
-                        </a>
-                      ) : (
-                        <Link href={linkTo as any} className="block">
-                          {linkContent}
-                        </Link>
+                        </div>
                       );
                     })()
                   )}

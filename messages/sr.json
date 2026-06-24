@@ -48,7 +48,33 @@
     "title_first": "Naše",
     "title_gradient": "Usluge",
     "description": "Sveobuhvatna digitalna rešenja skrojena prema vašim poslovnim potrebama.",
-    "footer_note": "Gradimo robusne arhitekture i isporučujemo merljive poslovne rezultate."
+    "footer_note": "Gradimo robusne arhitekture i isporučujemo merljive poslovne rezultate.",
+    "items": {
+      "fullstack": {
+        "title": "Full-Stack Razvoj",
+        "description": "End-to-end razvoj robusnih web aplikacija koristeći React, Next.js i moderne backend tehnologije."
+      },
+      "b2b": {
+        "title": "B2B Platforme & CRM",
+        "description": "Namenska enterprise rešenja i CRM sistemi krojeni da automatizuju vaše kompleksne poslovne procese."
+      },
+      "seo": {
+        "title": "Tehnički SEO",
+        "description": "Napredne on-page i arhitektonske SEO optimizacije za maksimalnu vidljivost na pretraživačima."
+      },
+      "uiux": {
+        "title": "UI/UX Dizajn",
+        "description": "Kreiranje intuitivnih, pristupačnih i modernih korisničkih interfejsa koji podižu vaše brend iskustvo."
+      },
+      "cloud": {
+        "title": "Cloud Arhitektura",
+        "description": "Skalabilna cloud infrastruktura, CI/CD pajplajnovi i pouzdana kontejnerizacija koristeći moderne provajdere."
+      },
+      "strategy": {
+        "title": "Digitalna Strategija",
+        "description": "Tehnički konsalting zasnovan na podacima za usklađivanje softverske arhitekture sa poslovnim ciljevima."
+      }
+    }
   },
   "Portfolio": {
     "title_first": "Istaknuti",
@@ -92,7 +118,10 @@
       "latest": "Najnovije",
       "engineering": "Inženjering",
       "product": "Proizvod",
-      "design": "Dizajn"
+      "design": "Dizajn",
+      "engineering_slug": "inzenjering",
+      "product_slug": "proizvod",
+      "design_slug": "dizajn"
     },
     "search": "Pretraga",
     "coming_soon": "Prvi članak uskoro",

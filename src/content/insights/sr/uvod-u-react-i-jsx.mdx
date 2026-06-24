@@ -1,7 +1,7 @@
 ---
 title: "Uvod u React i JSX: Kako razmišljati u komponentama"
 date: "2025-06-19"
-category: "Engineering"
+category: "Inženjering"
 slug: "uvod-u-react-i-jsx"
 icon: "⚛️"
 excerpt: "Nauči kako React-ov model komponenti i JSX sintaksa zajedno omogućavaju izgradnju skalabilnih, lako održivih UI-ova — i zašto je razmišljanje u komponentama najvažniji mentalni pomak za svakog modernog front-end developera."
@@ -128,7 +128,7 @@ Razumevanje razlike između props-a i state-a je najvažniji koncept u React-u.
 - **Može li da se menja?** Da, putem `useState`
 - **Analogija:** Lokalna promenljiva koja okida re-render
 
-Komponenta bi generalno trebalo da bude ili **"pametna" (stateful)** ili **"glupa" (prezentaciona)** — mešanje obe odgovornosti u istoj komponenti je tačka gde kompleksnost počinje da raste. Ovo ćemo detaljno istražiti u našem tekstu o [LINK_TO_STATE_MANAGEMENT_ARTICLE].
+Komponenta bi generalno trebalo da bude ili **"pametna" (stateful)** ili **"glupa" (prezentaciona)** — mešanje obe odgovornosti u istoj komponenti je tačka gde kompleksnost počinje da raste. Ovo ćemo detaljno istražiti u našem tekstu o [Upravljanje State-om i Životnim Ciklusom](/insights/react-state-management-i-zivotni-ciklus).
 
 ---
 
@@ -193,7 +193,7 @@ return (
 
 ### 4. Direktna mutacija props-a
 
-Props su read-only. Nikada ne pokušavaj da menjaš prop unutar komponente — ako trebaš da menjaš podatke, "podignuti" state na roditelja ili koristiti rešenje za upravljanje state-om. Ovo detaljno obrađujemo u [LINK_TO_STATE_MANAGEMENT_ARTICLE].
+Props su read-only. Nikada ne pokušavaj da menjaš prop unutar komponente — ako trebaš da menjaš podatke, "podignuti" state na roditelja ili koristiti rešenje za upravljanje state-om. Ovo detaljno obrađujemo u [Upravljanje State-om i Životnim Ciklusom](/insights/react-state-management-i-zivotni-ciklus).
 
 ---
 
@@ -201,8 +201,8 @@ Props su read-only. Nikada ne pokušavaj da menjaš prop unutar komponente — a
 
 Kada internalizuješ model komponenti, ostatak React ekosistema počinje da ima smisla:
 
-- **Hooks** (`useState`, `useEffect`, `useContext`) — načini da dodaš logiku i side efekte komponentama → [LINK_TO_HOOKS_ARTICLE]
-- **Next.js App Router** — obmotava React u full-stack framework sa Server Components, rutiranjem i data fetchingom → [LINK_TO_NEXTJS_INTRO_ARTICLE]
+- **Hooks** (`useState`, `useEffect`, `useContext`) — načini da dodaš logiku i side efekte komponentama → [Napredni React Hookovi](/insights/napredni-react-hookovi)
+- **Next.js App Router** — obmotava React u full-stack framework sa Server Components, rutiranjem i data fetchingom → tekst o Next.js-u uskoro
 - **State management** (Zustand, Redux Toolkit) — za deljenje state-a između velikog broja komponenti
 
 Mentalni model komponenti je temelj. Sve ostalo se nadograđuje na njega.
@@ -213,7 +213,7 @@ Mentalni model komponenti je temelj. Sve ostalo se nadograđuje na njega.
 
 ### Koja je razlika između React-a i Next.js-a?
 
-React je UI biblioteka — bavi se renderovanjem komponenti u browseru. Next.js je full-stack framework izgrađen na vrhu React-a koji dodaje rutiranje, server-side rendering, API rute i mnogo više. U Atonize-u, skoro uvek koristimo Next.js umesto čistog React-a za klijentske projekte. Saznaj više u [LINK_TO_NEXTJS_INTRO_ARTICLE].
+React je UI biblioteka — bavi se renderovanjem komponenti u browseru. Next.js je full-stack framework izgrađen na vrhu React-a koji dodaje rutiranje, server-side rendering, API rute i mnogo više. U Atonize-u, skoro uvek koristimo Next.js umesto čistog React-a za klijentske projekte. Saznaj više u našem nadolazećem tekstu o Next.js-u.
 
 ### Da li moram dobro da znam JavaScript pre učenja React-a?
 

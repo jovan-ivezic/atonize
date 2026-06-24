@@ -75,10 +75,20 @@ export const getPostByTranslationKey = (translationKey: string, locale: string =
 };
 
 export const slugify = (text: string) => {
-  return text
+  const map: Record<string, string> = {
+    'š':'s', 'đ':'dj', 'ž':'z', 'č':'c', 'ć':'c',
+    'Š':'s', 'Đ':'dj', 'Ž':'z', 'Č':'c', 'Ć':'c'
+  };
+  let str = text;
+  for (const key in map) {
+    str = str.replace(new RegExp(key, 'g'), map[key]);
+  }
+  return str
     .toString()
     .toLowerCase()
     .trim()
+    .normalize('NFD') // remove diacritics
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/\s+/g, '-')       // Replace spaces with -
     .replace(/[^\w\-]+/g, '')   // Remove all non-word chars
     .replace(/\-\-+/g, '-');    // Replace multiple - with single -

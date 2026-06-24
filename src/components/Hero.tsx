@@ -41,7 +41,7 @@ const Hero = () => {
           >
             <Link 
               href="#portfolio"
-              className="bg-primary text-on-primary px-8 py-4 rounded-DEFAULT font-label-caps text-label-caps flex items-center gap-3 ambient-hover no-underline"
+              className="bg-primary text-on-primary px-8 py-4 rounded-DEFAULT font-label-caps text-label-caps flex items-center gap-3 ambient-hover no-underline shadow-lg shadow-primary/20"
             >
               <span className="font-label-caps">{t('cta_projects').toUpperCase()}</span>
               <FaArrowRight size={16} />

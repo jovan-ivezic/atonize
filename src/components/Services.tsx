@@ -13,7 +13,7 @@ import { IconType } from 'react-icons';
 import { useTranslations } from 'next-intl';
 
 interface Service {
-  name: string;
+  id: string;
   icon: IconType;
   color: string;
 }
@@ -24,12 +24,12 @@ const Services = () => {
   const isInView = useInView(ref, { once: true, margin: '-100px' });
 
   const services: Service[] = [
-    { name: 'Full-Stack Development', icon: FaCode, color: 'text-primary' },
-    { name: 'B2B Platforms & CRM', icon: FaDatabase, color: 'text-inverse-primary' },
-    { name: 'Technical SEO', icon: FaSearch, color: 'text-primary' },
-    { name: 'UI/UX Design', icon: FaPaintBrush, color: 'text-outline' },
-    { name: 'Cloud Architecture', icon: FaServer, color: 'text-secondary' },
-    { name: 'Digital Strategy', icon: FaChartLine, color: 'text-primary' },
+    { id: 'fullstack', icon: FaCode, color: 'text-primary' },
+    { id: 'b2b', icon: FaDatabase, color: 'text-inverse-primary' },
+    { id: 'seo', icon: FaSearch, color: 'text-primary' },
+    { id: 'uiux', icon: FaPaintBrush, color: 'text-outline' },
+    { id: 'cloud', icon: FaServer, color: 'text-secondary' },
+    { id: 'strategy', icon: FaChartLine, color: 'text-primary' },
   ];
 
   const containerVariants = {
@@ -83,7 +83,7 @@ const Services = () => {
         >
           {services.map((service, index) => (
             <motion.div
-              key={service.name}
+              key={service.id}
               variants={itemVariants}
               className="bg-surface-container-lowest p-10 rounded-xl border border-outline-variant/30 ambient-hover flex flex-col items-center justify-center text-center h-full"
             >
@@ -93,9 +93,14 @@ const Services = () => {
               </div>
 
               {/* Service Name */}
-              <h3 className="font-headline-md font-semibold text-secondary text-xl">
-                {service.name}
+              <h3 className="font-headline-md font-semibold text-secondary text-xl mb-4">
+                {t(`items.${service.id}.title`)}
               </h3>
+              
+              {/* Description */}
+              <p className="text-on-surface-variant font-body-md leading-relaxed">
+                {t(`items.${service.id}.description`)}
+              </p>
             </motion.div>
           ))}
         </motion.div>

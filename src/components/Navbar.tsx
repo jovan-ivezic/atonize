@@ -1,4 +1,5 @@
 'use client';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { FaBars, FaTimes } from 'react-icons/fa';
@@ -36,14 +37,19 @@ const Navbar = () => {
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, href: string, isExternalPage?: boolean) => {
     if (isExternalPage) return;
     
-    // Ako smo na pocetnoj strani pokusavamo scroll
-    if (window.location.pathname === '/') {
+    // Proveravamo da li smo na početnoj strani (može biti /, /en ili /sr)
+    const pathname = window.location.pathname;
+    const isHomePage = pathname === '/' || pathname === '/en' || pathname === '/sr';
+    
+    if (isHomePage) {
       const targetId = href.replace('/#', '#');
       if (targetId.startsWith('#')) {
         e.preventDefault();
         const element = document.querySelector(targetId);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth' });
+          // Čisto ažuriranje URL-a bez gomilanja hash-eva
+          window.history.pushState(null, '', pathname + targetId);
           setIsOpen(false);
         }
       }
@@ -64,10 +70,10 @@ const Navbar = () => {
           <Motion.div whileHover={{ scale: 1.05 }}>
             <Link
               href={"/#home" as any}
-              className="text-headline-md font-headline-md text-primary tracking-tight"
+              className="flex items-center text-primary"
               onClick={(e) => scrollToSection(e, '/#home')}
             >
-              Atonize
+              <Image src="/images/logo-color.svg" alt="Atonize Logo" width={140} height={40} priority className="h-8 w-auto" />
             </Link>
           </Motion.div>
 

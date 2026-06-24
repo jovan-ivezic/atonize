@@ -48,7 +48,33 @@
     "title_first": "Our",
     "title_gradient": "Services",
     "description": "Comprehensive digital solutions tailored to your business needs.",
-    "footer_note": "Building robust architectures and delivering measurable business results."
+    "footer_note": "Building robust architectures and delivering measurable business results.",
+    "items": {
+      "fullstack": {
+        "title": "Full-Stack Development",
+        "description": "End-to-end development of robust web applications using React, Next.js, and modern backend technologies."
+      },
+      "b2b": {
+        "title": "B2B Platforms & CRM",
+        "description": "Custom enterprise solutions and CRM systems tailored to streamline your complex business operations."
+      },
+      "seo": {
+        "title": "Technical SEO",
+        "description": "Advanced on-page and architectural SEO optimizations to maximize your search engine visibility."
+      },
+      "uiux": {
+        "title": "UI/UX Design",
+        "description": "Creating intuitive, accessible, and high-converting user interfaces that elevate your brand experience."
+      },
+      "cloud": {
+        "title": "Cloud Architecture",
+        "description": "Scalable cloud infrastructure, CI/CD pipelines, and reliable containerization using modern providers."
+      },
+      "strategy": {
+        "title": "Digital Strategy",
+        "description": "Data-driven technical consulting to align your software architecture with overarching business goals."
+      }
+    }
   },
   "Portfolio": {
     "title_first": "Featured",
@@ -92,7 +118,10 @@
       "latest": "Latest",
       "engineering": "Engineering",
       "product": "Product",
-      "design": "Design"
+      "design": "Design",
+      "engineering_slug": "engineering",
+      "product_slug": "product",
+      "design_slug": "design"
     },
     "search": "Search",
     "coming_soon": "First Article Coming Soon",

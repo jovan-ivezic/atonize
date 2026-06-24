@@ -128,7 +128,7 @@ Understanding the difference between props and state is the single most importan
 - **Can it change?** Yes, via `useState`
 - **Analogy:** Local variable that triggers a re-render
 
-A component should generally be either **"smart" (stateful)** or **"dumb" (presentational)** — mixing both responsibilities in the same component is where complexity starts to creep in. We'll explore this further in our article on [LINK_TO_STATE_MANAGEMENT_ARTICLE].
+A component should generally be either **"smart" (stateful)** or **"dumb" (presentational)** — mixing both responsibilities in the same component is where complexity starts to creep in. We'll explore this further in our article on [State Management and Lifecycle](/insights/react-state-management-and-lifecycle).
 
 ---
 
@@ -193,7 +193,7 @@ return (
 
 ### 4. Mutating props directly
 
-Props are read-only. Never try to change a prop inside a component — if you need to change data, lift that state up to the parent or use a state management solution. We cover this in depth in [LINK_TO_STATE_MANAGEMENT_ARTICLE].
+Props are read-only. Never try to change a prop inside a component — if you need to change data, lift that state up to the parent or use a state management solution. We cover this in depth in [State Management and Lifecycle](/insights/react-state-management-and-lifecycle).
 
 ---
 
@@ -201,8 +201,8 @@ Props are read-only. Never try to change a prop inside a component — if you ne
 
 Once you internalize the component model, the rest of the React ecosystem starts to make sense:
 
-- **Hooks** (`useState`, `useEffect`, `useContext`) — ways to add logic and side effects to components → [LINK_TO_HOOKS_ARTICLE]
-- **Next.js App Router** — wraps React in a full-stack framework with Server Components, routing, and data fetching → [LINK_TO_NEXTJS_INTRO_ARTICLE]
+- **Hooks** (`useState`, `useEffect`, `useContext`) — ways to add logic and side effects to components → [Advanced React Hooks](/insights/advanced-react-hooks)
+- **Next.js App Router** — wraps React in a full-stack framework with Server Components, routing, and data fetching → Next.js intro (coming soon)
 - **State management** (Zustand, Redux Toolkit) — for sharing state across many components
 
 The component mindset is the foundation. Everything else builds on top of it.
@@ -213,7 +213,7 @@ The component mindset is the foundation. Everything else builds on top of it.
 
 ### What is the difference between React and Next.js?
 
-React is a UI library — it handles rendering components in the browser. Next.js is a full-stack framework built on top of React that adds routing, server-side rendering, API routes, and much more. At Atonize, we almost always use Next.js rather than plain React for client projects. Learn more in [LINK_TO_NEXTJS_INTRO_ARTICLE].
+React is a UI library — it handles rendering components in the browser. Next.js is a full-stack framework built on top of React that adds routing, server-side rendering, API routes, and much more. At Atonize, we almost always use Next.js rather than plain React for client projects. Learn more in our upcoming Next.js overview.
 
 ### Do I need to know JavaScript well before learning React?
 

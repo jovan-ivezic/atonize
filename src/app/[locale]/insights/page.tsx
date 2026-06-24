@@ -29,9 +29,9 @@ export default async function Insights({ params }: { params: Promise<{ locale: s
         <div className="flex flex-col md:flex-row justify-between items-center border-b border-gray-200 pb-4 mb-8">
           <div className="flex gap-6 overflow-x-auto w-full md:w-auto pb-4 md:pb-0 scrollbar-hide text-sm font-medium">
             <Link href="/insights" className="text-gray-900 border-b-2 border-yellow-400 pb-4 -mb-[18px] whitespace-nowrap">{t('filters.latest')}</Link>
-            <Link href={{ pathname: '/insights/category/[categorySlug]', params: { categorySlug: 'engineering' } }} className="text-gray-400 hover:text-gray-900 pb-4 -mb-[18px] whitespace-nowrap transition-colors">{t('filters.engineering')}</Link>
-            <Link href={{ pathname: '/insights/category/[categorySlug]', params: { categorySlug: 'product' } }} className="text-gray-400 hover:text-gray-900 pb-4 -mb-[18px] whitespace-nowrap transition-colors">{t('filters.product')}</Link>
-            <Link href={{ pathname: '/insights/category/[categorySlug]', params: { categorySlug: 'design' } }} className="text-gray-400 hover:text-gray-900 pb-4 -mb-[18px] whitespace-nowrap transition-colors">{t('filters.design')}</Link>
+            <Link href={{ pathname: '/insights/category/[categorySlug]', params: { categorySlug: t('filters.engineering_slug') } }} className="text-gray-400 hover:text-gray-900 pb-4 -mb-[18px] whitespace-nowrap transition-colors">{t('filters.engineering')}</Link>
+            <Link href={{ pathname: '/insights/category/[categorySlug]', params: { categorySlug: t('filters.product_slug') } }} className="text-gray-400 hover:text-gray-900 pb-4 -mb-[18px] whitespace-nowrap transition-colors">{t('filters.product')}</Link>
+            <Link href={{ pathname: '/insights/category/[categorySlug]', params: { categorySlug: t('filters.design_slug') } }} className="text-gray-400 hover:text-gray-900 pb-4 -mb-[18px] whitespace-nowrap transition-colors">{t('filters.design')}</Link>
           </div>
           
           <div className="relative mt-4 md:mt-0 w-full md:w-auto">

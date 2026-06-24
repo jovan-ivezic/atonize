@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaExternalLinkAlt, FaTimes, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
+import { Link } from '../i18n/routing';
+
 // Define the types (should match Portfolio.tsx)
 interface Feature {
   title: string;
@@ -79,7 +81,7 @@ const ProjectModal = ({ project, onClose }: ProjectModalProps) => {
         </button>
 
         {/* Image Slider */}
-        <div className="relative w-full aspect-video bg-gray-900 group">
+        <div className="relative w-full h-72 sm:h-96 md:h-[460px] bg-gray-900 group shrink-0">
           <AnimatePresence mode="wait">
             <motion.img
               key={currentImageIndex}
@@ -89,7 +91,7 @@ const ProjectModal = ({ project, onClose }: ProjectModalProps) => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-cover"
             />
           </AnimatePresence>
 
@@ -136,14 +138,32 @@ const ProjectModal = ({ project, onClose }: ProjectModalProps) => {
             </div>
             
             {project.link && (
-              <a
-                href={project.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg transition-colors shrink-0"
-              >
-                Visit Website <FaExternalLinkAlt size={14} />
-              </a>
+              (() => {
+                const isExternalLink = project.link.startsWith('http');
+                const isDirectRoute = project.link.startsWith('/') && !project.link.startsWith('/portfolio/');
+                const linkTo = isDirectRoute 
+                  ? project.link 
+                  : `/portfolio/viewer/${project.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`;
+                
+                return isExternalLink ? (
+                  <a
+                    href={project.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-on-primary font-medium rounded-lg transition-colors shrink-0"
+                  >
+                    Visit Website <FaExternalLinkAlt size={14} />
+                  </a>
+                ) : (
+                  <Link
+                    href={linkTo as any}
+                    onClick={onClose}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-on-primary font-medium rounded-lg transition-colors shrink-0"
+                  >
+                    View Project <FaExternalLinkAlt size={14} />
+                  </Link>
+                );
+              })()
             )}
           </div>
 
