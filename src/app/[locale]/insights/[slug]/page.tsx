@@ -17,13 +17,38 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug, locale } = await params;
   try {
     const { meta } = getPostBySlug(slug, locale);
+    
+    let enSlug = slug;
+    let srSlug = slug;
+    
+    if (meta.translationKey) {
+      const otherLocale = locale === 'en' ? 'sr' : 'en';
+      const otherPost = getPostByTranslationKey(meta.translationKey, otherLocale);
+      if (otherPost) {
+        if (locale === 'en') srSlug = otherPost.slug;
+        else enSlug = otherPost.slug;
+      }
+    }
+
     return {
-      title: `${meta.title} - Jovan Ivezić`,
+      title: `${meta.title} | Atonize`,
       description: meta.excerpt,
+      openGraph: {
+        type: 'article',
+        publishedTime: meta.date,
+        authors: ['Jovan Ivezić'],
+      },
+      alternates: {
+        canonical: locale === 'sr' ? `/sr/uvidi/${slug}` : `/en/insights/${slug}`,
+        languages: {
+          'en': `/en/insights/${enSlug}`,
+          'sr': `/sr/uvidi/${srSlug}`,
+        },
+      },
     };
   } catch (error) {
     return {
-      title: 'Article Not Found',
+      title: 'Article Not Found | Atonize',
     };
   }
 }

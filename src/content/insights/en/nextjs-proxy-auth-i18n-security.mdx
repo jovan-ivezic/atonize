@@ -1,0 +1,351 @@
+---
+title: "Next.js Proxy: Auth Redirects, i18n Routing & Security Headers"
+date: "2026-06-25"
+category: "Engineering"
+slug: "nextjs-proxy-auth-i18n-security"
+translationKey: "nextjs-proxy-auth-i18n-security"
+icon: "🛡️"
+excerpt: "Learn how Next.js 16 Proxy (formerly middleware) intercepts requests before they reach your pages — and how to use it for authentication redirects, i18n locale detection, and security headers without touching a single page component."
+series: "Next.js & Modern Web"
+seriesOrder: 4
+---
+
+# Next.js Proxy: Auth Redirects, i18n Routing & Security Headers
+
+> **TL;DR — Key Takeaways**
+> - Next.js 16 renamed `middleware.ts` to `proxy.ts` — same concept, clearer name that reflects its actual role as a network boundary
+> - Proxy runs on every request **before** the page renders — it's the right place for auth checks, locale detection, and security headers
+> - Proxy runs on the Edge runtime by default — no Node.js APIs, no database access, keep logic minimal and fast
+> - Poorly configured i18n redirects in Proxy are one of the most common causes of wasted crawl budget (302 vs 301)
+> - Security headers set in Proxy apply globally to every response — no per-page configuration needed
+
+---
+
+## What Proxy Is and Why It Exists
+
+Every request to your Next.js application goes through a single entry point before it reaches any page, layout, or API route. In Next.js 16, this entry point is `proxy.ts` — a file you place at the root of your project that intercepts and can modify every incoming request.
+
+It was called `middleware.ts` in earlier versions. The rename to `proxy.ts` in Next.js 16 is intentional — "middleware" created confusion with Express.js middleware, leading developers to put database queries and heavy logic inside it. "Proxy" more accurately describes what it does: it sits between the network and your application, inspecting and routing requests.
+
+Think of it as a bouncer at the door. It can check credentials, redirect visitors to the right entrance, and stamp hands — but it can't cook food or serve drinks. That happens inside.
+
+---
+
+## The Proxy File Structure
+
+```
+your-project/
+├── proxy.ts          ← intercepts all requests
+├── app/
+│   ├── layout.tsx
+│   └── ...
+├── next.config.ts
+└── package.json
+```
+
+A minimal `proxy.ts`:
+
+```ts
+// proxy.ts
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+
+export function proxy(request: NextRequest) {
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico).*)",
+  ],
+};
+```
+
+The `matcher` pattern is critical. Without it, Proxy runs on every single request — including static assets, image optimization requests, and API routes. The pattern above excludes `_next/static`, `_next/image`, and `favicon.ico`, which should never go through Proxy logic.
+
+---
+
+## Use Case 1: Authentication Redirects
+
+The most common use of Proxy is protecting routes that require authentication. Instead of adding auth checks to every page, you define protected patterns once in `proxy.ts`.
+
+```ts
+// proxy.ts
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+
+const PROTECTED_ROUTES = ["/dashboard", "/account", "/admin"];
+const AUTH_COOKIE = "auth-token";
+
+export function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Check if this is a protected route
+  const isProtected = PROTECTED_ROUTES.some((route) =>
+    pathname.startsWith(route)
+  );
+
+  if (isProtected) {
+    const token = request.cookies.get(AUTH_COOKIE)?.value;
+
+    if (!token) {
+      // Redirect to login, preserving the intended destination
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api).*)" ],
+};
+```
+
+**Important limitations to understand:**
+
+Proxy runs on the Edge runtime. You cannot verify a JWT with a database lookup here — there is no `prisma`, no `mysql2`, no `fetch` to your internal database. You can only inspect the cookie value itself.
+
+For proper token verification, the pattern is:
+1. Proxy does a **fast, lightweight check** — does the cookie exist? Is it non-empty?
+2. The page or API route does the **real verification** — is the token valid? Is the user still active?
+
+This two-layer approach is the correct architecture. Proxy is the first line of defense, not the only line.
+
+```ts
+// proxy.ts — lightweight check only
+const token = request.cookies.get(AUTH_COOKIE)?.value;
+if (!token) return NextResponse.redirect(new URL("/login", request.url));
+
+// app/dashboard/page.tsx — real verification
+import { verifyToken } from "@/lib/auth";
+
+export default async function DashboardPage() {
+  const user = await verifyToken(); // actual DB check happens here
+  if (!user) redirect("/login");
+  // ...
+}
+```
+
+---
+
+## Use Case 2: i18n Locale Detection and Routing
+
+Proxy is the standard location for i18n locale detection in Next.js applications using `next-intl` or similar libraries. When a user visits `/`, Proxy detects their preferred locale and redirects them to `/en` or `/sr`.
+
+```ts
+// proxy.ts
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import createIntlMiddleware from "next-intl/middleware";
+
+const intlProxy = createIntlMiddleware({
+  locales: ["en", "sr"],
+  defaultLocale: "en",
+  localePrefix: "always",
+});
+
+export function proxy(request: NextRequest) {
+  return intlProxy(request);
+}
+
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api).*)" ],
+};
+```
+
+**This is where most i18n SEO problems originate.**
+
+The default behavior of `next-intl` — and most i18n Proxy implementations — uses **302 temporary redirects** when detecting locale. A user visits `/products/valve`, Proxy detects they prefer English, and redirects them to `/en/products/valve` with a 302.
+
+For users, this is invisible. For Google, this is significant:
+
+- **302 (Temporary Redirect):** Google follows the redirect but does not transfer link equity to the destination. It may continue to index the original URL. Crawl budget is consumed by both the original and destination URL.
+- **301 (Permanent Redirect):** Google transfers link equity, stops indexing the original URL, and updates its index to the final destination.
+
+For i18n locale redirects that are permanent by design, the redirect should be 301. Check your GSC crawl statistics — a high percentage of 302 responses is often i18n Proxy misconfiguration.
+
+To force 301 redirects in `next-intl`:
+
+```ts
+const intlProxy = createIntlMiddleware({
+  locales: ["en", "sr"],
+  defaultLocale: "en",
+  localePrefix: "always",
+  // next-intl uses 307/308 internally, override with custom redirect
+});
+
+export function proxy(request: NextRequest) {
+  const response = intlProxy(request);
+
+  // Convert temporary redirects to permanent for locale detection
+  if (response.status === 307 || response.status === 302) {
+    const location = response.headers.get("location");
+    if (location) {
+      return NextResponse.redirect(location, { status: 301 });
+    }
+  }
+
+  return response;
+}
+```
+
+We cover the full i18n URL strategy — hreflang, canonical URLs, and avoiding the URL structure trap — in [i18n & Localized Routing](/insights/nextjs-i18n-localized-routing).
+
+---
+
+## Use Case 3: Security Headers
+
+Security headers protect your application from common web vulnerabilities. Setting them in Proxy means they apply to every response automatically — no per-page configuration, no risk of forgetting them on a new route.
+
+```ts
+// proxy.ts
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+
+const SECURITY_HEADERS = {
+  "X-DNS-Prefetch-Control": "on",
+  "X-Frame-Options": "SAMEORIGIN",
+  "X-Content-Type-Options": "nosniff",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+  "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
+};
+
+export function proxy(request: NextRequest) {
+  const response = NextResponse.next();
+
+  Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
+    response.headers.set(key, value);
+  });
+
+  return response;
+}
+```
+
+**Content Security Policy (CSP)** is the most impactful security header but requires careful configuration per application — a misconfigured CSP can break your entire UI. Start with the headers above, then add CSP incrementally once you've audited your third-party scripts and inline styles.
+
+---
+
+## Combining All Three Use Cases
+
+In a real B2B application, you'll often need auth, i18n, and security headers together. The key is keeping the logic clean and ordered:
+
+```ts
+// proxy.ts
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import createIntlMiddleware from "next-intl/middleware";
+
+const intlProxy = createIntlMiddleware({
+  locales: ["en", "sr"],
+  defaultLocale: "en",
+  localePrefix: "always",
+});
+
+const PROTECTED_ROUTES = ["/dashboard", "/account"];
+const AUTH_COOKIE = "auth-token";
+
+const SECURITY_HEADERS = {
+  "X-Frame-Options": "SAMEORIGIN",
+  "X-Content-Type-Options": "nosniff",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
+};
+
+export function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Step 1: Auth check (before i18n — check the raw path)
+  const isProtected = PROTECTED_ROUTES.some((route) =>
+    pathname.includes(route)
+  );
+
+  if (isProtected && !request.cookies.get(AUTH_COOKIE)?.value) {
+    const loginUrl = new URL("/en/login", request.url);
+    loginUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(loginUrl, { status: 302 });
+  }
+
+  // Step 2: i18n routing
+  const response = intlProxy(request);
+
+  // Step 3: Security headers on every response
+  Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
+    response.headers.set(key, value);
+  });
+
+  return response;
+}
+
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api).*)" ],
+};
+```
+
+Order matters here. Auth runs first — there is no point processing i18n or setting headers on a request that will be redirected anyway.
+
+---
+
+## What NOT to Put in Proxy
+
+Because Proxy runs on the Edge runtime, certain operations are simply not available:
+
+```ts
+// ❌ None of these work in proxy.ts
+import { db } from "@/lib/database";          // No database connections
+import { readFileSync } from "fs";             // No Node.js fs module
+import jwt from "jsonwebtoken";                // Some npm packages don't work on Edge
+const data = await prisma.user.findFirst();    // No Prisma on Edge
+```
+
+If you find yourself needing these in Proxy, the architecture is wrong. Move the heavy logic to:
+- A Server Component (for page-level auth)
+- An API route (for programmatic access)
+- A Server Action (for form submissions)
+
+Proxy should complete in **under 1ms**. If it's doing significant work, it becomes a bottleneck on every single request.
+
+---
+
+## SEO & Indexing Pitfalls
+
+### 1. Running Proxy on static assets
+
+Without a proper `matcher`, Proxy runs on `/_next/static/` requests. This adds latency to every JS and CSS file load — directly hurting Time to First Byte and Core Web Vitals. Always exclude static assets in your matcher.
+
+### 2. Using 302 for permanent locale redirects
+
+As covered above — locale detection redirects are permanent by nature and should use 301. A 9% 302 rate in your GSC crawl statistics is a signal to audit your Proxy redirect logic.
+
+### 3. Blocking Googlebot in Proxy
+
+Be careful with user-agent based logic. If you add bot detection to Proxy and accidentally redirect or block Googlebot, you'll see a dramatic drop in crawl activity within days. Always test bot-related Proxy logic against Googlebot's known user-agent strings.
+
+### 4. Forgetting the matcher pattern entirely
+
+A Proxy without a `matcher` runs on every request including `/_next/static/` assets, `/_next/image/` optimization requests, and API routes. This is wasteful at best and can introduce bugs at worst. Always define a matcher.
+
+---
+
+## Frequently Asked Questions (FAQ)
+
+### What is the difference between Next.js 16 Proxy and the old middleware.ts?
+
+The functionality is identical — only the filename and export name changed. `middleware.ts` with `export function middleware()` becomes `proxy.ts` with `export function proxy()`. The rename reflects the actual role more accurately and avoids confusion with Express-style middleware. Next.js 16 still supports `middleware.ts` but marks it as deprecated.
+
+### Can I access the database in Proxy?
+
+No. Proxy runs on the Edge runtime which does not support Node.js APIs or traditional database drivers. You can read cookies, headers, and URL parameters, and you can make `fetch` requests to external APIs. For database-dependent auth, use a stateless token (JWT stored in a cookie) and verify it in Proxy by checking its presence, then fully verify it in the page or API route.
+
+### How do I debug Proxy locally?
+
+Proxy logs appear in your terminal when running `next dev`. Use `console.log(request.nextUrl.pathname)` to trace which requests are hitting Proxy. For more complex debugging, add a `x-proxy-debug` header to responses and inspect it in browser DevTools.
+
+### Does Proxy affect static pages (SSG/ISR)?
+
+Yes — even statically generated pages go through Proxy on every request. Proxy runs at the network level before the cached HTML is served. This is why the matcher pattern matters: keeping Proxy logic minimal and fast ensures that even your fastest ISR pages don't have artificial latency added.
+
+---

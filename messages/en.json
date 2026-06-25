@@ -132,5 +132,11 @@
     "made_with": "Made with",
     "by": "by Atonize",
     "rights": "All rights reserved."
+  },
+  "SEO": {
+    "home_title": "Atonize | Custom Web Solutions & B2B Platforms",
+    "home_description": "We specialize in building scalable, accessible, and highly optimized custom web applications, advanced B2B platforms, and technical SEO solutions.",
+    "insights_title": "Engineering Insights & Articles",
+    "insights_description": "Explore our thoughts on full-stack development, software architecture, performance optimization, and technical SEO."
   }
 }

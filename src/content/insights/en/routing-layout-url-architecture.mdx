@@ -1,0 +1,378 @@
+---
+title: "Next.js App Router: File Structure, Routing & Layout Architecture"
+date: "2025-06-19"
+category: "Engineering"
+slug: "routing-layout-url-architecture"
+translationKey: "routing-layout-url-architecture"
+icon: "🗂️"
+excerpt: "Master the Next.js App Router file system — from folder-to-URL mapping and nested layouts to error boundaries, loading states, and URL architecture decisions that directly impact your SEO and Google indexing."
+series: "Next.js & Modern Web"
+seriesOrder: 3
+---
+
+# Next.js App Router: File Structure, Routing & Layout Architecture
+
+> **TL;DR — Key Takeaways**
+> - Next.js App Router uses the file system as the router — every folder inside `app/` maps directly to a URL segment
+> - Special files (`page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`) have fixed roles that Next.js recognizes automatically
+> - Nested layouts allow you to share UI across routes without re-rendering on navigation
+> - Dynamic segments (`[slug]`), catch-all routes (`[...slug]`), and route groups `(folder)` give you full control over URL structure
+> - URL architecture decisions made at the folder level have direct, long-term SEO consequences — plan before you build
+
+---
+
+## The File System Is the Router
+
+In Next.js App Router, there is no routing configuration file. No `react-router` setup. No array of route objects. The folder structure inside your `app/` directory **is** the routing configuration.
+
+Every folder you create becomes a URL segment. Every `page.tsx` inside that folder makes it publicly accessible. This is the most important mental model shift when coming from Pages Router or any other framework.
+
+```
+app/
+├── page.tsx                    → /
+├── about/
+│   └── page.tsx                → /about
+├── products/
+│   ├── page.tsx                → /products
+│   └── [slug]/
+│       └── page.tsx            → /products/[any-slug]
+└── blog/
+    ├── page.tsx                → /blog
+    └── [slug]/
+        └── page.tsx            → /blog/[any-slug]
+```
+
+A folder without a `page.tsx` is not a route — it exists in the file system but creates no URL. This is useful for organizing shared components, hooks, and utilities alongside the routes that use them.
+
+---
+
+## The Special Files Next.js Recognizes
+
+Inside any route folder, Next.js gives specific meaning to these filenames:
+
+| File | Purpose | Required? |
+|---|---|---|
+| `page.tsx` | The UI rendered at this URL | Yes — makes the route public |
+| `layout.tsx` | Wraps all pages in this folder and subfolders | No — but essential for shared UI |
+| `loading.tsx` | Shown instantly while the page streams in | No — but critical for UX and CWV |
+| `error.tsx` | Shown when an error is thrown in this segment | No — but prevents full-page crashes |
+| `not-found.tsx` | Shown when `notFound()` is called | No |
+| `route.ts` | API endpoint — no UI, returns Response | No |
+| `template.tsx` | Like layout, but re-mounts on navigation | Rarely needed |
+
+Understanding these files and where to place them is the foundation of a well-structured Next.js application.
+
+---
+
+## A Real-World File Structure
+
+Here is the file structure we use as a starting point for B2B SaaS applications at Atonize — including i18n with `next-intl`, an admin panel, and a public-facing catalog:
+
+```
+app/
+├── [locale]/                          ← i18n wrapper (e.g. /en, /sr)
+│   ├── layout.tsx                     ← sets lang attribute, loads fonts
+│   ├── page.tsx                       ← homepage
+│   ├── (marketing)/                   ← route group — no URL segment
+│   │   ├── about/
+│   │   │   └── page.tsx               ← /about
+│   │   └── contact/
+│   │       └── page.tsx               ← /contact
+│   ├── products/
+│   │   ├── layout.tsx                 ← shared product layout (sidebar, filters)
+│   │   ├── page.tsx                   ← /products (catalog listing)
+│   │   ├── loading.tsx                ← skeleton shown during fetch
+│   │   └── [slug]/
+│   │       ├── page.tsx               ← /products/industrial-valve-42
+│   │       └── not-found.tsx          ← shown when product doesn't exist
+│   └── blog/
+│       ├── page.tsx                   ← /blog
+│       └── [slug]/
+│           └── page.tsx               ← /blog/nextjs-tips
+├── (admin)/                           ← route group — no URL segment
+│   ├── layout.tsx                     ← admin shell (sidebar, auth check)
+│   └── dashboard/
+│       └── page.tsx                   ← /dashboard
+└── api/
+    ├── revalidate/
+    │   └── route.ts                   ← POST /api/revalidate
+    └── products/
+        └── route.ts                   ← GET /api/products
+```
+
+A few things to note in this structure that are not obvious from the documentation.
+
+---
+
+## Route Groups: Organize Without Affecting URLs
+
+Folders wrapped in parentheses `(folder)` are **route groups**. They exist purely for organization — they create no URL segment.
+
+```
+app/
+├── (marketing)/
+│   ├── about/page.tsx     → /about     (not /marketing/about)
+│   └── contact/page.tsx   → /contact
+├── (shop)/
+│   ├── products/page.tsx  → /products
+│   └── cart/page.tsx      → /cart
+```
+
+Route groups are also how you apply different layouts to different sections of your app without affecting URLs. The `(admin)` group in our structure above has its own `layout.tsx` with an auth check and a sidebar — completely separate from the public-facing layout — but `/dashboard` is still the URL, not `/admin/dashboard`.
+
+---
+
+## Nested Layouts: The Architecture That Makes Navigation Fast
+
+Layouts are the most powerful and most misunderstood feature of App Router. A layout wraps all pages inside its folder and all subfolders, and crucially, **it does not re-render when the user navigates between pages within its scope**.
+
+```tsx
+// app/[locale]/products/layout.tsx
+import { ProductSidebar } from "@/components/ProductSidebar";
+
+export default function ProductsLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-8">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[280px_1fr]">
+        <ProductSidebar />
+        <main>{children}</main>
+      </div>
+    </div>
+  );
+}
+```
+
+When a user navigates from `/products` to `/products/industrial-valve-42`, the `ProductsLayout` component stays mounted. Only `children` changes — the sidebar doesn't flicker, no full-page reload, no layout shift. This is what makes Next.js navigation feel instant.
+
+The layout hierarchy follows the folder hierarchy:
+
+```
+app/layout.tsx                 ← Root layout (always rendered)
+  app/[locale]/layout.tsx      ← Locale layout
+    app/[locale]/products/layout.tsx  ← Products layout
+      app/[locale]/products/page.tsx  ← Page (children)
+```
+
+Each layout wraps everything below it. The root layout is the only required layout and must include `<html>` and `<body>` tags.
+
+---
+
+## Loading and Error Boundaries
+
+`loading.tsx` and `error.tsx` are how Next.js integrates React Suspense and Error Boundaries into the file system.
+
+### loading.tsx — Instant Perceived Performance
+
+```tsx
+// app/[locale]/products/loading.tsx
+export default function ProductsLoading() {
+  return (
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div
+          key={i}
+          className="animate-pulse rounded-xl bg-gray-100"
+          style={{ height: "280px" }}
+        />
+      ))}
+    </div>
+  );
+}
+```
+
+Next.js shows this component **immediately** while the page is streaming in data. The browser renders the layout and the loading skeleton before the data fetch completes — which is why Lighthouse scores improve dramatically when loading states are properly implemented.
+
+From an SEO perspective, `loading.tsx` ensures that Googlebot sees a structured page immediately in Pass 1, even before all data is available.
+
+### error.tsx — Contained Failures
+
+```tsx
+// app/[locale]/products/error.tsx
+"use client"; // Error boundaries must be Client Components
+
+import { useEffect } from "react";
+
+export default function ProductsError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    console.error(error);
+  }, [error]);
+
+  return (
+    <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center">
+      <h2 className="text-lg font-semibold text-red-800">
+        Failed to load products
+      </h2>
+      <p className="mt-2 text-sm text-red-600">
+        {error.message || "An unexpected error occurred."}
+      </p>
+      <button
+        onClick={reset}
+        className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+      >
+        Try again
+      </button>
+    </div>
+  );
+}
+```
+
+The `error.tsx` at `/products/` level catches errors from the products listing and all product detail pages. An error on `/products/industrial-valve-42` won't crash the entire application — only the products segment is replaced with the error UI. The navigation, header, and footer remain intact.
+
+---
+
+## Dynamic Segments and URL Architecture
+
+Dynamic segments are folders with names wrapped in square brackets. They match any value at that URL position.
+
+```
+products/[slug]/page.tsx    → matches /products/anything
+blog/[slug]/page.tsx        → matches /blog/anything
+users/[id]/page.tsx         → matches /users/anything
+```
+
+The matched value is available as a prop:
+
+```tsx
+// app/[locale]/products/[slug]/page.tsx
+interface Props {
+  params: {
+    locale: string;
+    slug: string;
+  };
+}
+
+export default async function ProductPage({ params }: Props) {
+  const { locale, slug } = params;
+  // slug = "industrial-valve-42" for /products/industrial-valve-42
+}
+```
+
+### Catch-all Segments
+
+`[...slug]` matches multiple path segments:
+
+```
+docs/[...slug]/page.tsx     → matches /docs/a, /docs/a/b, /docs/a/b/c
+```
+
+### Optional Catch-all
+
+`[[...slug]]` matches the path with or without segments:
+
+```
+[[...slug]]/page.tsx        → matches /, /a, /a/b
+```
+
+---
+
+## URL Architecture and SEO
+
+The folder structure you choose at the beginning of a project directly determines your URL structure. Changing URLs later requires redirects, and redirects bleed link equity and confuse Google's index — something that can take months to recover from.
+
+**Plan your URL architecture before writing code.** Consider:
+
+**Flat vs. nested:**
+```
+/products/industrial-valve-42       ← flat, recommended for most cases
+/products/valves/industrial-valve-42  ← nested, adds context but deeper hierarchy
+```
+
+**Keyword placement:**
+The first segment after the domain carries the most SEO weight. `/blog/nextjs-seo-tips` ranks better for "nextjs seo tips" than `/posts/2024/06/nextjs-seo-tips`.
+
+**Consistency:**
+All product pages should follow the same pattern. Mixing `/products/[slug]` and `/catalog/[category]/[slug]` for the same type of content confuses Google's understanding of your site structure.
+
+**i18n and URL structure:**
+With `next-intl` and the `[locale]` segment, your URLs become `/en/products/slug` and `/sr/products/slug`. The locale prefix is correctly handled by hreflang tags — but the structure of the rest of the URL should be identical between languages. We cover this in detail in our article on [i18n and Localized Routing](/insights/nextjs-i18n-localized-routing).
+
+---
+
+## Canonical URLs and Duplicate Content
+
+Next.js does not automatically set canonical URLs. Without them, Google may discover and index the same content at multiple URLs — a crawl budget problem and a potential duplicate content penalty.
+
+Always set canonical URLs in your metadata:
+
+```tsx
+// app/[locale]/products/[slug]/page.tsx
+import { Metadata } from "next";
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
+  return {
+    alternates: {
+      canonical: `${baseUrl}/en/products/${params.slug}`,
+      languages: {
+        "en": `${baseUrl}/en/products/${params.slug}`,
+        "sr": `${baseUrl}/sr/products/${params.slug}`,
+      },
+    },
+  };
+}
+```
+
+We cover the full Metadata API — Open Graph, JSON-LD, sitemaps — in [Mastering SEO in Next.js](/insights/nextjs-seo-metadata-jsonld-sitemaps).
+
+---
+
+## SEO & Indexing Pitfalls
+
+### 1. Changing URL structure after launch
+
+This is the most expensive mistake in Next.js SEO. If you rename a folder — `/blog` to `/articles`, `/products` to `/catalog` — every indexed URL becomes a 404 until redirects are in place. And even with proper 301 redirects, Google takes weeks to transfer link equity. Plan your URL structure before the first deploy.
+
+### 2. Missing `not-found.tsx` for dynamic routes
+
+Without a `not-found.tsx`, a request to `/products/nonexistent-slug` returns a 200 status with a generic error message — a **soft 404**. Google indexes soft 404s as valid pages, filling your index with thin content. Always call `notFound()` when a dynamic route receives an invalid parameter:
+
+```tsx
+import { notFound } from "next/navigation";
+
+export default async function ProductPage({ params }: Props) {
+  const product = await getProduct(params.slug);
+  if (!product) notFound(); // Returns proper 404 status
+  // ...
+}
+```
+
+### 3. Overusing nested layouts
+
+A common mistake is creating a layout for every single route. Layouts should wrap UI that genuinely persists across multiple pages. A layout that only wraps one page adds complexity without benefit — just put that UI directly in `page.tsx`.
+
+### 4. Forgetting that layouts don't re-render
+
+Because layouts persist across navigation, any data fetched in a layout is fetched once and cached. If you need fresh data on every page visit, fetch it in `page.tsx`, not `layout.tsx`.
+
+---
+
+## Frequently Asked Questions (FAQ)
+
+### What is the difference between layout.tsx and template.tsx?
+
+Both wrap pages, but `layout.tsx` persists across navigations within its scope — it does not re-mount. `template.tsx` creates a new instance on every navigation, re-running effects and resetting state. Use `layout.tsx` for persistent UI (navigation, sidebar) and `template.tsx` only when you explicitly need remounting behavior (page transition animations, per-page analytics events).
+
+### Can I have multiple dynamic segments in one route?
+
+Yes. `/app/[locale]/products/[category]/[slug]/page.tsx` is valid and matches paths like `/en/products/valves/industrial-valve-42`. Each segment is available in `params`. Just be careful — deeper URL hierarchies are harder to change later and can dilute SEO value.
+
+### How do route groups affect layouts?
+
+Each route group can have its own `layout.tsx`. This is how you apply completely different UI shells to different parts of your app — a marketing layout, an app layout, and an admin layout — all without affecting URLs. The route group folder name is invisible to the router.
+
+### What happens if I don't have a root layout?
+
+The root `app/layout.tsx` is required in Next.js App Router. It must render the `<html>` and `<body>` elements. Without it, your application won't build. Every other layout is optional and wraps only its own segment and below.
+
+---

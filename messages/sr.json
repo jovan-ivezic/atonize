@@ -132,5 +132,11 @@
     "made_with": "Napravljeno sa",
     "by": "od strane Atonize",
     "rights": "Sva prava zadržana."
+  },
+  "SEO": {
+    "home_title": "Atonize | Izrada Web Sajtova i B2B Platformi",
+    "home_description": "Specijalizovani smo za izradu modernih web aplikacija, naprednih B2B platformi i tehničku SEO optimizaciju.",
+    "insights_title": "Članci i Edukacija | Atonize",
+    "insights_description": "Pročitajte naše tekstove o web programiranju, arhitekturi softvera, optimizaciji performansi i tehničkom SEO-u."
   }
 }

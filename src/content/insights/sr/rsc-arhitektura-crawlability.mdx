@@ -1,0 +1,337 @@
+---
+title: "React Server Komponente i Crawlability: Šta Google Zapravo Vidi"
+date: "2026-06-24"
+category: "Engineering"
+slug: "rsc-arhitektura-crawlability"
+translationKey: "rsc-architecture-crawlability"
+icon: "🔍"
+excerpt: "ISR dostavlja HTML Googleu — ali React Server Komponente kontrolišu koliko JavaScripta ide uz njega. Saznaj kako smo smanjili JS bundle na produkcijskoj B2B platformi, zašto useSearchParams tiho ubija ISR, i šta ti GSC crawl statistika zapravo govori."
+series: "Next.js & Modern Web"
+seriesOrder: 2
+---
+
+# React Server Komponente i Crawlability: Šta Google Zapravo Vidi
+
+> **TL;DR — Ključni Uvidi**
+> - ISR i RSC su dva odvojena koncepta — ISR kontroliše *kada* se HTML generiše, RSC kontroliše *koliko JavaScripta* se šalje browseru
+> - Googlebot crawluje u dva prolaza: brzi HTML prolaz i spori JavaScript rendering prolaz — cilj ti je da prvi prolaz bude dovoljan
+> - Stavljanje `"use client"` na velike wrapper komponente šalje cela stabla komponenti kao JavaScript, čak i kada je sadržaj statičan
+> - Pattern "Lišće na drvetu" izoluje klijentsku logiku u male komponente, čuvajući roditeljske komponente kao čiste Server Komponente
+> - `useSearchParams()` bilo gde u stablu komponenti rute tiho degradira celu rutu iz statičke (ISR) u dinamičku (SSR)
+
+---
+
+## Konfuzija koja košta rankinge
+
+Većina Next.js developera razume ISR. Postave `export const revalidate = 3600`, potvrde da Google dobija kompletan HTML pri svakom crawlanju, i smatraju da je SEO problem rešen.
+
+Napola su u pravu — i to napola je skupo.
+
+ISR i React Server Komponente rešavaju dva potpuno različita problema. Mešanje ova dva koncepta je jedna od najčešćih arhitekturnih grešaka koje viđamo u Next.js projektima, i direktno utiče na efikasnost Google indeksiranja tvog sajta.
+
+**ISR odgovara na pitanje:** Kada se HTML generiše i koliko je svež?
+**RSC odgovara na pitanje:** Koliko JavaScripta se šalje browseru uz taj HTML?
+
+Možeš imati savršen ISR — Googlebot dobija kompletan, pre-renderovan HTML pri svakoj poseti — i i dalje imati JavaScript crawl problem ako je arhitektura komponenti pogrešna. Ovo smo otkrili na licu mesta optimizujući produkcijsku B2B katalog platformu.
+
+---
+
+## Kako Googlebot Zapravo Crawluje Next.js Sajt
+
+Googlebot radi u dva odvojena prolaza, i razumevanje oba je ključno za dijagnozu crawl problema.
+
+**Prolaz 1 — HTML Crawler**
+Radi odmah. Googlebot preuzima URL, dobija HTML odgovor i izvlači tekstualni sadržaj, linkove i metapodatke. Ako je stranica server-renderovana (SSR, SSG ili ISR), ovaj prolaz je dovoljan za indeksiranje sadržaja. Brz je, jeftin i dešava se u roku od sati od otkrivanja stranice.
+
+**Prolaz 2 — JavaScript Renderer**
+Radi kasnije — ponekad danima ili nedeljama nakon Prolaza 1. Googlebot stavlja u red čekanja stranice koje zahtevaju izvršavanje JavaScripta (Client Komponente, klijentski data fetching, sadržaj zavistan od hydration-a) za drugi prolaz koristeći headless Chrome instancu. Ovaj prolaz je skup, spor i podložan ograničenjima crawl budgeta.
+
+Tvoj cilj kao Next.js developer je da Prolaz 1 bude dovoljan za sav sadržaj koji je važan za SEO. Svaki komad sadržaja koji zahteva Prolaz 2 znači odloženo indeksiranje i potrošen crawl budget.
+
+Metrika koja otkriva da li uspešno — **procenat JavaScripta u GSC crawl statistici**. Zdrav Next.js sajt sa ispravnom Server Component arhitekturom pokazuje 20-30% JavaScript. Sajtovi sa rasprostranjenim pogrešnim korišćenjem `"use client"` često pokazuju 40-60% — što znači da Googlebot troši većinu crawl budgeta na JavaScript resurse umesto na HTML stranice.
+
+---
+
+## Zamka `"use client"` na Wrapper Komponentama
+
+Evo patterna koji smo pronašli na produkcijskoj B2B platformi koji je tiho uništavao JavaScript/HTML ratio:
+
+```tsx
+// ❌ Pre — "use client" na velikoj wrapper komponenti
+"use client";
+
+import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
+
+export function CategoryGrid({ categories }) {
+  const t = useTranslations("categories");
+
+  return (
+    <motion.section
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    >
+      <h2>{t("title")}</h2>
+      {categories.map((cat) => (
+        <CategoryCard key={cat.id} category={cat} />
+      ))}
+    </motion.section>
+  );
+}
+```
+
+Ova komponenta treba `"use client"` iz dva razloga: Framer Motion animacije i `useTranslations`. Oba su legitimni klijentski zahtevi.
+
+Problem je cena. Zato što je `CategoryGrid` označen sa `"use client"`, Next.js pakuje celu komponentu — i sve što importuje — u klijentski JavaScript bundle. Ovo uključuje Framer Motion (značajna biblioteka), sve translation stringove i svaku child komponentu koja se eksplicitno ne isključi.
+
+Googlebot dobija HTML (jer ISR pre-renderuje), ali vidi i desetine JavaScript chunk fajlova koje mora da obradi. Svaki deploy generiše nove chunk hash-ove — i Googlebot crawluje svaki novi hash kao svež resurs, kontinuirano trošeći crawl budget.
+
+---
+
+## Pattern "Lišće na Drvetu"
+
+Rešenje je gurati `"use client"` što niže u stablu komponenti — do lišća, ne do debla.
+
+Ključni uvid: ne treba ceo `CategoryGrid` da bude Client Komponenta. Potrebno je samo da *animacioni wrapper* bude Client Komponenta. Struktura grida, podaci, naslovi — sve to može ostati na serveru.
+
+```tsx
+// components/ui/FadeIn.tsx — Jedina potrebna Client Komponenta
+"use client";
+
+import { motion } from "framer-motion";
+
+interface FadeInProps {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+}
+
+export function FadeIn({ children, className, delay = 0 }: FadeInProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay }}
+      viewport={{ once: true, margin: "-50px" }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+```
+
+```tsx
+// ✅ Posle — CategoryGrid je sada čista Server Komponenta
+import { getTranslations } from "next-intl/server";
+import { FadeIn } from "@/components/ui/FadeIn";
+
+export async function CategoryGrid({ categories }) {
+  const t = await getTranslations("categories");
+
+  return (
+    <section>
+      <FadeIn>
+        <h2>{t("title")}</h2>
+      </FadeIn>
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+        {categories.map((cat, index) => (
+          <FadeIn key={cat.id} delay={index * 0.05}>
+            <CategoryCard category={cat} />
+          </FadeIn>
+        ))}
+      </div>
+    </section>
+  );
+}
+```
+
+Šta se promenilo:
+
+- `CategoryGrid` je sada Server Komponenta — nula JavaScripta se šalje browseru za sam grid
+- `useTranslations` zamenjen sa `await getTranslations()` — translation stringovi se razrešavaju na serveru, ne šalju se klijentu
+- `FadeIn` je jedina Client Komponenta — otprilike 30 linija koda, u poređenju sa celim stablom komponenti pre
+- `viewport={{ once: true }}` osigurava da se animacije okidaju samo jednom, izbegavajući ponavljane GPU operacije pri skrolovanju
+
+HTML koji Googlebot dobija je identičan. JavaScript bundle koji mora da obradi je drastično manji.
+
+---
+
+## Kako `useSearchParams` Tiho Ubija ISR
+
+Ovo je suptilnija zamka, i trebalo nam je vreme da je dijagnostikujemo na katalog platformi sa filterovanjem proizvoda.
+
+Implementacija filtera čuvala je state u URL-u radi deljenja:
+
+```tsx
+// ❌ Ova komponenta tiho degradira celu rutu na SSR
+"use client";
+
+import { useSearchParams } from "next/navigation";
+
+export function ProductFilter({ products }) {
+  const searchParams = useSearchParams();
+  const activeCategory = searchParams.get("category");
+
+  const filtered = products.filter(
+    (p) => !activeCategory || p.category === activeCategory
+  );
+
+  return (/* filter UI */);
+}
+```
+
+Problem nije sama komponenta — problem je što `useSearchParams()` tera Next.js da isključi **celu rutu** iz statičkog renderovanja. Čak i sa `export const revalidate = 3600`, build output je pokazivao:
+
+```bash
+# ❌ Šta smo videli — ruta degradirana na dinamičku
+ƒ /[locale]/products          (Dynamic — server renderuje na svaki zahtev)
+
+# ✅ Šta smo hteli
+● /[locale]/products          (Static — ISR sa revalidacijom)
+```
+
+Svaka poseta je okidala svež server render. ISR je bio potpuno zaobiđen. Googlebot je dobijao SSR odgovore umesto kešovanih statičnih HTML-ova — veći TTFB, veće opterećenje servera, i ISR benefit performansi je bio potpuno izgubljen.
+
+**Rešenje:** Za katalog sa hiljadama proizvoda, in-memory filterovanje je brže i jednostavnije od URL state-a:
+
+```tsx
+// ✅ Client Komponenta sa lokalnim state-om — ISR sačuvan
+"use client";
+
+import { useState, useMemo } from "react";
+
+interface ProductFilterProps {
+  products: Product[];
+}
+
+export function ProductFilter({ products }: ProductFilterProps) {
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
+  const filtered = useMemo(
+    () =>
+      activeCategory
+        ? products.filter((p) => p.category === activeCategory)
+        : products,
+    [products, activeCategory]
+  );
+
+  return (
+    <div>
+      {/* Filter dugmad */}
+      <div className="flex gap-2">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() =>
+              setActiveCategory(activeCategory === cat ? null : cat)
+            }
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+              activeCategory === cat
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      {/* Filtrirani rezultati — primljeni kao props od Server Komponente */}
+      <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {filtered.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+Ruta se odmah vratila na `●` (statična) u build outputu. ISR je počeo da radi ispravno, TTFB je pao na gotovo instant za kešovane stranice, a filterovanje je zapravo brže jer se dešava u memoriji bez mrežnog roundtripa.
+
+Kompromis: filter state više nije u URL-u, pa korisnici ne mogu da dele filtrirane poglede. Za većinu B2B katalog slučajeva, to je prihvatljiv kompromis za benefit performansi i SEO-a.
+
+---
+
+## Čitanje GSC Crawl Statistike
+
+Kada razumeš Server/Client Component granicu, GSC crawl statistika panel postaje direktan dijagnostički alat za tvoju arhitekturu.
+
+Idi na **Podešavanja → Statistika popisivanja → Prema tipu fajla** u Google Search Console-u.
+
+| JS % | HTML % | Šta to znači |
+|---|---|---|
+| 20–30% | 50%+ | Zdrava RSC arhitektura, većina sadržaja server-renderovana |
+| 35–45% | 25–35% | Mešana arhitektura, neko prekomerno korišćenje Client Komponenti |
+| 50%+ | Ispod 20% | Rasprostranjeno pogrešno korišćenje `"use client"`, značajno rasipanje crawl budgeta |
+
+Sekundarni signal je breakdown **"Prema tipu Googlebot-a"**. Visok procenat "Učitavanja resursa stranice" (Googlebot preuzima JS/CSS resurse) u odnosu na "Desktop" ili "Pametni telefon" crawlove ukazuje da tvoje stranice generišu mnogo resource zahteva po HTML stranici — direktna posledica velikih JS bundle-ova.
+
+Jedna važna napomena: česti deploji pogoršavaju problem. Svaki Next.js deploy generiše nove content hash-ove za promenjene chunk-ove. Googlebot tretira svaki novi hash kao novi URL i ponovo ga crawluje — resetujući efektivni crawl budget za te resurse. Grupisanje deploya i ređe deployovanje direktno smanjuje ovaj overhead.
+
+---
+
+## SEO & Greške u Indeksiranju
+
+### 1. Pretpostavljanje da ISR znači da je SEO rešen
+
+ISR osigurava da Googlebot dobija pre-renderovani HTML. Ne govori ništa o veličini ili kompoziciji JavaScript bundle-a koji ga prati. Revidiraj oba nezavisno.
+
+### 2. Korišćenje `useSearchParams` bez Suspense-a
+
+Ako moraš da koristiš `useSearchParams`, omotaj komponentu u `Suspense` boundary da sprečiš deoptimizaciju na nivou rute:
+
+```tsx
+import { Suspense } from "react";
+import { ProductFilter } from "./ProductFilter";
+
+export default function ProductsPage({ products }) {
+  return (
+    <Suspense fallback={<div>Učitavanje filtera...</div>}>
+      <ProductFilter products={products} />
+    </Suspense>
+  );
+}
+```
+
+Ovo čuva statično renderovanje za ostatak stranice, dozvoljavajući samo suspendovanoj sekciji da se renderuje dinamički.
+
+### 3. Stavljanje `"use client"` na nivou layout-a
+
+`"use client"` direktiva u `layout.tsx` čini svaku stranicu u tom route segmentu Client Komponentom. Ovo je retko namerno i ima najširi mogući uticaj na JS bundle.
+
+### 4. Nepraćenje build outputa
+
+Pokreni `next build` i pročitaj output. Simboli `●` (statično), `ƒ` (dinamično) i `○` (pre-renderovano) govore ti tačno koje rute se serviraju kao ISR naspram SSR. Ako ruta koju si namerio kao statičnu pokazuje `ƒ`, nešto u njenom stablu komponenti forsira dinamičko renderovanje.
+
+```bash
+Route (app)                    Size    First Load JS
+─────────────────────────────────────────────────────
+● /[locale]                   4.2 kB       142 kB
+● /[locale]/products           3.8 kB       138 kB
+ƒ /[locale]/products/[slug]   2.1 kB       134 kB  ← istražiti ovo
+○ /[locale]/about              1.2 kB       128 kB
+```
+
+---
+
+## Često Postavljana Pitanja (FAQ)
+
+### Da li korišćenje Server Komponenti zaista poboljšava Google indeksiranje?
+
+Da, indirektno. Server Komponente smanjuju JavaScript bundle koji Googlebot mora da obradi u svom drugom (sporom) crawl prolazu. Sa ispravnom RSC arhitekturom, prvi HTML prolaz sadrži sav indeksabilni sadržaj, i drugi prolaz postaje nepotreban za većinu stranica. Ovo smanjuje potrošnju crawl budgeta i može ubrzati indeksiranje za velike sajtove.
+
+### Kako da znam koje komponente uzrokuju velike JS bundle-ove?
+
+Koristi `@next/bundle-analyzer`. Dodaj ga u Next.js konfiguraciju, pokreni produkcijski build i dobićeš vizuelnu mapu svakog modula u tvom bundle-u. Traži velike biblioteke koje se pojavljuju u klijentskim bundle-ovima a trebalo bi da rade samo na serveru — Framer Motion, velike icon biblioteke i translation biblioteke su česti krivci.
+
+### Mogu li koristiti Framer Motion bez pravljenja roditeljskih komponenti Client Komponentama?
+
+Da — upravo to rešava pattern "Lišće na drvetu". Napravi malu `FadeIn` ili `AnimatedWrapper` Client Komponentu koja prima `children`, i koristi je kao wrapper unutar tvojih Server Komponenti. Animaciona logika je izolovana u mali klijentski bundle; sve ostalo ostaje na serveru.
+
+### Da li `useSearchParams` uvek kvari ISR?
+
+Samo kada se koristi van `Suspense` boundary-ja na nivou rute. Omotavanje komponente koja koristi `useSearchParams` u `<Suspense>` dozvoljava Next.js-u da statički renderuje ostatak stranice i dinamički renderuje samo suspendovanu sekciju. Međutim, ako je filtrirani sadržaj sam po sebi ono što Googlebot treba da indeksira, razmotri da li je URL-bazirano filterovanje uopšte pravi pristup.
+
+---

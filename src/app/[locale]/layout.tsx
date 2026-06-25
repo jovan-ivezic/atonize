@@ -4,10 +4,29 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 
-export const metadata = {
-  title: 'Jovan Ivezić | Front-end Developer',
-  description: 'Portfolio of Jovan Ivezić, a passionate front-end developer focused on React and modern web technologies.',
-};
+import { getTranslations } from 'next-intl/server';
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'SEO' });
+
+  return {
+    metadataBase: new URL('https://www.atonize.com'),
+    title: {
+      template: `%s | Atonize`,
+      default: t('home_title'),
+    },
+    description: t('home_description'),
+    openGraph: {
+      type: 'website',
+      locale: locale,
+      siteName: 'Atonize',
+    },
+    twitter: {
+      card: 'summary_large_image',
+    },
+  };
+}
 
 export function generateStaticParams() {
   return [{ locale: 'en' }, { locale: 'sr' }];

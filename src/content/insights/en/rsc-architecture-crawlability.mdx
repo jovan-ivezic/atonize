@@ -1,0 +1,337 @@
+---
+title: "React Server Components & Crawlability: What Google Actually Sees"
+date: "2026-06-24"
+category: "Engineering"
+slug: "rsc-architecture-crawlability"
+translationKey: "rsc-architecture-crawlability"
+icon: "🔍"
+excerpt: "ISR gets your HTML to Google — but React Server Components control how much JavaScript follows it. Learn how we reduced client-side JS bundle size on a production B2B platform, why useSearchParams silently kills ISR, and what your GSC crawl statistics are actually telling you."
+series: "Next.js & Modern Web"
+seriesOrder: 2
+---
+
+# React Server Components & Crawlability: What Google Actually Sees
+
+> **TL;DR — Key Takeaways**
+> - ISR and RSC are two separate concepts — ISR controls *when* HTML is generated, RSC controls *how much JavaScript* is sent to the browser
+> - Googlebot crawls in two passes: a fast HTML pass and a slow JavaScript rendering pass — your goal is to make the first pass sufficient
+> - Placing `"use client"` on large wrapper components sends entire component trees as JavaScript, even when the content is static
+> - The "Leaves on a Tree" pattern isolates client-side logic into tiny components, keeping parent components as pure Server Components
+> - `useSearchParams()` anywhere in a route's component tree silently degrades the entire route from static (ISR) to dynamic (SSR)
+
+---
+
+## The Confusion That Costs You Rankings
+
+Most Next.js developers understand ISR. They set `export const revalidate = 3600`, confirm that Google receives full HTML on every crawl, and consider the SEO problem solved.
+
+They're half right — and that half-right understanding is expensive.
+
+ISR and React Server Components solve two completely different problems. Conflating them is one of the most common architectural mistakes we see in Next.js projects, and it directly affects how efficiently Google indexes your site.
+
+**ISR answers:** When is the HTML generated, and how fresh is it?
+**RSC answers:** How much JavaScript is sent to the browser alongside that HTML?
+
+You can have perfect ISR — Googlebot receives complete, pre-rendered HTML on every visit — and still have a JavaScript crawl problem if your component architecture is wrong. We discovered this firsthand while optimizing a production B2B catalog platform.
+
+---
+
+## How Googlebot Actually Crawls Your Next.js Site
+
+Googlebot operates in two distinct passes, and understanding both is essential for diagnosing crawl issues.
+
+**Pass 1 — The HTML Crawler**
+This runs immediately. Googlebot fetches the URL, receives the HTML response, and extracts text content, links, and metadata. If your page is server-rendered (SSR, SSG, or ISR), this pass is sufficient to index your content. This is fast, cheap, and happens within hours of a page being discovered.
+
+**Pass 2 — The JavaScript Renderer**
+This runs later — sometimes days or weeks after Pass 1. Googlebot queues pages that require JavaScript execution (Client Components, client-side data fetching, hydration-dependent content) for a second pass using a headless Chrome instance. This pass is expensive, slow, and subject to crawl budget constraints.
+
+Your goal as a Next.js developer is to make Pass 1 sufficient for all content that matters for SEO. Every piece of content that requires Pass 2 is delayed indexing and wasted crawl budget.
+
+The metric that reveals whether you're succeeding is the **JavaScript percentage in your GSC crawl statistics**. A healthy Next.js site with proper Server Component architecture shows 20-30% JavaScript. Sites with widespread `"use client"` misuse commonly show 40-60% — meaning the majority of Googlebot's crawl budget is spent on JavaScript resources rather than HTML pages.
+
+---
+
+## The "use client" Trap on Wrapper Components
+
+Here is the pattern we found in a production B2B platform that was silently destroying the JavaScript/HTML ratio:
+
+```tsx
+// ❌ Before — "use client" on a large wrapper component
+"use client";
+
+import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
+
+export function CategoryGrid({ categories }) {
+  const t = useTranslations("categories");
+
+  return (
+    <motion.section
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    >
+      <h2>{t("title")}</h2>
+      {categories.map((cat) => (
+        <CategoryCard key={cat.id} category={cat} />
+      ))}
+    </motion.section>
+  );
+}
+```
+
+This component needs `"use client"` for two reasons: Framer Motion animations and `useTranslations`. Both are legitimate client-side requirements.
+
+The problem is the cost. Because `CategoryGrid` is marked `"use client"`, Next.js bundles the entire component — and everything it imports — into the client-side JavaScript bundle. This includes Framer Motion (a substantial library), all translation strings, and every child component that doesn't explicitly opt out.
+
+Googlebot receives the HTML (because ISR pre-renders it), but it also sees dozens of JavaScript chunk files that it needs to process. Each deploy generates new chunk hashes — and Googlebot crawls each new hash as a fresh resource, continuously consuming crawl budget.
+
+---
+
+## The "Leaves on a Tree" Pattern
+
+The solution is to push `"use client"` as far down the component tree as possible — to the leaves, not the trunk.
+
+The key insight: you don't need the entire `CategoryGrid` to be a Client Component. You only need the *animation wrapper* to be a Client Component. The grid structure, the data, the headings — all of that can stay on the server.
+
+```tsx
+// components/ui/FadeIn.tsx — The only Client Component needed
+"use client";
+
+import { motion } from "framer-motion";
+
+interface FadeInProps {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+}
+
+export function FadeIn({ children, className, delay = 0 }: FadeInProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay }}
+      viewport={{ once: true, margin: "-50px" }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+```
+
+```tsx
+// ✅ After — CategoryGrid is now a pure Server Component
+import { getTranslations } from "next-intl/server";
+import { FadeIn } from "@/components/ui/FadeIn";
+
+export async function CategoryGrid({ categories }) {
+  const t = await getTranslations("categories");
+
+  return (
+    <section>
+      <FadeIn>
+        <h2>{t("title")}</h2>
+      </FadeIn>
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+        {categories.map((cat, index) => (
+          <FadeIn key={cat.id} delay={index * 0.05}>
+            <CategoryCard category={cat} />
+          </FadeIn>
+        ))}
+      </div>
+    </section>
+  );
+}
+```
+
+What changed:
+
+- `CategoryGrid` is now a Server Component — zero JavaScript sent to the browser for the grid itself
+- `useTranslations` replaced with `await getTranslations()` — translation strings are resolved on the server, not shipped to the client
+- `FadeIn` is the only Client Component — approximately 30 lines of code, compared to the entire component tree before
+- `viewport={{ once: true }}` ensures animations trigger only once, avoiding repeated GPU operations on scroll
+
+The HTML Googlebot receives is identical. The JavaScript bundle it has to process is dramatically smaller.
+
+---
+
+## How useSearchParams Silently Kills ISR
+
+This is a subtler trap, and it took us a while to diagnose it on a catalog platform with product filtering.
+
+The filter implementation stored state in the URL for shareability:
+
+```tsx
+// ❌ This component silently degrades the entire route to SSR
+"use client";
+
+import { useSearchParams } from "next/navigation";
+
+export function ProductFilter({ products }) {
+  const searchParams = useSearchParams();
+  const activeCategory = searchParams.get("category");
+
+  const filtered = products.filter(
+    (p) => !activeCategory || p.category === activeCategory
+  );
+
+  return (/* filter UI */);
+}
+```
+
+The problem isn't the component itself — it's that `useSearchParams()` forces Next.js to opt the **entire route** out of static rendering. Even though the page had `export const revalidate = 3600`, the build output showed:
+
+```bash
+# ❌ What we saw — route degraded to dynamic
+ƒ /[locale]/products          (Dynamic — server rendered on every request)
+
+# ✅ What we wanted
+● /[locale]/products          (Static — ISR with revalidation)
+```
+
+Every visit triggered a fresh server render. ISR was completely bypassed. Googlebot was getting SSR responses instead of cached static HTML — higher TTFB, higher server load, and the ISR performance benefit was entirely lost.
+
+**The fix:** For a catalog with thousands of products, in-memory filtering is faster and simpler than URL state anyway:
+
+```tsx
+// ✅ Client Component with local state — ISR preserved
+"use client";
+
+import { useState, useMemo } from "react";
+
+interface ProductFilterProps {
+  products: Product[];
+}
+
+export function ProductFilter({ products }: ProductFilterProps) {
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
+  const filtered = useMemo(
+    () =>
+      activeCategory
+        ? products.filter((p) => p.category === activeCategory)
+        : products,
+    [products, activeCategory]
+  );
+
+  return (
+    <div>
+      {/* Filter buttons */}
+      <div className="flex gap-2">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() =>
+              setActiveCategory(activeCategory === cat ? null : cat)
+            }
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+              activeCategory === cat
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      {/* Filtered results — received as props from Server Component */}
+      <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {filtered.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+The route immediately returned to `●` (static) in the build output. ISR started working correctly, TTFB dropped to near-instant for cached pages, and filtering is actually faster because it happens in memory with no network roundtrip.
+
+The trade-off: filter state is no longer in the URL, so users can't share filtered views. For most B2B catalog use cases, that's an acceptable trade-off for the performance and SEO benefit.
+
+---
+
+## Reading Your GSC Crawl Statistics
+
+Once you understand the Server/Client Component boundary, the GSC crawl statistics panel becomes a direct diagnostic tool for your architecture.
+
+Navigate to **Settings → Crawl Statistics → By file type** in Google Search Console.
+
+| JS % | HTML % | What it means |
+|---|---|---|
+| 20–30% | 50%+ | Healthy RSC architecture, most content server-rendered |
+| 35–45% | 25–35% | Mixed architecture, some Client Component overuse |
+| 50%+ | Under 20% | Widespread `"use client"` misuse, significant crawl budget waste |
+
+A secondary signal is the **"By Googlebot type"** breakdown. A high percentage of "Page resource loading" (Googlebot fetching JS/CSS assets) relative to "Desktop" or "Smartphone" crawls indicates your pages are generating many resource requests per HTML page — a direct consequence of large JS bundles.
+
+One important caveat: frequent deployments compound the problem. Every Next.js deploy generates new content hashes for changed chunks. Googlebot treats each new hash as a new URL and recrawls it — resetting the effective crawl budget for those resources. Grouping deployments and deploying less frequently directly reduces this overhead.
+
+---
+
+## SEO & Indexing Pitfalls
+
+### 1. Assuming ISR means your SEO is handled
+
+ISR ensures Googlebot receives pre-rendered HTML. It says nothing about the size or composition of the JavaScript bundle that accompanies it. Audit both independently.
+
+### 2. Using `useSearchParams` without Suspense
+
+If you must use `useSearchParams`, wrap the component in a `Suspense` boundary to prevent the route-level deoptimization:
+
+```tsx
+import { Suspense } from "react";
+import { ProductFilter } from "./ProductFilter";
+
+export default function ProductsPage({ products }) {
+  return (
+    <Suspense fallback={<div>Loading filters...</div>}>
+      <ProductFilter products={products} />
+    </Suspense>
+  );
+}
+```
+
+This preserves static rendering for the rest of the route while allowing the filtered section to render dynamically.
+
+### 3. Placing "use client" at layout level
+
+A `"use client"` directive in `layout.tsx` makes every page in that route segment a Client Component subtree. This is rarely intentional and has the broadest possible impact on your JS bundle.
+
+### 4. Not monitoring the build output
+
+Run `next build` and read the output. The `●` (static), `ƒ` (dynamic), and `○` (prerendered) symbols tell you exactly which routes are being served as ISR vs SSR. If a route you intended as static shows `ƒ`, something in its component tree is forcing dynamic rendering.
+
+```bash
+Route (app)                    Size    First Load JS
+─────────────────────────────────────────────────────
+● /[locale]                   4.2 kB       142 kB
+● /[locale]/products           3.8 kB       138 kB
+ƒ /[locale]/products/[slug]   2.1 kB       134 kB  ← investigate this
+○ /[locale]/about              1.2 kB       128 kB
+```
+
+---
+
+## Frequently Asked Questions (FAQ)
+
+### Does using Server Components actually improve Google indexing?
+
+Yes, indirectly. Server Components reduce the JavaScript bundle that Googlebot needs to process in its second (slow) crawl pass. With proper RSC architecture, the first HTML pass contains all indexable content, and the second pass becomes unnecessary for most pages. This reduces crawl budget consumption and can accelerate indexing for large sites.
+
+### How do I know which components are causing large JS bundles?
+
+Use `@next/bundle-analyzer`. Add it to your Next.js config, run a production build, and you'll get a visual map of every module in your bundle. Look for large libraries appearing in client bundles that should only run on the server — Framer Motion, heavy icon libraries, and translation libraries are common offenders.
+
+### Can I use Framer Motion without making parent components Client Components?
+
+Yes — this is exactly what the "Leaves on a Tree" pattern solves. Create a small `FadeIn` or `AnimatedWrapper` Client Component that accepts `children`, and use it as a wrapper inside your Server Components. The animation logic is isolated to a tiny client bundle; everything else stays on the server.
+
+### Does `useSearchParams` always break ISR?
+
+Only when used outside a `Suspense` boundary at the route level. Wrapping the component that uses `useSearchParams` in `<Suspense>` allows Next.js to statically render the rest of the page and dynamically render only the suspended section. However, if the filtered content itself is what Googlebot needs to index, consider whether URL-based filtering is the right approach at all.
+
+---

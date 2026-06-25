@@ -1,0 +1,264 @@
+---
+title: "Why Next.js? SSR, SSG, ISR and SEO Explained for Developers"
+date: "2026-06-14"
+category: "Engineering"
+slug: "why-nextjs-ssr-ssg-isr-seo"
+translationKey: "why-nextjs-ssr-ssg-isr-seo"
+icon: "🚀"
+excerpt: "Learn why Next.js has become the default choice for production React applications, how SSR, SSG, and ISR differ in practice, and why each rendering strategy has direct consequences for your SEO and Google indexing."
+series: "Next.js & Modern Web"
+seriesOrder: 1
+---
+
+# Why Next.js? SSR, SSG, ISR and SEO Explained for Developers
+
+> **TL;DR — Key Takeaways**
+> - Plain React (CRA/Vite) ships an empty HTML shell — Google has to execute JavaScript before it can index your content
+> - **SSR** renders HTML on every request — fresh content, higher server load, great for dynamic pages
+> - **SSG** renders HTML at build time — fastest possible delivery, perfect for content that rarely changes
+> - **ISR** is the sweet spot: static-speed delivery with automatic background revalidation — the best SEO strategy for most pages
+> - Choosing the wrong rendering strategy is one of the most common causes of poor Google indexing in Next.js projects
+
+---
+
+## The Problem With Plain React
+
+When you build a standard React app with Vite or Create React App, the server sends this to the browser:
+
+```html
+<!DOCTYPE html>
+<html>
+  <head><title>My App</title></head>
+  <body>
+    <div id="root"></div>
+    <script src="/bundle.js"></script>
+  </body>
+</html>
+```
+
+That `<div id="root">` is empty. Your entire application — every product name, every blog post title, every piece of content — lives inside `bundle.js`. The browser has to download, parse, and execute that JavaScript before anything appears on screen.
+
+For users on fast connections, this is barely noticeable. For SEO, it's a serious problem.
+
+Googlebot crawls billions of pages. It runs in two passes: a fast HTML crawler that processes pages immediately, and a slower JavaScript renderer that queues pages for later processing — sometimes days or weeks later. If your content is locked inside JavaScript, you're depending on that second, delayed pass for indexing.
+
+More importantly, even when Google does render your JavaScript, client-rendered pages consistently score lower on Core Web Vitals — particularly **LCP (Largest Contentful Paint)** — because the browser must execute JS before painting any meaningful content.
+
+Next.js solves this by rendering HTML on the server, before it reaches the browser or Googlebot.
+
+---
+
+## The Three Rendering Strategies
+
+### SSR — Server-Side Rendering
+
+With SSR, the server generates a fresh HTML page on every single request. When a user (or Googlebot) visits `/products/industrial-valve-42`, your server fetches the latest data, builds the complete HTML, and sends it.
+
+```tsx
+// app/products/[slug]/page.tsx
+// This is SSR — no `cache` option means fresh on every request in Next.js 15+
+
+interface Props {
+  params: { slug: string };
+}
+
+export default async function ProductPage({ params }: Props) {
+  const product = await fetch(`https://api.example.com/products/${params.slug}`, {
+    cache: "no-store", // Always fetch fresh data
+  }).then((res) => res.json());
+
+  return (
+    <article className="mx-auto max-w-3xl px-4 py-12">
+      <h1 className="text-3xl font-bold">{product.name}</h1>
+      <p className="mt-4 text-gray-600">{product.description}</p>
+      <p className="mt-6 text-2xl font-semibold">${product.price}</p>
+    </article>
+  );
+}
+```
+
+**When to use SSR:**
+- Pages with user-specific data (dashboards, account pages)
+- Real-time data that must be current on every request (stock levels, live pricing)
+- Pages behind authentication
+
+**SEO impact:** Good — Google receives full HTML immediately. But every request hits your server, so response time matters. Slow TTFB (Time To First Byte) directly hurts your Core Web Vitals score.
+
+---
+
+### SSG — Static Site Generation
+
+With SSG, pages are rendered once at build time and stored as static HTML files. Every visitor receives the exact same pre-built file — served from a CDN edge node closest to them.
+
+```tsx
+// app/blog/[slug]/page.tsx
+// generateStaticParams tells Next.js which pages to pre-render at build time
+
+export async function generateStaticParams() {
+  const posts = await fetch("https://api.example.com/posts").then((res) =>
+    res.json()
+  );
+
+  return posts.map((post: { slug: string }) => ({ slug: post.slug }));
+}
+
+export default async function BlogPost({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const post = await fetch(`https://api.example.com/posts/${params.slug}`).then(
+    (res) => res.json()
+  );
+
+  return (
+    <article className="mx-auto max-w-2xl px-4 py-12">
+      <h1 className="text-3xl font-bold">{post.title}</h1>
+      <div
+        className="prose mt-8"
+        dangerouslySetInnerHTML={{ __html: post.content }}
+      />
+    </article>
+  );
+}
+```
+
+**When to use SSG:**
+- Blog posts, documentation, marketing pages
+- Product pages that change infrequently
+- Any content where freshness within hours/days is acceptable
+
+**SEO impact:** Excellent — fastest possible TTFB, perfect Core Web Vitals, Googlebot gets full HTML instantly. The caveat: content only updates when you redeploy. For a 500-page site, a full rebuild takes time.
+
+---
+
+### ISR — Incremental Static Regeneration
+
+ISR is where Next.js truly differentiates itself. Pages are statically generated like SSG, but they automatically regenerate in the background after a set time interval — without a full redeploy.
+
+```tsx
+// app/products/[slug]/page.tsx
+// Revalidate every 3600 seconds (1 hour)
+
+export const revalidate = 3600;
+
+export default async function ProductPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const product = await fetch(`https://api.example.com/products/${params.slug}`, {
+    next: { revalidate: 3600 },
+  }).then((res) => res.json());
+
+  return (
+    <article className="mx-auto max-w-3xl px-4 py-12">
+      <h1 className="text-3xl font-bold">{product.name}</h1>
+      <p className="mt-4 text-gray-600">{product.description}</p>
+      <p className="mt-6 text-2xl font-semibold">${product.price}</p>
+    </article>
+  );
+}
+```
+
+The first visitor after the revalidation window triggers a background regeneration. They receive the slightly stale cached version — but the next visitor gets the fresh one. Zero downtime, no full rebuild.
+
+For on-demand revalidation (when a product is updated in your CMS), use `revalidateTag`:
+
+```tsx
+// app/api/revalidate/route.ts
+import { revalidateTag } from "next/cache";
+import { NextRequest } from "next/server";
+
+export async function POST(req: NextRequest) {
+  const { tag, secret } = await req.json();
+
+  if (secret !== process.env.REVALIDATION_SECRET) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  revalidateTag(tag); // e.g. revalidateTag("products")
+  return Response.json({ revalidated: true });
+}
+```
+
+**When to use ISR:**
+- E-commerce product pages (prices and stock change, but not every second)
+- Blog posts that may be edited after publishing
+- Any content site where you want static performance with dynamic freshness
+
+**SEO impact:** Best of both worlds. Google consistently receives fast, complete HTML. Content stays fresh without rebuild cycles. This is our default recommendation at Atonize for the majority of content pages.
+
+---
+
+## Choosing the Right Strategy: A Decision Framework
+
+```
+Is the content user-specific or requires authentication?
+  └─ YES → SSR (or skip rendering entirely, use Client Component)
+  └─ NO ↓
+
+Does the content change more frequently than every few minutes?
+  └─ YES → SSR with cache: "no-store"
+  └─ NO ↓
+
+Does the content change at all after publishing?
+  └─ YES → ISR (set revalidate based on how often it changes)
+  └─ NO  → SSG (generateStaticParams, rebuild on new content)
+```
+
+In practice, most Next.js applications use all three — SSG for marketing pages, ISR for product/content pages, SSR for authenticated dashboards.
+
+---
+
+## SEO & Indexing Pitfalls
+
+### 1. Using `"use client"` on pages that need to be indexed
+
+This is the most expensive mistake. A page component marked `"use client"` sends an empty HTML shell and delegates rendering to the browser — exactly the same problem as plain React. **Never put `"use client"` on a page-level component** that needs organic search traffic.
+
+### 2. Setting revalidate too high
+
+```tsx
+// ❌ Content updated weekly, but Google sees month-old pages
+export const revalidate = 2592000; // 30 days
+
+// ✅ Match revalidation to your actual content update frequency
+export const revalidate = 86400; // 24 hours
+```
+
+Googlebot recrawls pages based on how often it detects changes. Stale ISR pages signal low freshness and reduce recrawl frequency — a compounding SEO problem.
+
+### 3. Mixing rendering strategies inconsistently
+
+A product listing page on ISR that links to product detail pages on SSR creates inconsistent perceived freshness. Google's crawl budget gets allocated inefficiently when page types in the same section behave differently. Keep rendering strategies consistent within content sections.
+
+### 4. Not setting explicit cache behavior in Next.js 15+
+
+Next.js 15 changed the default fetch cache behavior — fetches are **no longer cached by default**. If you're upgrading from Next.js 14 and don't explicitly set `next: { revalidate }` or `cache: "force-cache"`, your ISR pages silently become SSR pages. Always be explicit.
+
+### 5. Forgetting `generateStaticParams` for dynamic SSG routes
+
+Without `generateStaticParams`, Next.js falls back to rendering dynamic routes on-demand rather than at build time. The pages still work — but they're not pre-rendered, defeating the SSG strategy.
+
+---
+
+## Frequently Asked Questions (FAQ)
+
+### What is the difference between SSR and ISR in Next.js?
+
+SSR renders a fresh page on every single request — the server does work for every visitor. ISR renders a page once, caches it as static HTML, then regenerates it in the background after a set interval. For SEO purposes, both deliver full HTML to Googlebot — but ISR is significantly faster because it serves cached files rather than computing a response per request.
+
+### Is ISR better than SSG for SEO?
+
+For most sites, yes. SSG is technically fastest, but requires a full redeploy whenever content changes. ISR gives you equivalent performance with automatic content freshness — Googlebot sees updated content within your revalidation window without any deployment. The exception is truly static content (documentation, evergreen marketing pages) where SSG is the right choice.
+
+### Does Next.js ISR work with any hosting provider?
+
+ISR requires server infrastructure to handle background regeneration — it doesn't work on purely static hosts like GitHub Pages. It works natively on Vercel, and is supported on self-hosted Node.js deployments, Netlify, and most modern hosting platforms. We cover deployment strategies in detail in later articles in this series.
+
+### How does Next.js compare to Astro or Gatsby for SEO?
+
+Astro is excellent for purely content-driven sites — it ships zero JavaScript by default, which is ideal for blogs and documentation. Gatsby has strong SSG support but has declined in adoption. Next.js wins when you need a mix of static content, dynamic features, and a full-stack architecture in one framework — which describes most B2B SaaS products we build at Atonize.
+
+---

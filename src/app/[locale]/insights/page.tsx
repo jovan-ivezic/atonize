@@ -4,10 +4,22 @@ import Footer from '../../../components/Footer';
 import { getAllPostsMeta } from '../../../lib/mdx';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
-export const metadata = {
-  title: 'Insights - Jovan Ivezić',
-  description: 'Articles about front-end development, React, Next.js, and clean code.',
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'SEO' });
+
+  return {
+    title: t('insights_title'),
+    description: t('insights_description'),
+    alternates: {
+      canonical: `/${locale}/insights`,
+      languages: {
+        'en': '/en/insights',
+        'sr': '/sr/uvidi',
+      },
+    },
+  };
+}
 
 export default async function Insights({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

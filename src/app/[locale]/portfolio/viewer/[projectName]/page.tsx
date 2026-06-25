@@ -6,6 +6,31 @@ const createSlug = (title: string): string => {
   return title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 };
 
+export async function generateMetadata({ params }: { params: Promise<{ locale: string, projectName: string }> }) {
+  const { locale, projectName } = await params;
+  const project = projectsData.find(p => createSlug(p.title) === projectName);
+
+  if (!project) {
+    return { title: 'Project Not Found | Atonize' };
+  }
+
+  return {
+    title: `${project.title} - Portfolio | Atonize`,
+    description: project.description,
+    openGraph: {
+      type: 'website',
+      images: [project.image],
+    },
+    alternates: {
+      canonical: `/${locale}/portfolio/viewer/${projectName}`,
+      languages: {
+        'en': `/en/portfolio/viewer/${projectName}`,
+        'sr': `/sr/portfolio/viewer/${projectName}`,
+      },
+    },
+  };
+}
+
 export default async function PortfolioViewer({ params }: { params: Promise<{ projectName: string }> }) {
   const resolvedParams = await params;
   const { projectName } = resolvedParams;

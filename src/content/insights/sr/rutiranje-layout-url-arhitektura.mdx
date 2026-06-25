@@ -1,0 +1,378 @@
+---
+title: "Next.js App Router: Struktura Fajlova, Rutiranje i Layout Arhitektura"
+date: "2025-06-19"
+category: "Engineering"
+slug: "rutiranje-layout-url-arhitektura"
+translationKey: "routing-layout-url-architecture"
+icon: "🗂️"
+excerpt: "Savladaj Next.js App Router file sistem — od mapiranja foldera na URL-ove i ugnežđenih layout-a do error boundary-ja, loading stanja i URL arhitekture koja direktno utiče na SEO i Google indeksiranje."
+series: "Next.js & Modern Web"
+seriesOrder: 3
+---
+
+# Next.js App Router: Struktura Fajlova, Rutiranje i Layout Arhitektura
+
+> **TL;DR — Ključni Uvidi**
+> - Next.js App Router koristi file sistem kao router — svaki folder unutar `app/` direktno se mapira na URL segment
+> - Specijalni fajlovi (`page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`) imaju fiksne uloge koje Next.js automatski prepoznaje
+> - Ugnežđeni layout-i omogućavaju deljenje UI-a kroz rute bez ponovnog renderovanja pri navigaciji
+> - Dinamički segmenti (`[slug]`), catch-all rute (`[...slug]`) i route grupe `(folder)` daju ti potpunu kontrolu nad URL strukturom
+> - Odluke o URL arhitekturi donete na nivou foldera imaju direktne, dugoročne SEO posledice — planiraj pre nego što počneš da gradiš
+
+---
+
+## File Sistem Je Router
+
+U Next.js App Router-u, nema konfiguracionog fajla za rutiranje. Nema `react-router` setup-a. Nema niza route objekata. Struktura foldera unutar `app/` direktorijuma **jeste** konfiguracija rutiranja.
+
+Svaki folder koji kreiraš postaje URL segment. Svaki `page.tsx` unutar tog foldera čini ga javno dostupnim. Ovo je najvažniji mentalni pomak kada dolaziš iz Pages Router-a ili bilo kog drugog frameworka.
+
+```
+app/
+├── page.tsx                    → /
+├── about/
+│   └── page.tsx                → /about
+├── products/
+│   ├── page.tsx                → /products
+│   └── [slug]/
+│       └── page.tsx            → /products/[bilo-koji-slug]
+└── blog/
+    ├── page.tsx                → /blog
+    └── [slug]/
+        └── page.tsx            → /blog/[bilo-koji-slug]
+```
+
+Folder bez `page.tsx` nije ruta — postoji u file sistemu ali ne kreira URL. Ovo je korisno za organizovanje deljenih komponenti, hook-ova i utility-ja pored ruta koje ih koriste.
+
+---
+
+## Specijalni Fajlovi Koje Next.js Prepoznaje
+
+Unutar bilo kog route foldera, Next.js daje specifično značenje ovim imenima fajlova:
+
+| Fajl | Svrha | Obavezan? |
+|---|---|---|
+| `page.tsx` | UI koji se renderuje na ovom URL-u | Da — čini rutu javnom |
+| `layout.tsx` | Omata sve stranice u ovom folderu i podfoldere | Ne — ali je ključan za deljeni UI |
+| `loading.tsx` | Prikazuje se odmah dok stranica strimuje podatke | Ne — ali kritičan za UX i CWV |
+| `error.tsx` | Prikazuje se kada se baci greška u ovom segmentu | Ne — ali sprečava rušenje cele stranice |
+| `not-found.tsx` | Prikazuje se kada se pozove `notFound()` | Ne |
+| `route.ts` | API endpoint — nema UI-a, vraća Response | Ne |
+| `template.tsx` | Kao layout, ali se ponovo mount-uje pri navigaciji | Retko potrebno |
+
+Razumevanje ovih fajlova i gde ih postaviti je osnova dobro strukturirane Next.js aplikacije.
+
+---
+
+## Realna Struktura Fajlova
+
+Evo strukture fajlova koju koristimo kao polaznu tačku za B2B SaaS aplikacije u Atonize-u — uključujući i18n sa `next-intl`, admin panel i javni katalog:
+
+```
+app/
+├── [locale]/                          ← i18n wrapper (npr. /en, /sr)
+│   ├── layout.tsx                     ← postavlja lang atribut, učitava fontove
+│   ├── page.tsx                       ← homepage
+│   ├── (marketing)/                   ← route grupa — nema URL segmenta
+│   │   ├── about/
+│   │   │   └── page.tsx               ← /about
+│   │   └── contact/
+│   │       └── page.tsx               ← /contact
+│   ├── products/
+│   │   ├── layout.tsx                 ← deljeni product layout (sidebar, filteri)
+│   │   ├── page.tsx                   ← /products (listing kataloga)
+│   │   ├── loading.tsx                ← skeleton prikazan tokom fetch-a
+│   │   └── [slug]/
+│   │       ├── page.tsx               ← /products/industrijski-ventil-42
+│   │       └── not-found.tsx          ← prikazuje se kada proizvod ne postoji
+│   └── blog/
+│       ├── page.tsx                   ← /blog
+│       └── [slug]/
+│           └── page.tsx               ← /blog/nextjs-saveti
+├── (admin)/                           ← route grupa — nema URL segmenta
+│   ├── layout.tsx                     ← admin shell (sidebar, provera auth-a)
+│   └── dashboard/
+│       └── page.tsx                   ← /dashboard
+└── api/
+    ├── revalidate/
+    │   └── route.ts                   ← POST /api/revalidate
+    └── products/
+        └── route.ts                   ← GET /api/products
+```
+
+Nekoliko stvari u ovoj strukturi koje nisu očigledne iz dokumentacije.
+
+---
+
+## Route Grupe: Organizuj Bez Uticaja na URL-ove
+
+Folderi omotani u zagrade `(folder)` su **route grupe**. Postoje isključivo radi organizacije — ne kreiraju URL segment.
+
+```
+app/
+├── (marketing)/
+│   ├── about/page.tsx     → /about     (ne /marketing/about)
+│   └── contact/page.tsx   → /contact
+├── (shop)/
+│   ├── products/page.tsx  → /products
+│   └── cart/page.tsx      → /cart
+```
+
+Route grupe su takođe način da primenišu različite layout-e na različite sekcije aplikacije bez uticaja na URL-ove. `(admin)` grupa u našoj strukturi gore ima sopstveni `layout.tsx` sa proverom auth-a i sidebar-om — potpuno odvojen od javnog layout-a — ali `/dashboard` je i dalje URL, ne `/admin/dashboard`.
+
+---
+
+## Ugnežđeni Layout-i: Arhitektura Koja Čini Navigaciju Brzom
+
+Layout-i su najmoćnija i najpogrešnije shvaćena funkcionalnost App Router-a. Layout omata sve stranice unutar svog foldera i svih podfoldere, i što je ključno, **ne re-renderuje se kada korisnik navigira između stranica unutar svog opsega**.
+
+```tsx
+// app/[locale]/products/layout.tsx
+import { ProductSidebar } from "@/components/ProductSidebar";
+
+export default function ProductsLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-8">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[280px_1fr]">
+        <ProductSidebar />
+        <main>{children}</main>
+      </div>
+    </div>
+  );
+}
+```
+
+Kada korisnik navigira sa `/products` na `/products/industrijski-ventil-42`, `ProductsLayout` komponenta ostaje mount-ovana. Samo se `children` menja — sidebar ne treperi, nema punog ponovnog učitavanja stranice, nema layout shift-a. Ovo je ono što čini Next.js navigaciju brzom.
+
+Hijerarhija layout-a prati hijerarhiju foldera:
+
+```
+app/layout.tsx                 ← Root layout (uvek se renderuje)
+  app/[locale]/layout.tsx      ← Locale layout
+    app/[locale]/products/layout.tsx  ← Products layout
+      app/[locale]/products/page.tsx  ← Stranica (children)
+```
+
+Svaki layout omata sve ispod sebe. Root layout je jedini obavezni layout i mora uključivati `<html>` i `<body>` tagove.
+
+---
+
+## Loading i Error Boundary-ji
+
+`loading.tsx` i `error.tsx` su kako Next.js integriše React Suspense i Error Boundary-je u file sistem.
+
+### loading.tsx — Trenutna Percipirana Performansa
+
+```tsx
+// app/[locale]/products/loading.tsx
+export default function ProductsLoading() {
+  return (
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div
+          key={i}
+          className="animate-pulse rounded-xl bg-gray-100"
+          style={{ height: "280px" }}
+        />
+      ))}
+    </div>
+  );
+}
+```
+
+Next.js prikazuje ovu komponentu **odmah** dok stranica strimuje podatke. Browser renderuje layout i loading skeleton pre nego što se fetch podataka završi — zbog čega se Lighthouse score-ovi dramatično poboljšavaju kada su loading stanja ispravno implementirana.
+
+Sa SEO perspektive, `loading.tsx` osigurava da Googlebot odmah vidi strukturiranu stranicu u Prolazu 1, čak i pre nego što su svi podaci dostupni.
+
+### error.tsx — Izolovane Greške
+
+```tsx
+// app/[locale]/products/error.tsx
+"use client"; // Error boundary-ji moraju biti Client Komponente
+
+import { useEffect } from "react";
+
+export default function ProductsError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    console.error(error);
+  }, [error]);
+
+  return (
+    <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center">
+      <h2 className="text-lg font-semibold text-red-800">
+        Greška pri učitavanju proizvoda
+      </h2>
+      <p className="mt-2 text-sm text-red-600">
+        {error.message || "Došlo je do neočekivane greške."}
+      </p>
+      <button
+        onClick={reset}
+        className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+      >
+        Pokušaj ponovo
+      </button>
+    </div>
+  );
+}
+```
+
+`error.tsx` na nivou `/products/` hvata greške iz listinga proizvoda i svih stranica detalja proizvoda. Greška na `/products/industrijski-ventil-42` neće srušiti celu aplikaciju — samo se products segment zamenjuje error UI-om. Navigacija, header i footer ostaju netaknuti.
+
+---
+
+## Dinamički Segmenti i URL Arhitektura
+
+Dinamički segmenti su folderi sa imenima omotanim u uglaste zagrade. Poklapaju se sa bilo kojom vrednošću na toj poziciji u URL-u.
+
+```
+products/[slug]/page.tsx    → poklapa se sa /products/bilo-sta
+blog/[slug]/page.tsx        → poklapa se sa /blog/bilo-sta
+users/[id]/page.tsx         → poklapa se sa /users/bilo-sta
+```
+
+Poklopljena vrednost je dostupna kao prop:
+
+```tsx
+// app/[locale]/products/[slug]/page.tsx
+interface Props {
+  params: {
+    locale: string;
+    slug: string;
+  };
+}
+
+export default async function ProductPage({ params }: Props) {
+  const { locale, slug } = params;
+  // slug = "industrijski-ventil-42" za /products/industrijski-ventil-42
+}
+```
+
+### Catch-all Segmenti
+
+`[...slug]` poklapa se sa više path segmenata:
+
+```
+docs/[...slug]/page.tsx     → poklapa se sa /docs/a, /docs/a/b, /docs/a/b/c
+```
+
+### Opcioni Catch-all
+
+`[[...slug]]` poklapa se sa putanjom sa ili bez segmenata:
+
+```
+[[...slug]]/page.tsx        → poklapa se sa /, /a, /a/b
+```
+
+---
+
+## URL Arhitektura i SEO
+
+Struktura foldera koju odabereš na početku projekta direktno određuje URL strukturu. Menjanje URL-ova kasnije zahteva redirecte, a redirecti gube link equity i zbunjuju Google-ov indeks — nešto od čega oporavak može trajati mesecima.
+
+**Planiraj URL arhitekturu pre pisanja koda.** Razmotri:
+
+**Flat vs. ugnežđena struktura:**
+```
+/products/industrijski-ventil-42         ← flat, preporučeno za većinu slučajeva
+/products/ventili/industrijski-ventil-42  ← ugnežđena, dodaje kontekst ali dublja hijerarhija
+```
+
+**Placement ključnih reči:**
+Prvi segment nakon domene nosi najveću SEO težinu. `/blog/nextjs-seo-saveti` bolje rangira za "nextjs seo saveti" nego `/posts/2024/06/nextjs-seo-saveti`.
+
+**Konzistentnost:**
+Sve stranice proizvoda treba da prate isti pattern. Mešanje `/products/[slug]` i `/catalog/[category]/[slug]` za isti tip sadržaja zbunjuje Google-ovo razumevanje strukture sajta.
+
+**i18n i URL struktura:**
+Sa `next-intl` i `[locale]` segmentom, tvoji URL-ovi postaju `/en/products/slug` i `/sr/products/slug`. Locale prefiks se ispravno obrađuje hreflang tagovima — ali struktura ostatka URL-a treba biti identična između jezika. Ovo detaljno pokrivamo u tekstu o [i18n i Lokalizovanom Rutiranju](/insights/nextjs-i18n-localized-routing).
+
+---
+
+## Canonical URL-ovi i Duplirani Sadržaj
+
+Next.js automatski ne postavlja canonical URL-ove. Bez njih, Google može da otkrije i indeksira isti sadržaj na više URL-ova — problem sa crawl budgetom i potencijalna kazna za duplirani sadržaj.
+
+Uvek postavljaj canonical URL-ove u metadata:
+
+```tsx
+// app/[locale]/products/[slug]/page.tsx
+import { Metadata } from "next";
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
+  return {
+    alternates: {
+      canonical: `${baseUrl}/en/products/${params.slug}`,
+      languages: {
+        "en": `${baseUrl}/en/products/${params.slug}`,
+        "sr": `${baseUrl}/sr/products/${params.slug}`,
+      },
+    },
+  };
+}
+```
+
+Kompletan Metadata API — Open Graph, JSON-LD, sitemap-e — pokrivamo u [Mastering SEO u Next.js-u](/insights/nextjs-seo-metadata-jsonld-sitemaps).
+
+---
+
+## SEO & Greške u Indeksiranju
+
+### 1. Menjanje URL strukture nakon lansiranja
+
+Ovo je najskuplja greška u Next.js SEO-u. Ako preimenujete folder — `/blog` u `/articles`, `/products` u `/catalog` — svaki indeksirani URL postaje 404 dok redirecti ne budu postavljeni. Čak i sa ispravnim 301 redirectima, Google treba nedelje da prenese link equity. Planiraj URL strukturu pre prvog deploya.
+
+### 2. Nedostajući `not-found.tsx` za dinamičke rute
+
+Bez `not-found.tsx`, zahtev za `/products/nepostojeci-slug` vraća 200 status sa generičkom porukom greške — **soft 404**. Google indeksira soft 404-e kao validne stranice, punjujući tvoj indeks tankim sadržajem. Uvek pozovi `notFound()` kada dinamička ruta primi nevalidan parametar:
+
+```tsx
+import { notFound } from "next/navigation";
+
+export default async function ProductPage({ params }: Props) {
+  const product = await getProduct(params.slug);
+  if (!product) notFound(); // Vraća ispravan 404 status
+  // ...
+}
+```
+
+### 3. Preterano korišćenje ugnežđenih layout-a
+
+Česta greška je kreiranje layout-a za svaku pojedinačnu rutu. Layout-i treba da omotavaju UI koji se zaista zadržava kroz više stranica. Layout koji omata samo jednu stranicu dodaje kompleksnost bez koristi — samo stavi taj UI direktno u `page.tsx`.
+
+### 4. Zaboravljanje da se layout-i ne re-renderuju
+
+Zato što layout-i opstaju kroz navigaciju, svi podaci fetchovani u layout-u se fetchuju jednom i keširaju. Ako trebaš sveže podatke pri svakoj poseti stranici, fetchuj ih u `page.tsx`, ne u `layout.tsx`.
+
+---
+
+## Često Postavljana Pitanja (FAQ)
+
+### Koja je razlika između layout.tsx i template.tsx?
+
+Oba omotavaju stranice, ali `layout.tsx` opstaje kroz navigacije unutar svog opsega — ne re-mount-uje se. `template.tsx` kreira novu instancu pri svakoj navigaciji, ponovo pokrećući efekte i resetujući state. Koristi `layout.tsx` za persistentni UI (navigacija, sidebar) i `template.tsx` samo kada eksplicitno trebaš remounting ponašanje (animacije tranzicije stranica, per-page analytics eventi).
+
+### Mogu li imati više dinamičkih segmenata u jednoj ruti?
+
+Da. `/app/[locale]/products/[category]/[slug]/page.tsx` je validno i poklapa se sa putanjama poput `/en/products/ventili/industrijski-ventil-42`. Svaki segment je dostupan u `params`. Samo pazi — dublje URL hijerarhije je teže menjati kasnije i mogu razrediti SEO vrednost.
+
+### Kako route grupe utiču na layout-e?
+
+Svaka route grupa može imati sopstveni `layout.tsx`. Ovako primenjuješ potpuno različite UI shell-ove na različite delove aplikacije — marketing layout, app layout i admin layout — sve bez uticaja na URL-ove. Ime route grupe foldera je nevidljivo za router.
+
+### Šta se dešava ako nemam root layout?
+
+Root `app/layout.tsx` je obavezan u Next.js App Router-u. Mora da renderuje `<html>` i `<body>` elemente. Bez njega, aplikacija se neće ni build-ovati. Svaki drugi layout je opcioni i omata samo svoj segment i ispod.
+
+---

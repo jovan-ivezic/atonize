@@ -1,0 +1,350 @@
+---
+title: "Next.js Proxy: Auth Redirecti, i18n Rutiranje i Security Headers"
+date: "2026-06-25"
+category: "Engineering"
+slug: "nextjs-proxy-auth-i18n-bezbednost"
+translationKey: "nextjs-proxy-auth-i18n-security"
+icon: "🛡️"
+excerpt: "Saznaj kako Next.js 16 Proxy (ranije middleware) presreće zahteve pre nego što stignu do tvojih stranica — i kako ga koristiti za auth redirecte, i18n detekciju lokala i security headers bez dodirivanja ijedne page komponente."
+series: "Next.js & Modern Web"
+seriesOrder: 4
+---
+
+# Next.js Proxy: Auth Redirecti, i18n Rutiranje i Security Headers
+
+> **TL;DR — Ključni Uvidi**
+> - Next.js 16 je preimenovao `middleware.ts` u `proxy.ts` — isti koncept, jasnije ime koje odražava njegovu stvarnu ulogu kao mrežne granice
+> - Proxy se pokreće na svakom zahtevu **pre** nego što se stranica renderuje — pravo je mesto za auth provere, detekciju lokala i security headers
+> - Proxy radi na Edge runtimeu po defaultu — nema Node.js API-ja, nema pristupa bazi, drži logiku minimalnom i brzom
+> - Loše konfigurisani i18n redirecti u Proxy-ju su jedan od najčešćih uzroka rasipanja crawl budgeta (302 vs 301)
+> - Security headers postavljeni u Proxy-ju primenjuju se globalno na svaki odgovor — nema konfiguracije po stranici
+
+---
+
+## Šta Je Proxy i Zašto Postoji
+
+Svaki zahtev ka tvojoj Next.js aplikaciji prolazi kroz jednu ulaznu tačku pre nego što stigne do bilo koje stranice, layout-a ili API rute. U Next.js 16, ova ulazna tačka je `proxy.ts` — fajl koji postavljaš u root projekta koji presreće i može modifikovati svaki dolazni zahtev.
+
+U ranijim verzijama se zvao `middleware.ts`. Preimenovanje u `proxy.ts` u Next.js 16 je namerno — "middleware" je stvaralo konfuziju sa Express.js middleware-om, navodeći developere da stavljaju upite baze i tešku logiku unutar njega. "Proxy" preciznije opisuje šta radi: sedi između mreže i tvoje aplikacije, pregleda i rutira zahteve.
+
+Zamisli ga kao čuvara na ulazu. Može proveravati akreditive, preusmeravati posetioce na pravi ulaz i štampati ruke — ali ne može kuvati hranu ni posluživati piće. To se dešava unutra.
+
+---
+
+## Struktura Proxy Fajla
+
+```
+tvoj-projekat/
+├── proxy.ts          ← presreće sve zahteve
+├── app/
+│   ├── layout.tsx
+│   └── ...
+├── next.config.ts
+└── package.json
+```
+
+Minimalni `proxy.ts`:
+
+```ts
+// proxy.ts
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+
+export function proxy(request: NextRequest) {
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico).*)",
+  ],
+};
+```
+
+`matcher` pattern je kritičan. Bez njega, Proxy se pokreće na svakom pojedinačnom zahtevu — uključujući statične resurse, zahteve za optimizaciju slika i API rute. Pattern iznad isključuje `_next/static`, `_next/image` i `favicon.ico`, koji nikad ne bi trebalo da prolaze kroz Proxy logiku.
+
+---
+
+## Slučaj Upotrebe 1: Auth Redirecti
+
+Najčešća upotreba Proxy-ja je zaštita ruta koje zahtevaju autentikaciju. Umesto dodavanja auth provera svakoj stranici, jednom definišeš zaštićene patterne u `proxy.ts`.
+
+```ts
+// proxy.ts
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+
+const ZASTITENE_RUTE = ["/dashboard", "/account", "/admin"];
+const AUTH_KOLACIC = "auth-token";
+
+export function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Proveri da li je ovo zaštićena ruta
+  const jeZasticena = ZASTITENE_RUTE.some((ruta) =>
+    pathname.startsWith(ruta)
+  );
+
+  if (jeZasticena) {
+    const token = request.cookies.get(AUTH_KOLACIC)?.value;
+
+    if (!token) {
+      // Redirect na login, čuvajući nameravanu destinaciju
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api).*)"],
+};
+```
+
+**Važna ograničenja koja treba razumeti:**
+
+Proxy radi na Edge runtimeu. Ne možeš ovde verifikovati JWT sa upitom baze — nema `prisma`, nema `mysql2`, nema `fetch` ka internoj bazi. Možeš samo inspektovati vrednost kolačića.
+
+Za ispravnu verifikaciju tokena, pattern je:
+1. Proxy radi **brzu, laganu proveru** — da li kolačić postoji? Da li je neprazan?
+2. Stranica ili API ruta radi **pravu verifikaciju** — da li je token validan? Da li je korisnik i dalje aktivan?
+
+Ovaj dvoslojni pristup je ispravna arhitektura. Proxy je prva linija odbrane, ne jedina.
+
+```ts
+// proxy.ts — samo lagana provera
+const token = request.cookies.get(AUTH_KOLACIC)?.value;
+if (!token) return NextResponse.redirect(new URL("/login", request.url));
+
+// app/dashboard/page.tsx — prava verifikacija
+import { verifyToken } from "@/lib/auth";
+
+export default async function DashboardPage() {
+  const user = await verifyToken(); // stvarna DB provera se dešava ovde
+  if (!user) redirect("/login");
+  // ...
+}
+```
+
+---
+
+## Slučaj Upotrebe 2: i18n Detekcija Lokala i Rutiranje
+
+Proxy je standardna lokacija za i18n detekciju lokala u Next.js aplikacijama koje koriste `next-intl` ili slične biblioteke. Kada korisnik poseti `/`, Proxy detektuje njihov preferirani lokal i preusmerava ih na `/en` ili `/sr`.
+
+```ts
+// proxy.ts
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import createIntlMiddleware from "next-intl/middleware";
+
+const intlProxy = createIntlMiddleware({
+  locales: ["en", "sr"],
+  defaultLocale: "en",
+  localePrefix: "always",
+});
+
+export function proxy(request: NextRequest) {
+  return intlProxy(request);
+}
+
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api).*)"],
+};
+```
+
+**Ovde nastaje većina i18n SEO problema.**
+
+Podrazumevano ponašanje `next-intl`-a — i većine i18n Proxy implementacija — koristi **302 privremene redirecte** pri detekciji lokala. Korisnik poseti `/products/ventil`, Proxy detektuje da preferiraju engleski i preusmerava ih na `/en/products/ventil` sa 302.
+
+Za korisnike, ovo je nevidljivo. Za Google, ovo je značajno:
+
+- **302 (Privremeni Redirect):** Google prati redirect ali ne prenosi link equity na destinaciju. Može nastaviti da indeksira originalni URL. Crawl budget se troši i na originalni i na destinacijski URL.
+- **301 (Trajni Redirect):** Google prenosi link equity, prestaje da indeksira originalni URL i ažurira indeks na finalnu destinaciju.
+
+Za i18n locale redirecte koji su po prirodi permanentni, redirect treba da bude 301. Proveri GSC crawl statistiku — visok procenat 302 odgovora je često signal pogrešne konfiguracije Proxy-ja.
+
+Da forsiraš 301 redirecte u `next-intl`-u:
+
+```ts
+const intlProxy = createIntlMiddleware({
+  locales: ["en", "sr"],
+  defaultLocale: "en",
+  localePrefix: "always",
+});
+
+export function proxy(request: NextRequest) {
+  const response = intlProxy(request);
+
+  // Konvertuj privremene redirecte u permanentne za detekciju lokala
+  if (response.status === 307 || response.status === 302) {
+    const location = response.headers.get("location");
+    if (location) {
+      return NextResponse.redirect(location, { status: 301 });
+    }
+  }
+
+  return response;
+}
+```
+
+Kompletnu i18n URL strategiju — hreflang, canonical URL-ovi i izbegavanje URL kaosa — pokrivamo u [i18n i Lokalizovano Rutiranje](/insights/nextjs-i18n-localized-routing).
+
+---
+
+## Slučaj Upotrebe 3: Security Headers
+
+Security headers štite tvoju aplikaciju od uobičajenih web ranjivosti. Postavljanje u Proxy-ju znači da se primenjuju na svaki odgovor automatski — nema konfiguracije po stranicama, nema rizika da ih zaboraviš na novoj ruti.
+
+```ts
+// proxy.ts
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+
+const BEZBEDNOSNI_HEADERS = {
+  "X-DNS-Prefetch-Control": "on",
+  "X-Frame-Options": "SAMEORIGIN",
+  "X-Content-Type-Options": "nosniff",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+  "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
+};
+
+export function proxy(request: NextRequest) {
+  const response = NextResponse.next();
+
+  Object.entries(BEZBEDNOSNI_HEADERS).forEach(([key, value]) => {
+    response.headers.set(key, value);
+  });
+
+  return response;
+}
+```
+
+**Content Security Policy (CSP)** je najuticajniji security header ali zahteva pažljivu konfiguraciju po aplikaciji — pogrešno konfigurisani CSP može slomiti ceo UI. Počni sa header-ima iznad, zatim dodaj CSP postupno kada proceniš third-party skripte i inline stilove.
+
+---
+
+## Kombinovanje Sva Tri Slučaja Upotrebe
+
+U pravoj B2B aplikaciji, često ti trebaju auth, i18n i security headers zajedno. Ključ je da logika bude čista i uređena:
+
+```ts
+// proxy.ts
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import createIntlMiddleware from "next-intl/middleware";
+
+const intlProxy = createIntlMiddleware({
+  locales: ["en", "sr"],
+  defaultLocale: "en",
+  localePrefix: "always",
+});
+
+const ZASTITENE_RUTE = ["/dashboard", "/account"];
+const AUTH_KOLACIC = "auth-token";
+
+const BEZBEDNOSNI_HEADERS = {
+  "X-Frame-Options": "SAMEORIGIN",
+  "X-Content-Type-Options": "nosniff",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
+};
+
+export function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Korak 1: Auth provera (pre i18n — proveravamo sirovu putanju)
+  const jeZasticena = ZASTITENE_RUTE.some((ruta) =>
+    pathname.includes(ruta)
+  );
+
+  if (jeZasticena && !request.cookies.get(AUTH_KOLACIC)?.value) {
+    const loginUrl = new URL("/en/login", request.url);
+    loginUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(loginUrl, { status: 302 });
+  }
+
+  // Korak 2: i18n rutiranje
+  const response = intlProxy(request);
+
+  // Korak 3: Security headers na svakom odgovoru
+  Object.entries(BEZBEDNOSNI_HEADERS).forEach(([key, value]) => {
+    response.headers.set(key, value);
+  });
+
+  return response;
+}
+
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api).*)"],
+};
+```
+
+Redosled je važan. Auth se pokreće prvi — nema smisla obrađivati i18n ili postavljati headers na zahtev koji će ionako biti preusmerен.
+
+---
+
+## Šta NE Stavljati u Proxy
+
+Zbog toga što Proxy radi na Edge runtimeu, određene operacije jednostavno nisu dostupne:
+
+```ts
+// ❌ Ništa od ovoga ne radi u proxy.ts
+import { db } from "@/lib/database";          // Nema konekcija sa bazom
+import { readFileSync } from "fs";             // Nema Node.js fs modula
+import jwt from "jsonwebtoken";                // Neki npm paketi ne rade na Edge-u
+const data = await prisma.user.findFirst();    // Nema Prisma na Edge-u
+```
+
+Ako se nađeš u situaciji da trebaš ovo u Proxy-ju, arhitektura je pogrešna. Premesti tešku logiku u:
+- Server Komponentu (za auth na nivou stranice)
+- API rutu (za programatski pristup)
+- Server Action (za submit formi)
+
+Proxy bi trebalo da se završi za **ispod 1ms**. Ako radi značajan posao, postaje usko grlo na svakom pojedinačnom zahtevu.
+
+---
+
+## SEO & Greške u Indeksiranju
+
+### 1. Pokretanje Proxy-ja na statičnim resursima
+
+Bez ispravnog `matcher`-a, Proxy se pokreće na `/_next/static/` zahtevima. Ovo dodaje latenciju svakom učitavanju JS i CSS fajla — direktno šteti Time to First Byte i Core Web Vitals. Uvek isključi statične resurse u matcher-u.
+
+### 2. Korišćenje 302 za permanentne locale redirecte
+
+Kao što je gore pokriveno — redirecti za detekciju lokala su permanentni po prirodi i trebaju koristiti 301. 9% stopa 302 u GSC crawl statistici je signal da treba revidirati Proxy redirect logiku.
+
+### 3. Blokiranje Googlebot-a u Proxy-ju
+
+Pazi sa logikom baziranom na user-agentu. Ako dodaš detekciju botova u Proxy i slučajno preusmeriš ili blokiraš Googlebot, videćeš dramatičan pad crawl aktivnosti za nekoliko dana. Uvek testiraj bot-related Proxy logiku prema poznatim Googlebot user-agent stringovima.
+
+### 4. Potpuno zaboravljanje matcher patterna
+
+Proxy bez `matcher`-a se pokreće na svakom zahtevu uključujući `/_next/static/` resurse, `/_next/image/` zahteve za optimizaciju i API rute. U najboljем slučaju je rasipanje, u najgorem može unositi bugove. Uvek definišei matcher.
+
+---
+
+## Često Postavljana Pitanja (FAQ)
+
+### Koja je razlika između Next.js 16 Proxy i starog middleware.ts?
+
+Funkcionalnost je identična — promenilo se samo ime fajla i naziv exporta. `middleware.ts` sa `export function middleware()` postaje `proxy.ts` sa `export function proxy()`. Preimenovanje preciznije odražava stvarnu ulogu i izbegava konfuziju sa Express-style middleware-om. Next.js 16 i dalje podržava `middleware.ts` ali ga označava kao deprecated.
+
+### Mogu li pristupiti bazi podataka u Proxy-ju?
+
+Ne. Proxy radi na Edge runtimeu koji ne podržava Node.js API-je ni tradicionalne drajvere za baze podataka. Možeš čitati kolačiće, headers i URL parametre, i možeš praviti `fetch` zahteve ka eksternim API-jima. Za auth zavisan od baze, koristi stateless token (JWT čuvan u kolačiću) i verifikuj ga u Proxy-ju proverom prisustva, a zatim ga potpuno verifikuj u stranici ili API ruti.
+
+### Kako da debugujem Proxy lokalno?
+
+Proxy logovi se pojavljuju u terminalu kada pokrećeš `next dev`. Koristi `console.log(request.nextUrl.pathname)` da pratiš koji zahtevi pogađaju Proxy. Za kompleksniji debugging, dodaj `x-proxy-debug` header odgovorima i inspektuj ga u browser DevTools-u.
+
+### Da li Proxy utiče na statične stranice (SSG/ISR)?
+
+Da — čak i statički generisane stranice prolaze kroz Proxy na svakom zahtevu. Proxy se pokreće na mrežnom nivou pre nego što se kešovani HTML servira. Zbog toga matcher pattern ima značaja: čuvanje Proxy logike minimalnom i brzom osigurava da čak ni tvoje najbrže ISR stranice nemaju artificijalno dodatu latenciju.
+
+---

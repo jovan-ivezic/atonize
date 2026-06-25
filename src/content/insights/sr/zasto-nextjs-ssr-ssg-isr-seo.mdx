@@ -1,0 +1,264 @@
+---
+title: "Zašto Next.js? SSR, SSG, ISR i SEO objašnjeni za developere"
+date: "2026-06-14"
+category: "Engineering"
+slug: "zasto-nextjs-ssr-ssg-isr-seo"
+translationKey: "why-nextjs-ssr-ssg-isr-seo"
+icon: "🚀"
+excerpt: "Saznaj zašto je Next.js postao podrazumevani izbor za produkcijske React aplikacije, kako se SSR, SSG i ISR razlikuju u praksi, i zašto svaka strategija renderovanja ima direktne posledice po SEO i Google indeksiranje."
+series: "Next.js & Modern Web"
+seriesOrder: 1
+---
+
+# Zašto Next.js? SSR, SSG, ISR i SEO objašnjeni za developere
+
+> **TL;DR — Ključni Uvidi**
+> - Čisti React (CRA/Vite) šalje prazan HTML shell — Google mora da izvrši JavaScript pre nego što može da indeksira tvoj sadržaj
+> - **SSR** renderuje HTML na svaki zahtev — svež sadržaj, veće opterećenje servera, odlično za dinamične stranice
+> - **SSG** renderuje HTML u vreme build-a — najbrža moguća isporuka, savršeno za sadržaj koji se retko menja
+> - **ISR** je zlatna sredina: isporuka brzinom statičnih stranica sa automatskom pozadinskom revalidacijom — najbolja SEO strategija za većinu stranica
+> - Pogrešan izbor strategije renderovanja jedan je od najčešćih uzroka lošeg Google indeksiranja u Next.js projektima
+
+---
+
+## Problem sa čistim React-om
+
+Kada praviš standardnu React aplikaciju sa Vite-om ili Create React App-om, server šalje ovo browseru:
+
+```html
+<!DOCTYPE html>
+<html>
+  <head><title>Moja Aplikacija</title></head>
+  <body>
+    <div id="root"></div>
+    <script src="/bundle.js"></script>
+  </body>
+</html>
+```
+
+Taj `<div id="root">` je prazan. Cela tvoja aplikacija — svaki naziv proizvoda, svaki naslov blog posta, svaki komad sadržaja — živi unutar `bundle.js`. Browser mora da preuzme, parsira i izvrši taj JavaScript pre nego što se išta pojavi na ekranu.
+
+Za korisnike na brzim konekcijama, ovo je jedva primetno. Za SEO, to je ozbiljan problem.
+
+Googlebot crawluje milijarde stranica. Radi u dva prolaza: brzi HTML crawler koji odmah obrađuje stranice, i sporiji JavaScript renderer koji stavlja stranice u red čekanja za kasniju obradu — ponekad danima ili nedeljama kasnije. Ako je tvoj sadržaj zaključan unutar JavaScript-a, zavisiš od tog drugog, odloženog prolaza za indeksiranje.
+
+Što je još važnije, čak i kada Google renderuje tvoj JavaScript, stranice renderovane na klijentu konzistentno postižu lošije rezultate na Core Web Vitals — posebno na **LCP (Largest Contentful Paint)** — jer browser mora da izvrši JS pre nego što nacrta bilo koji smislen sadržaj.
+
+Next.js rešava ovo renderovanjem HTML-a na serveru, pre nego što stigne do browsera ili Googlebota.
+
+---
+
+## Tri strategije renderovanja
+
+### SSR — Server-Side Rendering
+
+Sa SSR-om, server generiše svež HTML na svaki pojedinačni zahtev. Kada korisnik (ili Googlebot) poseti `/products/industrijski-ventil-42`, tvoj server povlači najsvežije podatke, gradi kompletan HTML i šalje ga.
+
+```tsx
+// app/products/[slug]/page.tsx
+// Ovo je SSR — bez `cache` opcije znači svež zahtev na svaki request u Next.js 15+
+
+interface Props {
+  params: { slug: string };
+}
+
+export default async function ProductPage({ params }: Props) {
+  const product = await fetch(`https://api.example.com/products/${params.slug}`, {
+    cache: "no-store", // Uvek povlači svježe podatke
+  }).then((res) => res.json());
+
+  return (
+    <article className="mx-auto max-w-3xl px-4 py-12">
+      <h1 className="text-3xl font-bold">{product.name}</h1>
+      <p className="mt-4 text-gray-600">{product.description}</p>
+      <p className="mt-6 text-2xl font-semibold">{product.price} RSD</p>
+    </article>
+  );
+}
+```
+
+**Kada koristiti SSR:**
+- Stranice sa korisničkim podacima (dashboard-i, stranice naloga)
+- Podaci u realnom vremenu koji moraju biti ažurni na svaki zahtev (stanje zaliha, live cene)
+- Stranice iza autentikacije
+
+**SEO uticaj:** Dobar — Google odmah dobija kompletan HTML. Ali svaki zahtev pogađa tvoj server, pa vreme odgovora je važno. Sporo TTFB (Time To First Byte) direktno šteti tvom Core Web Vitals score-u.
+
+---
+
+### SSG — Static Site Generation
+
+Sa SSG-om, stranice se renderuju jednom u vreme build-a i čuvaju kao statični HTML fajlovi. Svaki posetilac dobija isti pre-buildovani fajl — serviran sa CDN edge nodea najbližeg njima.
+
+```tsx
+// app/blog/[slug]/page.tsx
+// generateStaticParams govori Next.js-u koje stranice da pre-renderuje u vreme build-a
+
+export async function generateStaticParams() {
+  const posts = await fetch("https://api.example.com/posts").then((res) =>
+    res.json()
+  );
+
+  return posts.map((post: { slug: string }) => ({ slug: post.slug }));
+}
+
+export default async function BlogPost({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const post = await fetch(`https://api.example.com/posts/${params.slug}`).then(
+    (res) => res.json()
+  );
+
+  return (
+    <article className="mx-auto max-w-2xl px-4 py-12">
+      <h1 className="text-3xl font-bold">{post.title}</h1>
+      <div
+        className="prose mt-8"
+        dangerouslySetInnerHTML={{ __html: post.content }}
+      />
+    </article>
+  );
+}
+```
+
+**Kada koristiti SSG:**
+- Blog postovi, dokumentacija, marketing stranice
+- Stranice proizvoda koje se retko menjaju
+- Bilo koji sadržaj gde je prihvatljiva svežina u okviru sati/dana
+
+**SEO uticaj:** Odličan — najbrži mogući TTFB, savršeni Core Web Vitals, Googlebot odmah dobija kompletan HTML. Caveat: sadržaj se ažurira samo kada ponovo deployuješ. Za sajt sa 500 stranica, kompletan rebuild zahteva vreme.
+
+---
+
+### ISR — Incremental Static Regeneration
+
+ISR je mesto gde se Next.js zaista diferencira. Stranice se statično generišu kao kod SSG-a, ali se automatski regenerišu u pozadini nakon određenog vremenskog intervala — bez kompletnog redeployanja.
+
+```tsx
+// app/products/[slug]/page.tsx
+// Revalidacija svakih 3600 sekundi (1 sat)
+
+export const revalidate = 3600;
+
+export default async function ProductPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const product = await fetch(`https://api.example.com/products/${params.slug}`, {
+    next: { revalidate: 3600 },
+  }).then((res) => res.json());
+
+  return (
+    <article className="mx-auto max-w-3xl px-4 py-12">
+      <h1 className="text-3xl font-bold">{product.name}</h1>
+      <p className="mt-4 text-gray-600">{product.description}</p>
+      <p className="mt-6 text-2xl font-semibold">{product.price} RSD</p>
+    </article>
+  );
+}
+```
+
+Prvi posetilac nakon isteka revalidacionog prozora okida pozadinsku regeneraciju. Oni dobijaju blago zastarelu kešovanu verziju — ali sledeći posetilac dobija svežu. Nula downtime-a, bez kompletnog rebuilda.
+
+Za revalidaciju na zahtev (kada se proizvod ažurira u tvom CMS-u), koristi `revalidateTag`:
+
+```tsx
+// app/api/revalidate/route.ts
+import { revalidateTag } from "next/cache";
+import { NextRequest } from "next/server";
+
+export async function POST(req: NextRequest) {
+  const { tag, secret } = await req.json();
+
+  if (secret !== process.env.REVALIDATION_SECRET) {
+    return Response.json({ error: "Neovlašćen pristup" }, { status: 401 });
+  }
+
+  revalidateTag(tag); // npr. revalidateTag("products")
+  return Response.json({ revalidated: true });
+}
+```
+
+**Kada koristiti ISR:**
+- Stranice e-commerce proizvoda (cene i zalihe se menjaju, ali ne svake sekunde)
+- Blog postovi koji mogu biti uređivani nakon objavljivanja
+- Bilo koji sadržajni sajt gde hoćeš statičke performanse sa dinamičnom svežinom
+
+**SEO uticaj:** Najbolje od oba sveta. Google konzistentno dobija brz, kompletan HTML. Sadržaj ostaje svež bez rebuild ciklusa. Ovo je naša podrazumevana preporuka u Atonize-u za većinu sadržajnih stranica.
+
+---
+
+## Kako odabrati pravu strategiju: Okvir za odlučivanje
+
+```
+Da li je sadržaj korisnički specifičan ili zahteva autentikaciju?
+  └─ DA → SSR (ili preskoči renderovanje, koristi Client Component)
+  └─ NE ↓
+
+Da li se sadržaj menja češće nego svakih nekoliko minuta?
+  └─ DA → SSR sa cache: "no-store"
+  └─ NE ↓
+
+Da li se sadržaj uopšte menja nakon objavljivanja?
+  └─ DA → ISR (postavi revalidate prema učestalosti promena)
+  └─ NE → SSG (generateStaticParams, rebuild pri novom sadržaju)
+```
+
+U praksi, većina Next.js aplikacija koristi sve tri — SSG za marketing stranice, ISR za stranice proizvoda/sadržaja, SSR za autentifikovane dashboard-e.
+
+---
+
+## SEO & Greške u Indeksiranju
+
+### 1. Korišćenje `"use client"` na stranicama koje treba da budu indeksirane
+
+Ovo je najskuplja greška. Komponenta stranice označena sa `"use client"` šalje prazan HTML shell i delegira renderovanje browseru — tačno isti problem kao čisti React. **Nikada ne stavljaj `"use client"` na komponentu na nivou stranice** koja treba organski saobraćaj iz pretrage.
+
+### 2. Previsoko postavljanje revalidate
+
+```tsx
+// ❌ Sadržaj se ažurira nedeljno, ali Google vidi stranice stare mesec dana
+export const revalidate = 2592000; // 30 dana
+
+// ✅ Uskladi revalidaciju sa stvarnom učestalošću ažuriranja sadržaja
+export const revalidate = 86400; // 24 sata
+```
+
+Googlebot ponovo crawluje stranice na osnovu toga koliko često detektuje promene. Zastarele ISR stranice signaliziraju nisku svežinu i smanjuju učestalost ponovnog crawlanja — problem koji se kumulativno pogoršava.
+
+### 3. Nedosledno mešanje strategija renderovanja
+
+Stranica listinga proizvoda na ISR koja linkuje ka stranicama detalja proizvoda na SSR kreira nedoslednu percipiranu svežinu. Googlebot efikasno alocira crawl budget kada tipovi stranica u istoj sekciji ponašaju dosledno. Drži strategije renderovanja konzistentnim unutar sadržajnih sekcija.
+
+### 4. Nepostavljanje eksplicitnog cache ponašanja u Next.js 15+
+
+Next.js 15 je promenio podrazumevano ponašanje fetch cache-a — fetch-ovi **više nisu kešovani po defaultu**. Ako upgraduješ sa Next.js 14 i ne postaviš eksplicitno `next: { revalidate }` ili `cache: "force-cache"`, tvoje ISR stranice tiho postaju SSR stranice. Uvek budi eksplicitan.
+
+### 5. Zaboravljanje `generateStaticParams` za dinamične SSG rute
+
+Bez `generateStaticParams`, Next.js pada nazad na renderovanje dinamičnih ruta na zahtev umesto u vreme build-a. Stranice i dalje rade — ali nisu pre-renderovane, što poništava SSG strategiju.
+
+---
+
+## Često Postavljana Pitanja (FAQ)
+
+### Koja je razlika između SSR i ISR u Next.js-u?
+
+SSR renderuje svežu stranicu na svaki pojedinačni zahtev — server radi za svakog posetiioca. ISR renderuje stranicu jednom, kešuje je kao statični HTML, a zatim je regeneriše u pozadini nakon određenog intervala. Za SEO svrhe, oba dostavljaju kompletan HTML Googlebot-u — ali ISR je značajno brži jer servira kešovane fajlove umesto računanja odgovora po zahtevu.
+
+### Da li je ISR bolji od SSG za SEO?
+
+Za većinu sajtova, da. SSG je tehnički najbrži, ali zahteva kompletan redeploy svaki put kada se sadržaj promeni. ISR daje ekvivalentne performanse sa automatskom svežinom sadržaja — Googlebot vidi ažurirani sadržaj unutar tvog revalidacionog prozora bez ikakvog deployovanja. Izuzetak je zaista statični sadržaj (dokumentacija, evergreen marketing stranice) gde je SSG pravi izbor.
+
+### Da li Next.js ISR radi na svakom hosting provajderu?
+
+ISR zahteva serversku infrastrukturu za pozadinsku regeneraciju — ne radi na čisto statičnim hostovima kao što je GitHub Pages. Radi nativno na Vercel-u, podržan je na self-hosted Node.js deploymentima, Netlify-u i većini modernih hosting platformi.
+
+### Kako se Next.js poredi sa Astro ili Gatsby za SEO?
+
+Astro je odličan za čisto sadržajne sajtove — po defaultu šalje nula JavaScript-a, što je idealno za blogove i dokumentaciju. Gatsby ima jaku SSG podršku ali je opao u popularnosti. Next.js pobjeđuje kada ti treba mešavina statičnog sadržaja, dinamičnih funkcionalnosti i full-stack arhitekture u jednom frameworku — što opisuje većinu B2B SaaS proizvoda koje gradimo u Atonize-u.
+
+---

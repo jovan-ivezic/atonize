@@ -5,10 +5,44 @@ import { getAllCategorySlugs, getPostsByCategorySlug } from '../../../../../lib/
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 
-export const metadata = {
-  title: 'Insights - Jovan Ivezić',
-  description: 'Articles about front-end development, React, Next.js, and clean code.',
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string, categorySlug: string }> }) {
+  const { locale, categorySlug } = await params;
+  const t = await getTranslations({ locale, namespace: 'Insights' });
+  
+  let categoryName = '';
+  let enSlug = categorySlug;
+  let srSlug = categorySlug;
+
+  if (categorySlug === t('filters.engineering_slug')) {
+    categoryName = t('filters.engineering');
+    enSlug = 'engineering';
+    srSlug = 'inzenjering';
+  } else if (categorySlug === t('filters.product_slug')) {
+    categoryName = t('filters.product');
+    enSlug = 'product';
+    srSlug = 'proizvod';
+  } else if (categorySlug === t('filters.design_slug')) {
+    categoryName = t('filters.design');
+    enSlug = 'design';
+    srSlug = 'dizajn';
+  } else {
+    categoryName = categorySlug;
+  }
+
+  const tSeo = await getTranslations({ locale, namespace: 'SEO' });
+
+  return {
+    title: `${tSeo('insights_title')} | ${categoryName}`,
+    description: tSeo('insights_description'),
+    alternates: {
+      canonical: locale === 'sr' ? `/sr/uvidi/kategorija/${categorySlug}` : `/en/insights/category/${categorySlug}`,
+      languages: {
+        'en': `/en/insights/category/${enSlug}`,
+        'sr': `/sr/uvidi/kategorija/${srSlug}`,
+      },
+    },
+  };
+}
 
 export async function generateStaticParams() {
   // Ovo omogućava SSG za kategorije (generiše rute za sve dostupne slugove)
