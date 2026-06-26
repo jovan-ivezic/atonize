@@ -29,3 +29,5 @@ deploy.config.sh
 *.sw?
 public/portfolio/*
 !public/portfolio/images/
+
+/src/generated/prisma

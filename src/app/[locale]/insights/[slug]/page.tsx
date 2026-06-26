@@ -1,4 +1,4 @@
-import { getPostBySlug, getAllPostsMeta, getPostsInSeries, getPostByTranslationKey } from '../../../../lib/mdx';
+import { getPostBySlug, getAllPostsMeta, getPostsInSeries, getPostByPostId } from '../../../../lib/mdx';
 import { MDXRemote } from 'next-mdx-remote/rsc';
 import SeriesNavigation from '../../../../components/SeriesNavigation';
 import Navbar from '../../../../components/Navbar';
@@ -9,21 +9,22 @@ import { setRequestLocale } from 'next-intl/server';
 import { AlternateLocalesRegister } from '../../../../components/AlternateLocalesRegister';
 
 export async function generateStaticParams() {
-  const posts = getAllPostsMeta('en');
+  const posts = await getAllPostsMeta('en');
   return posts.map((post) => ({ slug: post.slug }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string, locale: string }> }) {
   const { slug, locale } = await params;
   try {
-    const { meta } = getPostBySlug(slug, locale);
+    const { meta } = await getPostBySlug(slug, locale);
     
-    let enSlug = slug;
-    let srSlug = slug;
+    const otherLocale = locale === 'en' ? 'sr' : 'en';
+    let enSlug = locale === 'en' ? slug : '';
+    let srSlug = locale === 'sr' ? slug : '';
     
-    if (meta.translationKey) {
-      const otherLocale = locale === 'en' ? 'sr' : 'en';
-      const otherPost = getPostByTranslationKey(meta.translationKey, otherLocale);
+    // Find the corresponding translation slug via postId
+    if (meta.id) {
+      const otherPost = await getPostByPostId(meta.id, otherLocale);
       if (otherPost) {
         if (locale === 'en') srSlug = otherPost.slug;
         else enSlug = otherPost.slug;
@@ -41,8 +42,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       alternates: {
         canonical: locale === 'sr' ? `/sr/uvidi/${slug}` : `/en/insights/${slug}`,
         languages: {
-          'en': `/en/insights/${enSlug}`,
-          'sr': `/sr/uvidi/${srSlug}`,
+          'en': enSlug ? `/en/insights/${enSlug}` : undefined,
+          'sr': srSlug ? `/sr/uvidi/${srSlug}` : undefined,
         },
       },
     };
@@ -118,7 +119,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
   let post;
   
   try {
-    post = getPostBySlug(slug, locale);
+    post = await getPostBySlug(slug, locale);
   } catch (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#fafafa]">
@@ -137,9 +138,9 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
     [locale]: { slug: post.slug }
   };
 
-  if (post.meta.translationKey) {
+  if (post.meta.id) {
     const otherLocale = locale === 'en' ? 'sr' : 'en';
-    const otherPost = getPostByTranslationKey(post.meta.translationKey, otherLocale);
+    const otherPost = await getPostByPostId(post.meta.id, otherLocale);
     if (otherPost) {
       alternates[otherLocale] = { slug: otherPost.slug };
     }
@@ -189,7 +190,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                 {post.meta.series && (
                   <SeriesNavigation 
                     seriesName={post.meta.series} 
-                    posts={getPostsInSeries(post.meta.series, locale)} 
+                    posts={await getPostsInSeries(post.meta.series, locale)} 
                     currentSlug={post.slug} 
                   />
                 )}
@@ -202,7 +203,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
               {post.meta.series && (
                 <SeriesNavigation 
                   seriesName={post.meta.series} 
-                  posts={getPostsInSeries(post.meta.series, locale)} 
+                  posts={await getPostsInSeries(post.meta.series, locale)} 
                   currentSlug={post.slug} 
                 />
               )}

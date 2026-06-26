@@ -1,0 +1,493 @@
+---
+title: "Data Fetching, ISR & Caching Strategies in Next.js 16"
+date: "2026-06-25"
+category: "Engineering"
+slug: "data-fetching-isr-caching-nextjs16"
+translationKey: "data-fetching-isr-caching-nextjs16"
+icon: "⚡"
+excerpt: "Learn how to choose the right data fetching strategy for your Next.js application — from SSG and ISR to SSR and client-side fetching — with a practical decision framework based on catalog size, a real B2B case study, and the caching pitfalls that silently break production apps."
+series: "Next.js & Modern Web"
+seriesOrder: 5
+---
+
+# Data Fetching, ISR & Caching Strategies in Next.js 16
+
+> **TL;DR — Key Takeaways**
+> - There is no single "best" data fetching strategy — the right choice depends on your content type, catalog size, and update frequency
+> - ISR is the default recommendation for most content pages, but it breaks silently when `searchParams` or `useSearchParams` are present in the route
+> - For product catalogs, choose your strategy based on size: under ~100 items use SSG with all items in DOM; 100-500 use ISR with client-side filtering; 500+ use SSR with URL-based filtering
+> - Next.js 15+ changed default fetch caching behavior — fetches are no longer cached by default, explicit configuration is required
+> - `revalidateTag` is the most precise cache invalidation tool — use it over time-based revalidation wherever your CMS or database can send webhooks
+
+---
+
+## The Core Question: Who Fetches the Data, and When?
+
+Every data fetching decision in Next.js comes down to three variables: who fetches the data, when they fetch it, and how long the result is cached.
+
+Getting this wrong has compounding consequences — slow pages, wasted server resources, poor Lighthouse scores, and most critically for content sites, slow or incomplete Google indexing.
+
+Let's start with the complete picture of what's available, then build a decision framework.
+
+---
+
+## The Four Data Fetching Strategies
+
+### 1. SSG — Static Site Generation
+
+Data is fetched **once at build time**. The result is baked into a static HTML file and served to every visitor from a CDN.
+
+```tsx
+// app/[locale]/blog/[slug]/page.tsx
+// No cache option = uses Next.js default (force-cache in build context)
+
+export async function generateStaticParams() {
+  const posts = await fetch("https://cms.example.com/api/posts")
+    .then((res) => res.json());
+
+  return posts.map((post: { slug: string }) => ({ slug: post.slug }));
+}
+
+export default async function BlogPost({ params }: { params: { slug: string } }) {
+  const post = await fetch(`https://cms.example.com/api/posts/${params.slug}`)
+    .then((res) => res.json());
+
+  return (
+    <article className="prose mx-auto max-w-3xl px-4 py-12">
+      <h1>{post.title}</h1>
+      <div dangerouslySetInnerHTML={{ __html: post.content }} />
+    </article>
+  );
+}
+```
+
+**Best for:** Documentation, evergreen marketing pages, content that never changes after publishing.
+
+**SEO impact:** Excellent. Fastest possible TTFB, perfect Core Web Vitals, Googlebot gets full HTML instantly.
+
+**The catch:** Content only updates on redeploy. For a 200-page site this is a 2-3 minute rebuild on every content change.
+
+---
+
+### 2. ISR — Incremental Static Regeneration
+
+Pages are statically generated like SSG, but automatically regenerate in the background after a set interval — no redeploy needed.
+
+```tsx
+// app/[locale]/destinations/[country]/[city]/page.tsx
+export const revalidate = 3600; // Regenerate every hour
+
+export default async function DestinationPage({
+  params,
+}: {
+  params: { country: string; city: string };
+}) {
+  const destination = await fetch(
+    `https://api.example.com/destinations/${params.country}/${params.city}`,
+    { next: { revalidate: 3600, tags: [`destination-${params.city}`] } }
+  ).then((res) => res.json());
+
+  return (
+    <main className="mx-auto max-w-5xl px-4 py-12">
+      <h1 className="text-4xl font-bold">{destination.name}</h1>
+      <p className="mt-4 text-lg text-gray-600">{destination.description}</p>
+    </main>
+  );
+}
+```
+
+**Best for:** Product pages, destination guides, blog posts that get edited after publishing, any content where hourly or daily freshness is acceptable.
+
+**SEO impact:** Best of both worlds — static-speed delivery with automatic freshness. Our default recommendation at Atonize for content-heavy pages.
+
+**The catch:** Silently breaks when `searchParams` are present. More on this below.
+
+---
+
+### 3. SSR — Server-Side Rendering
+
+A fresh page is generated on every single request. No caching, always current.
+
+```tsx
+// app/[locale]/search/page.tsx
+export default async function SearchPage({
+  searchParams,
+}: {
+  searchParams: { q?: string; page?: string };
+}) {
+  const query = searchParams.q ?? "";
+  const page = Number(searchParams.page ?? 1);
+
+  const results = await fetch(
+    `https://api.example.com/search?q=${query}&page=${page}`,
+    { cache: "no-store" }
+  ).then((res) => res.json());
+
+  return (
+    <div className="mx-auto max-w-5xl px-4 py-12">
+      <h1 className="text-2xl font-bold">
+        Results for: <span className="text-blue-600">{query}</span>
+      </h1>
+      <p className="mt-1 text-sm text-gray-500">{results.total} results found</p>
+      {/* results list */}
+    </div>
+  );
+}
+```
+
+**Best for:** Search pages, user dashboards, real-time data, any page where content is unique per request.
+
+**SEO impact:** Good for indexing (Googlebot gets full HTML), but TTFB depends entirely on your server and database response time. Every millisecond of database latency becomes visible to users and Googlebot.
+
+---
+
+### 4. Client-Side Fetching
+
+Data is fetched in the browser after the page loads, using hooks or libraries like SWR or TanStack Query.
+
+```tsx
+// components/LiveInventory.tsx — appropriate for real-time data
+"use client";
+
+import useSWR from "swr";
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
+export function LiveInventory({ productId }: { productId: string }) {
+  const { data, isLoading } = useSWR(
+    `/api/inventory/${productId}`,
+    fetcher,
+    { refreshInterval: 30000 } // Poll every 30 seconds
+  );
+
+  if (isLoading) return <span className="text-gray-400">Checking...</span>;
+
+  return (
+    <span className={data?.inStock ? "text-green-600" : "text-red-500"}>
+      {data?.inStock ? `${data.quantity} in stock` : "Out of stock"}
+    </span>
+  );
+}
+```
+
+**Best for:** Real-time data (stock levels, live prices), user-specific content loaded after auth, data that should not be cached or pre-rendered.
+
+**SEO impact:** None — Googlebot does not index client-fetched content. Never use client-side fetching for content that needs to be indexed.
+
+---
+
+## The Decision Framework: Choosing by Catalog Size
+
+The most common confusion we see in B2B projects is applying ISR or SSG to scenarios that actually need SSR, and vice versa. Here is the framework we use at Atonize:
+
+### Small Catalog (under ~100 items)
+
+**Strategy: SSG or ISR, render all items at once**
+
+This is the approach we took on a B2B industrial components platform with exactly 40 products. Instead of implementing pagination or lazy loading, we simply rendered all products in a single static page.
+
+```tsx
+// app/[locale]/products/page.tsx
+export const revalidate = 3600;
+
+export default async function ProductsPage() {
+  // Fetch ALL products — no pagination, no limit
+  const products = await fetch("https://api.example.com/products", {
+    next: { revalidate: 3600, tags: ["products"] },
+  }).then((res) => res.json());
+
+  return (
+    <div>
+      {/* Client component receives ALL products as props */}
+      <ProductGrid products={products} />
+    </div>
+  );
+}
+```
+
+```tsx
+// components/ProductGrid.tsx
+"use client";
+
+import { useState, useMemo } from "react";
+
+export function ProductGrid({ products }: { products: Product[] }) {
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
+  const filtered = useMemo(
+    () =>
+      activeCategory
+        ? products.filter((p) => p.category === activeCategory)
+        : products,
+    [products, activeCategory]
+  );
+
+  return (
+    <div>
+      {/* Category filters — instant, no network request */}
+      <div className="flex flex-wrap gap-2 mb-8">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setActiveCategory(cat === activeCategory ? null : cat)}
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+              activeCategory === cat
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      {/* All products rendered in DOM — perfect for Googlebot */}
+      <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {filtered.map((product) => (
+          <li key={product.id}>
+            <a href={`/products/${product.slug}`}>
+              <ProductCard product={product} />
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+**Why this wins for small catalogs:**
+
+- ISR is fully preserved — `searchParams` never touches this route
+- All `<a href>` links are in the HTML — Googlebot discovers every product page
+- Client-side filtering is instant (0ms) — all data is already in memory
+- Zero "orphaned content" — no products hidden behind a "Load More" button that Googlebot can't click
+
+The DOM is marginally heavier with 40 products vs 12, but the difference is negligible (a few kilobytes) compared to the architectural benefits.
+
+### Medium Catalog (100–500 items)
+
+**Strategy: ISR + client-side filtering, with pagination if needed**
+
+For this range, all items can still be loaded into memory, but you need to be careful about initial page weight. Consider loading product cards with minimal data (name, slug, category, thumbnail) and fetching full details only on the product page.
+
+If pagination is needed, use path-based pagination to preserve ISR:
+
+```tsx
+// app/[locale]/products/page/[pageNumber]/page.tsx
+export async function generateStaticParams() {
+  const { totalPages } = await fetch("https://api.example.com/products/meta")
+    .then((res) => res.json());
+
+  return Array.from({ length: totalPages }, (_, i) => ({
+    pageNumber: String(i + 1),
+  }));
+}
+
+export const revalidate = 3600;
+
+export default async function ProductsPage({
+  params,
+}: {
+  params: { pageNumber: string };
+}) {
+  const page = Number(params.pageNumber);
+  const { products, totalPages } = await fetch(
+    `https://api.example.com/products?page=${page}&limit=24`,
+    { next: { revalidate: 3600 } }
+  ).then((res) => res.json());
+
+  return <ProductGrid products={products} currentPage={page} totalPages={totalPages} />;
+}
+```
+
+**SEO note for paginated pages:** Pages 2, 3, 4... should have `noindex, follow` and a canonical pointing to page 1. They exist as crawl bridges for Googlebot, not as indexable destinations.
+
+```tsx
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const page = Number(params.pageNumber);
+
+  if (page > 1) {
+    return {
+      robots: { index: false, follow: true },
+      alternates: {
+        canonical: `${process.env.NEXT_PUBLIC_BASE_URL}/en/products`,
+      },
+    };
+  }
+
+  return {
+    title: "Products — Our Catalog",
+  };
+}
+```
+
+### Large Catalog (500+ items)
+
+**Strategy: SSR with URL-based filtering and pagination**
+
+At this scale, loading all items into memory is not feasible. ISR is also not practical — too many unique URL combinations. SSR with server-side filtering is the only scalable approach.
+
+```tsx
+// app/[locale]/products/page.tsx
+// No revalidate — this is full SSR
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: { category?: string; page?: string; q?: string };
+}) {
+  const { products, total, totalPages } = await fetch(
+    `https://api.example.com/products?${new URLSearchParams({
+      category: searchParams.category ?? "",
+      page: searchParams.page ?? "1",
+      q: searchParams.q ?? "",
+      limit: "24",
+    })}`,
+    { cache: "no-store" }
+  ).then((res) => res.json());
+
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-12">
+      <ProductFilters activeCategory={searchParams.category} />
+      <p className="text-sm text-gray-500">{total} products found</p>
+      <ProductGrid products={products} />
+      <Pagination currentPage={Number(searchParams.page ?? 1)} totalPages={totalPages} />
+    </div>
+  );
+}
+```
+
+Accept the SSR trade-off consciously. The TTFB will be higher than ISR, but for 500+ products there is no alternative that maintains both SEO and usability.
+
+---
+
+## The ISR Silent Killers
+
+### Silent Killer 1: searchParams in Server Components
+
+As we covered in [RSC Architecture & Crawlability](/insights/rsc-architecture-crawlability), accessing `searchParams` in a Server Component degrades the entire route from static to dynamic.
+
+```tsx
+// ❌ This silently converts ISR → SSR for the entire route
+export default async function ProductsPage({ searchParams }) {
+  const category = searchParams.category; // Route is now dynamic
+  // ...
+}
+
+// ✅ If you need URL params on an ISR page, restructure
+// Put filtering logic in a client component that receives all data as props
+```
+
+Check your build output. If a route you intended as ISR (`●`) shows as dynamic (`ƒ`), `searchParams` is the most likely culprit.
+
+### Silent Killer 2: Next.js 15+ Default Cache Change
+
+In Next.js 14 and earlier, `fetch()` was cached by default. In Next.js 15+, **fetch is no longer cached by default**. If you migrated from v14 without updating your fetch calls, your ISR pages silently became SSR pages.
+
+```tsx
+// Next.js 14 — cached by default
+const data = await fetch("https://api.example.com/products");
+
+// Next.js 15+ — NOT cached by default, must be explicit
+const data = await fetch("https://api.example.com/products", {
+  next: { revalidate: 3600 }, // ISR behavior
+  // OR
+  cache: "force-cache",        // SSG behavior
+  // OR
+  cache: "no-store",           // SSR behavior
+});
+```
+
+Always be explicit about cache behavior. Implicit behavior changes between versions — explicit behavior does not.
+
+### Silent Killer 3: "use client" on the Page Component
+
+A page component marked `"use client"` receives no server-side rendering benefit. The HTML shell is empty, ISR is pointless, and Googlebot sees nothing on the first pass. We covered this in depth in [RSC Architecture & Crawlability](/insights/rsc-architecture-crawlability) — never put `"use client"` on a `page.tsx`.
+
+---
+
+## On-Demand Revalidation with revalidateTag
+
+Time-based revalidation (`revalidate: 3600`) means your content can be stale for up to an hour. For most content this is acceptable. For product pricing, stock levels, or breaking news, it isn't.
+
+`revalidateTag` lets you invalidate specific cache entries immediately when data changes — triggered from a webhook in your CMS or database.
+
+```tsx
+// app/api/revalidate/route.ts
+import { revalidateTag } from "next/cache";
+import { NextRequest } from "next/server";
+
+export async function POST(req: NextRequest) {
+  const { tag, secret } = await req.json();
+
+  if (secret !== process.env.REVALIDATION_SECRET) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  revalidateTag(tag);
+  return Response.json({ revalidated: true, tag });
+}
+```
+
+Tag your fetches, then invalidate by tag when data changes:
+
+```tsx
+// Tag the fetch
+await fetch(`https://api.example.com/products/${slug}`, {
+  next: {
+    revalidate: 86400,              // Fallback: revalidate daily
+    tags: [`product-${slug}`],      // Precise tag for on-demand invalidation
+  },
+});
+
+// When the product is updated in your CMS, it calls:
+// POST /api/revalidate { tag: "product-industrial-valve-42", secret: "..." }
+// That single product page is immediately regenerated — nothing else is touched
+```
+
+This is the production-grade pattern. Time-based revalidation is a safety net; tag-based revalidation is the primary mechanism.
+
+---
+
+## SEO & Indexing Pitfalls
+
+### 1. "Orphaned content" behind Load More buttons
+
+A "Load More" button implemented with client-side state means only the initially loaded items have `<a href>` links in the HTML. Googlebot cannot click buttons — it only follows `<a href>` links. Every product or post hidden behind that button is invisible to Google.
+
+The fix depends on catalog size: for small catalogs, render everything. For large catalogs, use real pagination with `<a href>` links to page URLs.
+
+### 2. Dynamic query parameters creating infinite URL variations
+
+```
+/accommodation?city=Hvar&checkin=2026-05-09&checkout=2026-05-16
+/accommodation?city=Hvar&checkin=2026-05-10&checkout=2026-05-17
+```
+
+Date parameters create effectively infinite unique URLs. Googlebot discovers and attempts to crawl all of them, consuming crawl budget with no indexing value. In Google Search Console, tell Google to ignore specific parameters, or restructure URLs to use path segments for indexable parameters and hash fragments for UI state.
+
+### 3. Not setting revalidate explicitly in Next.js 15+
+
+After upgrading from Next.js 14, audit every `fetch()` call in Server Components. The silent switch from cached to uncached can turn your entire ISR site into an SSR site overnight — with no error messages, just slower pages and higher server load.
+
+---
+
+## Frequently Asked Questions (FAQ)
+
+### When should I use ISR vs SSR for a product catalog?
+
+The primary factor is catalog size. Under ~100 products, use ISR and render everything. 100–500 products, use ISR with client-side filtering. 500+ products, accept SSR — it's the only approach that handles filtering and pagination at scale without breaking ISR. The secondary factor is update frequency: if product data changes by the minute (live stock, live pricing), SSR is necessary regardless of size.
+
+### Does Next.js ISR work with databases, or only with external APIs?
+
+ISR works with any async data source — databases, REST APIs, GraphQL, CMSes. The data source doesn't matter; what matters is that the fetch is done in a Server Component and cache behavior is explicitly configured. Database queries in Server Components are treated the same as `fetch()` calls from a caching perspective when wrapped in Next.js's `unstable_cache`.
+
+### What is the difference between revalidate and cache: "force-cache"?
+
+`cache: "force-cache"` means cache forever — the data is fetched once and never automatically refreshed (equivalent to SSG). `next: { revalidate: N }` means cache for N seconds, then regenerate in the background on the next request after the interval expires (ISR behavior). Use `force-cache` for truly static data; use `revalidate` for data that changes but doesn't need to be real-time.
+
+### How do I handle loading states for ISR pages?
+
+ISR pages serve cached HTML instantly — there is no loading state for the initial render. Loading states (`loading.tsx`) are relevant for the streaming portions of the page that use `Suspense` for secondary data fetches. If your ISR page shows a loading state to users, it means either the cache hasn't been warmed yet (first visitor after revalidation) or a secondary fetch inside `Suspense` is still resolving.
+
+---

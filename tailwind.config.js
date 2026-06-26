@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: [
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
@@ -42,6 +43,20 @@ export default {
         'on-error-container': '#93000a',
         background: '#faf8ff',
         'on-background': '#131b2e',
+        'brand': {
+          50: '#ecf3ff',
+          100: '#dde9ff',
+          200: '#c2d6ff',
+          300: '#9cb9ff',
+          400: '#7592ff',
+          500: '#465fff',
+          600: '#3641f5',
+          700: '#2a31d8',
+          800: '#252dae',
+          900: '#262e89',
+          950: '#161950',
+        },
+        'gray-dark': '#1a2231',
       },
       fontFamily: {
         'headline-xl': ['Playfair Display', 'serif'],
@@ -52,6 +67,11 @@ export default {
         'label-caps': ['Hanken Grotesk', 'sans-serif'],
         'label-sm': ['Hanken Grotesk', 'sans-serif'],
       },
+      fontSize: {
+        'theme-xs': ['12px', '18px'],
+        'theme-sm': ['14px', '20px'],
+        'theme-xl': ['20px', '30px'],
+      },
       borderRadius: {
         sm: '0.125rem',
         DEFAULT: '0.25rem',
@@ -59,6 +79,13 @@ export default {
         lg: '0.5rem',
         xl: '0.75rem',
         full: '9999px',
+      },
+      boxShadow: {
+        'theme-xs': '0px 1px 2px 0px rgba(16, 24, 40, 0.05)',
+        'theme-sm': '0px 1px 3px 0px rgba(16, 24, 40, 0.1), 0px 1px 2px 0px rgba(16, 24, 40, 0.06)',
+        'theme-md': '0px 4px 8px -2px rgba(16, 24, 40, 0.1), 0px 2px 4px -2px rgba(16, 24, 40, 0.06)',
+        'theme-lg': '0px 12px 16px -4px rgba(16, 24, 40, 0.08), 0px 4px 6px -2px rgba(16, 24, 40, 0.03)',
+        'theme-xl': '0px 20px 24px -4px rgba(16, 24, 40, 0.08), 0px 8px 8px -4px rgba(16, 24, 40, 0.03)',
       },
       spacing: {
         unit: '4px',

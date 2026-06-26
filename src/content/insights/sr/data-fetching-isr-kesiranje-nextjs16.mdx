@@ -1,0 +1,491 @@
+---
+title: "Data Fetching, ISR i Caching Strategije u Next.js 16"
+date: "2026-06-25"
+category: "Engineering"
+slug: "data-fetching-isr-kesiranje-nextjs16"
+translationKey: "data-fetching-isr-caching-nextjs16"
+icon: "⚡"
+excerpt: "Saznaj kako odabrati pravu strategiju za dohvatanje podataka u Next.js aplikaciji — od SSG i ISR do SSR i klijentskog fetchinga — sa praktičnim decision framework-om zasnovanim na veličini kataloga, realnim B2B case study-jem i caching zamkama koje tiho kvare produkcijske aplikacije."
+series: "Next.js & Modern Web"
+seriesOrder: 5
+---
+
+# Data Fetching, ISR i Caching Strategije u Next.js 16
+
+> **TL;DR — Ključni Uvidi**
+> - Ne postoji jedna "najbolja" strategija za dohvatanje podataka — pravi izbor zavisi od tipa sadržaja, veličine kataloga i učestalosti ažuriranja
+> - ISR je podrazumevana preporuka za većinu sadržajnih stranica, ali tiho prestaje da radi kada su `searchParams` ili `useSearchParams` prisutni u ruti
+> - Za kataloge proizvoda, biraj strategiju prema veličini: ispod ~100 stavki koristi SSG sa svim stavkama u DOM-u; 100-500 koristi ISR sa klijentskim filterovanjem; 500+ koristi SSR sa URL-baziranim filterovanjem
+> - Next.js 15+ je promenio podrazumevano ponašanje fetch cachea — fetch-ovi više nisu keširani po defaultu, eksplicitna konfiguracija je obavezna
+> - `revalidateTag` je najprecizniji alat za invalidaciju keša — koristi ga umesto vremenski baziranog revalidiranja gde god tvoj CMS ili baza mogu slati webhook-ove
+
+---
+
+## Osnovno Pitanje: Ko Dohvata Podatke i Kada?
+
+Svaka odluka o dohvatanju podataka u Next.js svodi se na tri promenljive: ko dohvata podatke, kada ih dohvata i koliko dugo se rezultat kešira.
+
+Pogrešan izbor ima kumulativne posledice — spore stranice, rasipanje serverskih resursa, loši Lighthouse score-ovi i, što je najkritičnije za sadržajne sajtove, sporo ili nepotpuno Google indeksiranje.
+
+Počnimo sa kompletnom slikom svega što je dostupno, zatim izgradimo decision framework.
+
+---
+
+## Četiri Strategije za Dohvatanje Podataka
+
+### 1. SSG — Static Site Generation
+
+Podaci se dohvataju **jednom u vreme build-a**. Rezultat se ugrađuje u statički HTML fajl i servira svakom posetiocu sa CDN-a.
+
+```tsx
+// app/[locale]/blog/[slug]/page.tsx
+
+export async function generateStaticParams() {
+  const posts = await fetch("https://cms.example.com/api/posts")
+    .then((res) => res.json());
+
+  return posts.map((post: { slug: string }) => ({ slug: post.slug }));
+}
+
+export default async function BlogPost({ params }: { params: { slug: string } }) {
+  const post = await fetch(`https://cms.example.com/api/posts/${params.slug}`)
+    .then((res) => res.json());
+
+  return (
+    <article className="prose mx-auto max-w-3xl px-4 py-12">
+      <h1>{post.title}</h1>
+      <div dangerouslySetInnerHTML={{ __html: post.content }} />
+    </article>
+  );
+}
+```
+
+**Najbolje za:** Dokumentaciju, evergreen marketing stranice, sadržaj koji se nikada ne menja nakon objavljivanja.
+
+**SEO uticaj:** Odličan. Najbrži mogući TTFB, savršeni Core Web Vitals, Googlebot odmah dobija kompletan HTML.
+
+**Zamka:** Sadržaj se ažurira samo pri redeployovanju. Za sajt sa 200 stranica, ovo je rebuild od 2-3 minuta pri svakoj promeni sadržaja.
+
+---
+
+### 2. ISR — Incremental Static Regeneration
+
+Stranice se statički generišu kao kod SSG-a, ali se automatski regenerišu u pozadini nakon određenog intervala — bez potrebe za redeployovanjem.
+
+```tsx
+// app/[locale]/destinations/[country]/[city]/page.tsx
+export const revalidate = 3600; // Regeneriši svakog sata
+
+export default async function DestinationPage({
+  params,
+}: {
+  params: { country: string; city: string };
+}) {
+  const destination = await fetch(
+    `https://api.example.com/destinations/${params.country}/${params.city}`,
+    { next: { revalidate: 3600, tags: [`destination-${params.city}`] } }
+  ).then((res) => res.json());
+
+  return (
+    <main className="mx-auto max-w-5xl px-4 py-12">
+      <h1 className="text-4xl font-bold">{destination.name}</h1>
+      <p className="mt-4 text-lg text-gray-600">{destination.description}</p>
+    </main>
+  );
+}
+```
+
+**Najbolje za:** Stranice proizvoda, vodiče za destinacije, blog postove koji se uređuju nakon objavljivanja, bilo koji sadržaj gde je satna ili dnevna svežina prihvatljiva.
+
+**SEO uticaj:** Najbolje od oba sveta — isporuka brzinom statičnih stranica sa automatskom svežinom. Naša podrazumevana preporuka u Atonize-u za stranice bogate sadržajem.
+
+**Zamka:** Tiho prestaje da radi kada su `searchParams` prisutni. Više o ovome ispod.
+
+---
+
+### 3. SSR — Server-Side Rendering
+
+Svežа stranica se generiše na svaki pojedinačni zahtev. Bez keširanja, uvek ažurno.
+
+```tsx
+// app/[locale]/search/page.tsx
+export default async function SearchPage({
+  searchParams,
+}: {
+  searchParams: { q?: string; page?: string };
+}) {
+  const query = searchParams.q ?? "";
+  const page = Number(searchParams.page ?? 1);
+
+  const results = await fetch(
+    `https://api.example.com/search?q=${query}&page=${page}`,
+    { cache: "no-store" }
+  ).then((res) => res.json());
+
+  return (
+    <div className="mx-auto max-w-5xl px-4 py-12">
+      <h1 className="text-2xl font-bold">
+        Rezultati za: <span className="text-blue-600">{query}</span>
+      </h1>
+      <p className="mt-1 text-sm text-gray-500">{results.total} rezultata pronađeno</p>
+    </div>
+  );
+}
+```
+
+**Najbolje za:** Stranice pretrage, korisničke dashboard-e, podatke u realnom vremenu, bilo koju stranicu gde je sadržaj jedinstven po zahtevu.
+
+**SEO uticaj:** Dobar za indeksiranje (Googlebot dobija kompletan HTML), ali TTFB zavisi u potpunosti od vremena odgovora servera i baze. Svaki milisekund latencije baze postaje vidljiv korisnicima i Googlebot-u.
+
+---
+
+### 4. Klijentski Fetching
+
+Podaci se dohvataju u browseru nakon učitavanja stranice, koristeći hook-ove ili biblioteke poput SWR ili TanStack Query.
+
+```tsx
+// components/LiveInventory.tsx — prikladno za podatke u realnom vremenu
+"use client";
+
+import useSWR from "swr";
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
+export function LiveInventory({ productId }: { productId: string }) {
+  const { data, isLoading } = useSWR(
+    `/api/inventory/${productId}`,
+    fetcher,
+    { refreshInterval: 30000 } // Polling svakih 30 sekundi
+  );
+
+  if (isLoading) return <span className="text-gray-400">Proveravanje...</span>;
+
+  return (
+    <span className={data?.inStock ? "text-green-600" : "text-red-500"}>
+      {data?.inStock ? `${data.quantity} na stanju` : "Nije na stanju"}
+    </span>
+  );
+}
+```
+
+**Najbolje za:** Podatke u realnom vremenu (stanje zaliha, live cene), korisničko-specifičan sadržaj učitan nakon autentikacije, podatke koji ne bi trebalo da budu keširani ili pre-renderovani.
+
+**SEO uticaj:** Nikakav — Googlebot ne indeksira klijentski dohvaćen sadržaj. Nikada ne koristi klijentski fetching za sadržaj koji treba biti indeksiran.
+
+---
+
+## Decision Framework: Izbor prema Veličini Kataloga
+
+Najčešća konfuzija koju viđamo u B2B projektima je primena ISR ili SSG na scenarije koji zapravo trebaju SSR, i obrnuto. Evo framework-a koji koristimo u Atonize-u:
+
+### Mali Katalog (ispod ~100 stavki)
+
+**Strategija: SSG ili ISR, renderuj sve stavke odjednom**
+
+Ovaj pristup smo koristili na B2B platformi za industrijske komponente sa tačno 40 proizvoda. Umesto implementacije paginacije ili lazy loadinga, jednostavno smo renderovali sve proizvode na jednoj statičnoj stranici.
+
+```tsx
+// app/[locale]/products/page.tsx
+export const revalidate = 3600;
+
+export default async function ProductsPage() {
+  // Dohvati SVE proizvode — bez paginacije, bez limita
+  const products = await fetch("https://api.example.com/products", {
+    next: { revalidate: 3600, tags: ["products"] },
+  }).then((res) => res.json());
+
+  return (
+    <div>
+      {/* Client komponenta prima SVE proizvode kao props */}
+      <ProductGrid products={products} />
+    </div>
+  );
+}
+```
+
+```tsx
+// components/ProductGrid.tsx
+"use client";
+
+import { useState, useMemo } from "react";
+
+export function ProductGrid({ products }: { products: Product[] }) {
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
+  const filtered = useMemo(
+    () =>
+      activeCategory
+        ? products.filter((p) => p.category === activeCategory)
+        : products,
+    [products, activeCategory]
+  );
+
+  return (
+    <div>
+      {/* Filteri kategorija — instant, bez mrežnog zahteva */}
+      <div className="flex flex-wrap gap-2 mb-8">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setActiveCategory(cat === activeCategory ? null : cat)}
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+              activeCategory === cat
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      {/* Svi proizvodi renderovani u DOM-u — savršeno za Googlebot */}
+      <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {filtered.map((product) => (
+          <li key={product.id}>
+            <a href={`/products/${product.slug}`}>
+              <ProductCard product={product} />
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+**Zašto ovo pobjeđuje za male kataloge:**
+
+- ISR je potpuno sačuvan — `searchParams` nikada ne dodiruje ovu rutu
+- Svi `<a href>` linkovi su u HTML-u — Googlebot otkriva svaku stranicu proizvoda
+- Klijentsko filterovanje je instant (0ms) — svi podaci su već u memoriji
+- Nula "zarobljenog sadržaja" — nema proizvoda skrivenih iza "Učitaj više" dugmeta koje Googlebot ne može da klikne
+
+DOM je marginalno teži sa 40 proizvoda naspram 12, ali razlika je zanemarljiva (nekoliko kilobajta) u poređenju sa arhitekturnim benefitima.
+
+### Srednji Katalog (100–500 stavki)
+
+**Strategija: ISR + klijentsko filterovanje, sa paginacijom ako je potrebno**
+
+Za ovaj opseg, sve stavke se i dalje mogu učitati u memoriju, ali treba biti oprezan sa početnom težinom stranice. Razmotri učitavanje kartica proizvoda sa minimalnim podacima (naziv, slug, kategorija, thumbnail) i dohvatanje punih detalja samo na stranici proizvoda.
+
+Ako je paginacija potrebna, koristi paginaciju baziranu na putanji da sačuvaš ISR:
+
+```tsx
+// app/[locale]/products/page/[pageNumber]/page.tsx
+export async function generateStaticParams() {
+  const { totalPages } = await fetch("https://api.example.com/products/meta")
+    .then((res) => res.json());
+
+  return Array.from({ length: totalPages }, (_, i) => ({
+    pageNumber: String(i + 1),
+  }));
+}
+
+export const revalidate = 3600;
+
+export default async function ProductsPage({
+  params,
+}: {
+  params: { pageNumber: string };
+}) {
+  const page = Number(params.pageNumber);
+  const { products, totalPages } = await fetch(
+    `https://api.example.com/products?page=${page}&limit=24`,
+    { next: { revalidate: 3600 } }
+  ).then((res) => res.json());
+
+  return <ProductGrid products={products} currentPage={page} totalPages={totalPages} />;
+}
+```
+
+**SEO napomena za paginirane stranice:** Stranice 2, 3, 4... treba da imaju `noindex, follow` i canonical koji pokazuje na stranicu 1. Postoje kao crawl mostovi za Googlebot, ne kao indeksabilne destinacije.
+
+```tsx
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const page = Number(params.pageNumber);
+
+  if (page > 1) {
+    return {
+      robots: { index: false, follow: true },
+      alternates: {
+        canonical: `${process.env.NEXT_PUBLIC_BASE_URL}/sr/products`,
+      },
+    };
+  }
+
+  return {
+    title: "Proizvodi — Naš Katalog",
+  };
+}
+```
+
+### Veliki Katalog (500+ stavki)
+
+**Strategija: SSR sa URL-baziranim filterovanjem i paginacijom**
+
+U ovom obimu, učitavanje svih stavki u memoriju nije izvodljivo. ISR takođe nije praktičan — previše jedinstvenih URL kombinacija. SSR sa server-side filterovanjem je jedini skalabilan pristup.
+
+```tsx
+// app/[locale]/products/page.tsx
+// Bez revalidate — ovo je pun SSR
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: { category?: string; page?: string; q?: string };
+}) {
+  const { products, total, totalPages } = await fetch(
+    `https://api.example.com/products?${new URLSearchParams({
+      category: searchParams.category ?? "",
+      page: searchParams.page ?? "1",
+      q: searchParams.q ?? "",
+      limit: "24",
+    })}`,
+    { cache: "no-store" }
+  ).then((res) => res.json());
+
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-12">
+      <ProductFilters activeCategory={searchParams.category} />
+      <p className="text-sm text-gray-500">{total} proizvoda pronađeno</p>
+      <ProductGrid products={products} />
+      <Pagination currentPage={Number(searchParams.page ?? 1)} totalPages={totalPages} />
+    </div>
+  );
+}
+```
+
+Svesno prihvati SSR kompromis. TTFB će biti viši nego kod ISR-a, ali za 500+ proizvoda nema alternative koja održava i SEO i upotrebljivost.
+
+---
+
+## Tihe Ubice ISR-a
+
+### Tiha Ubica 1: searchParams u Server Komponentama
+
+Kao što smo pokrili u [RSC Arhitektura i Crawlability](/insights/rsc-architecture-crawlability), pristupanje `searchParams` u Server Komponenti degradira celu rutu iz statičke u dinamičku.
+
+```tsx
+// ❌ Ovo tiho konvertuje ISR → SSR za celu rutu
+export default async function ProductsPage({ searchParams }) {
+  const category = searchParams.category; // Ruta je sada dinamička
+  // ...
+}
+
+// ✅ Ako trebaš URL parametre na ISR stranici, restrukturiraj
+// Stavi logiku filterovanja u klijentsku komponentu koja prima sve podatke kao props
+```
+
+Proveri build output. Ako ruta koju si namerio kao ISR (`●`) pokazuje kao dinamična (`ƒ`), `searchParams` je najvjerovatniji krivac.
+
+### Tiha Ubica 2: Next.js 15+ Promena Podrazumevanog Cachea
+
+U Next.js 14 i ranije, `fetch()` je bio keširan po defaultu. U Next.js 15+, **fetch više nije keširan po defaultu**. Ako si migrirao sa v14 bez ažuriranja fetch poziva, tvoje ISR stranice su tiho postale SSR stranice.
+
+```tsx
+// Next.js 14 — keširano po defaultu
+const data = await fetch("https://api.example.com/products");
+
+// Next.js 15+ — NIJE keširano po defaultu, mora biti eksplicitno
+const data = await fetch("https://api.example.com/products", {
+  next: { revalidate: 3600 }, // ISR ponašanje
+  // ILI
+  cache: "force-cache",        // SSG ponašanje
+  // ILI
+  cache: "no-store",           // SSR ponašanje
+});
+```
+
+Uvek budi eksplicitan u pogledu ponašanja keša. Implicitno ponašanje se menja između verzija — eksplicitno ponašanje se ne menja.
+
+### Tiha Ubica 3: `"use client"` na Page Komponenti
+
+Page komponenta označena sa `"use client"` ne dobija nikakav benefit server-side renderovanja. HTML shell je prazan, ISR je beskoristan i Googlebot ne vidi ništa u prvom prolazu. Ovo smo detaljno pokrili u [RSC Arhitektura i Crawlability](/insights/rsc-architecture-crawlability) — nikada ne stavljaj `"use client"` na `page.tsx`.
+
+---
+
+## Revalidacija na Zahtev sa revalidateTag
+
+Vremenski bazirana revalidacija (`revalidate: 3600`) znači da tvoj sadržaj može biti zastareo do sat vremena. Za većinu sadržaja ovo je prihvatljivo. Za cene proizvoda, stanje zaliha ili breaking news, nije.
+
+`revalidateTag` ti omogućava da odmah invalidiraš specifične cache unose kada se podaci promene — pokrenuto webhook-om iz tvog CMS-a ili baze.
+
+```tsx
+// app/api/revalidate/route.ts
+import { revalidateTag } from "next/cache";
+import { NextRequest } from "next/server";
+
+export async function POST(req: NextRequest) {
+  const { tag, secret } = await req.json();
+
+  if (secret !== process.env.REVALIDATION_SECRET) {
+    return Response.json({ error: "Neovlašćen pristup" }, { status: 401 });
+  }
+
+  revalidateTag(tag);
+  return Response.json({ revalidated: true, tag });
+}
+```
+
+Taguj fetch-ove, zatim invalidraj po tagu kada se podaci promene:
+
+```tsx
+// Taguj fetch
+await fetch(`https://api.example.com/products/${slug}`, {
+  next: {
+    revalidate: 86400,                    // Fallback: revalidacija dnevno
+    tags: [`product-${slug}`],            // Precizan tag za invalidaciju na zahtev
+  },
+});
+
+// Kada se proizvod ažurira u CMS-u, poziva se:
+// POST /api/revalidate { tag: "product-industrijski-ventil-42", secret: "..." }
+// Samo ta stranica proizvoda se odmah regeneriše — ništa drugo se ne dira
+```
+
+Ovo je produkcijski pattern. Vremenski bazirana revalidacija je sigurnosna mreža; tag-bazirana revalidacija je primarni mehanizam.
+
+---
+
+## SEO & Greške u Indeksiranju
+
+### 1. "Zarobljeni sadržaj" iza Load More dugmadi
+
+"Učitaj više" dugme implementirano sa klijentskim state-om znači da samo inicijalno učitane stavke imaju `<a href>` linkove u HTML-u. Googlebot ne može da klikće na dugmad — prati samo `<a href>` linkove. Svaki proizvod ili post skriven iza tog dugmeta je nevidljiv za Google.
+
+Rešenje zavisi od veličine kataloga: za male kataloge, renderuj sve. Za velike kataloge, koristi pravu paginaciju sa `<a href>` linkovima ka URL-ovima stranica.
+
+### 2. Dinamički query parametri koji kreiraju beskonačne URL varijacije
+
+```
+/accommodation?city=Hvar&checkin=2026-05-09&checkout=2026-05-16
+/accommodation?city=Hvar&checkin=2026-05-10&checkout=2026-05-17
+```
+
+Parametri datuma kreiraju efektivno beskonačne jedinstvene URL-ove. Googlebot ih otkriva i pokušava da crawluje sve, trošeći crawl budget bez vrednosti indeksiranja. U Google Search Console-u, reci Google-u da ignoriše specifične parametre, ili restrukturiraj URL-ove da koriste path segmente za indeksabilne parametre i hash fragmente za UI state.
+
+### 3. Nepostavljanje revalidate eksplicitno u Next.js 15+
+
+Nakon nadogradnje sa Next.js 14, pregledaj svaki `fetch()` poziv u Server Komponentama. Tihi prelaz iz keširanog u nekeširano može pretvoriti ceo tvoj ISR sajt u SSR sajt preko noći — bez poruka grešaka, samo sporije stranice i veće opterećenje servera.
+
+---
+
+## Često Postavljana Pitanja (FAQ)
+
+### Kada koristiti ISR vs SSR za katalog proizvoda?
+
+Primarni faktor je veličina kataloga. Ispod ~100 proizvoda, koristi ISR i renderuj sve. 100–500 proizvoda, koristi ISR sa klijentskim filterovanjem. 500+ proizvoda, prihvati SSR — jedini je pristup koji skalabilno handles filterovanje i paginaciju bez kidanja ISR-a. Sekundarni faktor je učestalost ažuriranja: ako se podaci o proizvodu menjaju po minuti (live zalihe, live cene), SSR je neophodan bez obzira na veličinu.
+
+### Da li Next.js ISR radi sa bazama podataka, ili samo sa eksternim API-jima?
+
+ISR radi sa bilo kojim async izvorom podataka — bazama, REST API-jima, GraphQL-om, CMS-ovima. Izvor podataka nije važan; važno je da se fetch radi u Server Komponenti i da je ponašanje keša eksplicitno konfigurisano. Upiti baze u Server Komponentama tretiraju se isto kao `fetch()` pozivi iz perspektive keširanja kada su omotani u Next.js-ov `unstable_cache`.
+
+### Koja je razlika između revalidate i cache: "force-cache"?
+
+`cache: "force-cache"` znači keširaj zauvek — podaci se dohvataju jednom i nikada se automatski ne osvežavaju (ekvivalentno SSG-u). `next: { revalidate: N }` znači keširaj N sekundi, zatim regeneriši u pozadini na sledeći zahtev nakon isteka intervala (ISR ponašanje). Koristi `force-cache` za zaista statične podatke; koristi `revalidate` za podatke koji se menjaju ali ne moraju biti u realnom vremenu.
+
+### Kako da rukovam loading stanjima za ISR stranice?
+
+ISR stranice serviraju kešovani HTML odmah — nema loading stanja za inicijalni render. Loading stanja (`loading.tsx`) su relevantna za delove stranice koji strimuju koristeći `Suspense` za sekundarne fetch-ove podataka. Ako tvoja ISR stranica prikazuje loading stanje korisnicima, to znači ili da keš još nije zagrejan (prvi posetilac nakon revalidacije) ili da se sekundarni fetch unutar `Suspense`-a još razrešava.
+
+---

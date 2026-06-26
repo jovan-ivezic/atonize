@@ -4,7 +4,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -45,6 +45,8 @@ export default async function RootLayout({
   if (locale !== 'en' && locale !== 'sr') {
     notFound();
   }
+  
+  setRequestLocale(locale);
   
   const messages = await getMessages();
 

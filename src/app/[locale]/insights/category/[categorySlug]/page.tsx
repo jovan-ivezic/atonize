@@ -1,135 +1,71 @@
 import { Link } from '../../../../../i18n/routing';
 import Navbar from '../../../../../components/Navbar';
 import Footer from '../../../../../components/Footer';
-import { getAllCategorySlugs, getPostsByCategorySlug } from '../../../../../lib/mdx';
+import { getPostsByCategorySlug, getAllCategorySlugs, getCategoryBySlug } from '../../../../../lib/mdx';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string, categorySlug: string }> }) {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string, categorySlug: string }> }): Promise<Metadata> {
   const { locale, categorySlug } = await params;
-  const t = await getTranslations({ locale, namespace: 'Insights' });
-  
-  let categoryName = '';
-  let enSlug = categorySlug;
-  let srSlug = categorySlug;
 
-  if (categorySlug === t('filters.engineering_slug')) {
-    categoryName = t('filters.engineering');
-    enSlug = 'engineering';
-    srSlug = 'inzenjering';
-  } else if (categorySlug === t('filters.product_slug')) {
-    categoryName = t('filters.product');
-    enSlug = 'product';
-    srSlug = 'proizvod';
-  } else if (categorySlug === t('filters.design_slug')) {
-    categoryName = t('filters.design');
-    enSlug = 'design';
-    srSlug = 'dizajn';
-  } else {
-    categoryName = categorySlug;
-  }
-
-  const tSeo = await getTranslations({ locale, namespace: 'SEO' });
+  const catTranslation = await getCategoryBySlug(categorySlug, locale);
+  if (!catTranslation) return {};
 
   return {
-    title: `${tSeo('insights_title')} | ${categoryName}`,
-    description: tSeo('insights_description'),
+    title: catTranslation.name,
+    description: catTranslation.description || undefined,
     alternates: {
       canonical: locale === 'sr' ? `/sr/uvidi/kategorija/${categorySlug}` : `/en/insights/category/${categorySlug}`,
-      languages: {
-        'en': `/en/insights/category/${enSlug}`,
-        'sr': `/sr/uvidi/kategorija/${srSlug}`,
-      },
     },
   };
 }
 
 export async function generateStaticParams() {
-  // Ovo omogućava SSG za kategorije (generiše rute za sve dostupne slugove)
   const locales = ['en', 'sr'];
-  const params: { locale: string; categorySlug: string }[] = [];
+  const paramsList: { locale: string; categorySlug: string }[] = [];
   
   for (const locale of locales) {
-    const slugs = getAllCategorySlugs(locale);
+    const slugs = await getAllCategorySlugs(locale);
     for (const slug of slugs) {
-      params.push({ locale, categorySlug: slug });
+      paramsList.push({ locale, categorySlug: slug });
     }
   }
   
-  return params;
+  return paramsList;
 }
 
 export default async function CategoryPage({ params }: { params: Promise<{ locale: string, categorySlug: string }> }) {
   const { locale, categorySlug } = await params;
   setRequestLocale(locale);
   
-  const posts = getPostsByCategorySlug(categorySlug, locale);
-  const t = await getTranslations('Insights');
+  const [posts, catTranslation, t] = await Promise.all([
+    getPostsByCategorySlug(categorySlug, locale),
+    getCategoryBySlug(categorySlug, locale),
+    getTranslations('Insights'),
+  ]);
 
-  const validEmptySlugs = [
-    t('filters.engineering_slug'),
-    t('filters.product_slug'),
-    t('filters.design_slug')
-  ];
+  if (!catTranslation && posts.length === 0) notFound();
 
-  // Strictly validate that the categorySlug is either a known empty category for THIS locale,
-  // or a category that actually has posts in THIS locale.
-  // If a user types an English slug in a Serbian URL, it will 404 here.
-  const isValidEmptySlug = validEmptySlugs.includes(categorySlug);
-  const hasPosts = posts.length > 0;
-
-  if (!isValidEmptySlug && !hasPosts) {
-    notFound();
-  }
-  
-  // Izvlačimo originalno ime kategorije iz prvog posta za prikaz naslova,
-  // a ako nema postova, mapiramo je iz translation fajla
-  let categoryName = '';
-  if (hasPosts) {
-    categoryName = posts[0].category;
-  } else {
-    if (categorySlug === t('filters.engineering_slug')) categoryName = t('filters.engineering');
-    else if (categorySlug === t('filters.product_slug')) categoryName = t('filters.product');
-    else if (categorySlug === t('filters.design_slug')) categoryName = t('filters.design');
-    else categoryName = categorySlug;
-  }
+  const categoryName = catTranslation?.name || categorySlug;
 
   return (
     <div className="min-h-screen bg-[#fafafa] flex flex-col">
       <Navbar />
       
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-24">
-        {/* Link za povratak */}
         <Link href="/insights" className="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-700 mb-8 transition-colors">
            &larr; {t('title')}
         </Link>
         
-        <h1 className="text-4xl font-display font-bold text-gray-900 mb-8">{t('title')}: {categoryName}</h1>
-        <p className="text-gray-600 mb-12 max-w-2xl">
-          {t('description')}
-        </p>
+        <h1 className="text-4xl font-display font-bold text-gray-900 mb-4">{categoryName}</h1>
+        
+        {catTranslation?.description && (
+          <p className="text-gray-600 mb-12 max-w-2xl">{catTranslation.description}</p>
+        )}
 
-        {/* Filter meni za brzu navigaciju između kategorija */}
-        <div className="flex flex-col md:flex-row justify-between items-center border-b border-gray-200 pb-4 mb-8">
-          <div className="flex gap-6 overflow-x-auto w-full md:w-auto pb-4 md:pb-0 scrollbar-hide text-sm font-medium">
-            <Link href="/insights" className="text-gray-400 hover:text-gray-900 pb-4 -mb-[18px] whitespace-nowrap transition-colors">{t('filters.latest')}</Link>
-            
-            {/* Dinamički izlistavamo sve kategorije iz i18n */}
-            <Link href={{ pathname: '/insights/category/[categorySlug]', params: { categorySlug: t('filters.engineering_slug') } }} className={`pb-4 -mb-[18px] whitespace-nowrap transition-colors ${categorySlug === t('filters.engineering_slug') ? 'text-gray-900 border-b-2 border-yellow-400' : 'text-gray-400 hover:text-gray-900'}`}>
-              {t('filters.engineering')}
-            </Link>
-            <Link href={{ pathname: '/insights/category/[categorySlug]', params: { categorySlug: t('filters.product_slug') } }} className={`pb-4 -mb-[18px] whitespace-nowrap transition-colors ${categorySlug === t('filters.product_slug') ? 'text-gray-900 border-b-2 border-yellow-400' : 'text-gray-400 hover:text-gray-900'}`}>
-              {t('filters.product')}
-            </Link>
-            <Link href={{ pathname: '/insights/category/[categorySlug]', params: { categorySlug: t('filters.design_slug') } }} className={`pb-4 -mb-[18px] whitespace-nowrap transition-colors ${categorySlug === t('filters.design_slug') ? 'text-gray-900 border-b-2 border-yellow-400' : 'text-gray-400 hover:text-gray-900'}`}>
-              {t('filters.design')}
-            </Link>
-          </div>
-        </div>
-
-        {/* Grid of Posts */}
         {posts.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
             {posts.map((post, index) => {
               const colors = ['bg-[#facc15]', 'bg-[#b4dcdc]', 'bg-[#f05a41]', 'bg-[#818cf8]'];
               const bgColor = colors[index % colors.length];

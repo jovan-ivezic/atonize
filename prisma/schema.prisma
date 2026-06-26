@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Post {
+  id          String   @id @default(uuid())
+  date        DateTime @default(now())
+  categoryId  String
+  icon        String?
+  series      String?
+  seriesOrder Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category     Category          @relation(fields: [categoryId], references: [id])
+  translations PostTranslation[]
+}
+
+model PostTranslation {
+  id        String   @id @default(uuid())
+  postId    String
+  locale    String
+  title     String
+  slug      String
+  excerpt   String?
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, locale])
+  @@unique([slug, locale])
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  icon        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  posts       Post[]
+  translations CategoryTranslation[]
+}
+
+model CategoryTranslation {
+  id          String   @id @default(uuid())
+  categoryId  String
+  locale      String
+  name        String
+  slug        String
+  description String?
+
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, locale])
+  @@unique([slug, locale])
+}

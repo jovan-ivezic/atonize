@@ -1,77 +1,90 @@
-import fs from 'fs';
-import path from 'path';
-import matter from 'gray-matter';
-
-const getContentDirectory = (locale: string) => path.join(process.cwd(), `src/content/insights/${locale}`);
+import { prisma } from './prisma';
 
 export type PostMetadata = {
+  id?: string;
   title: string;
   date: string;
   category: string;
+  categorySlug: string;
   slug: string;
-  icon?: string;
-  excerpt?: string;
-  series?: string;
-  seriesOrder?: number;
-  translationKey?: string;
+  icon?: string | null;
+  excerpt?: string | null;
+  series?: string | null;
+  seriesOrder?: number | null;
+  locale?: string;
 };
 
-export const getPostBySlug = (slug: string, locale: string = 'en') => {
-  const realSlug = slug.replace(/\.mdx$/, '');
-  const dir = getContentDirectory(locale);
-  const fullPath = path.join(dir, `${realSlug}.mdx`);
-  
-  // Fallback to English if file doesn't exist in the target locale
-  if (!fs.existsSync(fullPath) && locale !== 'en') {
-    return getPostBySlug(slug, 'en');
-  }
-
-  const fileContents = fs.readFileSync(fullPath, 'utf8');
-  
-  const { data, content } = matter(fileContents);
-  
+const mapPrismaPostToMeta = (post: any, translation: any): PostMetadata => {
+  const catTranslation = post.category?.translations?.[0];
   return {
-    slug: realSlug,
-    meta: data as PostMetadata,
-    content
+    id: post.id,
+    title: translation.title,
+    date: post.date.toISOString(),
+    category: catTranslation?.name || 'Uncategorized',
+    categorySlug: catTranslation?.slug || 'uncategorized',
+    slug: translation.slug,
+    icon: post.icon,
+    excerpt: translation.excerpt,
+    series: post.series,
+    seriesOrder: post.seriesOrder,
+    locale: translation.locale,
   };
 };
 
-export const getAllPostsMeta = (locale: string = 'en'): PostMetadata[] => {
-  const dir = getContentDirectory(locale);
-  if (!fs.existsSync(dir)) return [];
-  
-  const files = fs.readdirSync(dir);
-  
-  const posts = files
-    .filter(file => file.endsWith('.mdx'))
-    .map(file => {
-      const { meta } = getPostBySlug(file, locale);
-      return meta;
-    })
-    .sort((a, b) => (new Date(a.date) < new Date(b.date) ? 1 : -1));
-    
-  return posts;
-};
+export const getPostBySlug = async (slug: string, locale: string = 'en') => {
+  let post = await prisma.post.findFirst({
+    where: { translations: { some: { slug, locale } } },
+    include: { 
+      translations: { where: { locale } },
+      category: { include: { translations: { where: { locale } } } }
+    }
+  });
 
-export const getPostsInSeries = (seriesName: string, locale: string = 'en'): PostMetadata[] => {
-  const allPosts = getAllPostsMeta(locale);
-  return allPosts
-    .filter(post => post.series === seriesName)
-    .sort((a, b) => {
-      const orderA = a.seriesOrder ?? 999;
-      const orderB = b.seriesOrder ?? 999;
-      return orderA - orderB;
+  // Fallback to English if not found
+  if (!post && locale !== 'en') {
+    post = await prisma.post.findFirst({
+      where: { translations: { some: { slug, locale: 'en' } } },
+      include: { 
+        translations: { where: { locale: 'en' } },
+        category: { include: { translations: { where: { locale: 'en' } } } }
+      }
     });
+  }
+
+  if (!post || post.translations.length === 0) throw new Error('Post not found');
+
+  const t = post.translations[0];
+  return {
+    slug: t.slug,
+    meta: mapPrismaPostToMeta(post, t),
+    content: t.content
+  };
 };
 
-export const getPostByTranslationKey = (translationKey: string, locale: string = 'en') => {
-  const allPosts = getAllPostsMeta(locale);
-  const postMeta = allPosts.find(post => post.translationKey === translationKey);
+export const getAllPostsMeta = async (locale: string = 'en'): Promise<PostMetadata[]> => {
+  const posts = await prisma.post.findMany({
+    where: { translations: { some: { locale } } },
+    include: { 
+      translations: { where: { locale } },
+      category: { include: { translations: { where: { locale } } } }
+    },
+    orderBy: { date: 'desc' }
+  });
   
-  if (!postMeta) return null;
+  return posts.map(p => mapPrismaPostToMeta(p, p.translations[0]));
+};
+
+export const getPostsInSeries = async (seriesName: string, locale: string = 'en'): Promise<PostMetadata[]> => {
+  const posts = await prisma.post.findMany({
+    where: { series: seriesName, translations: { some: { locale } } },
+    include: { 
+      translations: { where: { locale } },
+      category: { include: { translations: { where: { locale } } } }
+    },
+    orderBy: { seriesOrder: 'asc' }
+  });
   
-  return getPostBySlug(postMeta.slug, locale);
+  return posts.map(p => mapPrismaPostToMeta(p, p.translations[0]));
 };
 
 export const slugify = (text: string) => {
@@ -87,20 +100,55 @@ export const slugify = (text: string) => {
     .toString()
     .toLowerCase()
     .trim()
-    .normalize('NFD') // remove diacritics
+    .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\s+/g, '-')       // Replace spaces with -
-    .replace(/[^\w\-]+/g, '')   // Remove all non-word chars
-    .replace(/\-\-+/g, '-');    // Replace multiple - with single -
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-');
 };
 
-export const getPostsByCategorySlug = (categorySlug: string, locale: string = 'en'): PostMetadata[] => {
-  const allPosts = getAllPostsMeta(locale);
-  return allPosts.filter(post => slugify(post.category) === categorySlug);
+export const getPostsByCategorySlug = async (categorySlug: string, locale: string = 'en'): Promise<PostMetadata[]> => {
+  const posts = await prisma.post.findMany({
+    where: { 
+      translations: { some: { locale } },
+      category: { translations: { some: { slug: categorySlug, locale } } }
+    },
+    include: { 
+      translations: { where: { locale } },
+      category: { include: { translations: { where: { locale } } } }
+    },
+    orderBy: { date: 'desc' }
+  });
+  return posts.map(p => mapPrismaPostToMeta(p, p.translations[0]));
 };
 
-export const getAllCategorySlugs = (locale: string = 'en'): string[] => {
-  const allPosts = getAllPostsMeta(locale);
-  const categories = new Set(allPosts.map(post => slugify(post.category)));
-  return Array.from(categories);
+export const getAllCategorySlugs = async (locale: string = 'en'): Promise<string[]> => {
+  const categories = await prisma.categoryTranslation.findMany({
+    where: { locale },
+    select: { slug: true }
+  });
+  return categories.map(c => c.slug);
+};
+
+export const getCategoryBySlug = async (categorySlug: string, locale: string = 'en') => {
+  const category = await prisma.category.findFirst({
+    where: { translations: { some: { slug: categorySlug, locale } } },
+    include: { translations: { where: { locale } } }
+  });
+  
+  if (!category || category.translations.length === 0) return null;
+  return category.translations[0];
+};
+
+export const getPostByPostId = async (postId: string, locale: string = 'en'): Promise<PostMetadata | null> => {
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+    include: {
+      translations: { where: { locale } },
+      category: { include: { translations: { where: { locale } } } }
+    }
+  });
+
+  if (!post || post.translations.length === 0) return null;
+  return mapPrismaPostToMeta(post, post.translations[0]);
 };

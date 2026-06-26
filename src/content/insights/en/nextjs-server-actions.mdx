@@ -1,0 +1,404 @@
+---
+title: "Next.js Server Actions: Mutations Without API Routes"
+date: "2026-06-25"
+category: "Engineering"
+slug: "nextjs-server-actions"
+translationKey: "nextjs-server-actions"
+icon: "⚙️"
+excerpt: "Learn how Next.js Server Actions let you write server-side mutation logic directly in your components — no API routes, no client-side fetch boilerplate, and less JavaScript sent to the browser. Includes real B2B form patterns, error handling, and progressive enhancement."
+series: "Next.js & Modern Web"
+seriesOrder: 6
+---
+
+# Next.js Server Actions: Mutations Without API Routes
+
+> **TL;DR — Key Takeaways**
+> - Server Actions are async functions that run on the server and can be called directly from Client Components or HTML forms
+> - They eliminate the need for API routes for most mutation use cases — less code, less JavaScript in the bundle
+> - Server Actions integrate natively with React's `useActionState` hook for loading and error states
+> - They support progressive enhancement — forms with Server Actions work even without JavaScript enabled
+> - Server Actions are not a replacement for API routes when you need a public endpoint consumed by third parties
+
+---
+
+## The Problem They Solve
+
+Before Server Actions, the flow for submitting a form in Next.js looked like this:
+
+1. User submits form in a Client Component
+2. Client Component calls `fetch("/api/contact", { method: "POST", body: ... })`
+3. API route at `app/api/contact/route.ts` receives the request
+4. API route validates data, writes to database, sends email
+5. API route returns a response
+6. Client Component updates UI based on response
+
+This works — but it has real costs. The API route is boilerplate that exists solely to bridge the client and server. The `fetch` call and response handling add client-side JavaScript. The entire round-trip adds latency.
+
+Server Actions collapse steps 2-5 into a single function call:
+
+```
+User submits form → Server Action runs on server → UI updates
+```
+
+No API route. No client-side fetch. Less JavaScript shipped to the browser.
+
+---
+
+## The Basic Pattern
+
+A Server Action is an async function marked with `"use server"`. It can be defined in a dedicated file or directly inside a Server Component.
+
+```tsx
+// app/[locale]/contact/actions.ts
+"use server";
+
+import { z } from "zod";
+import { revalidateTag } from "next/cache";
+
+const contactSchema = z.object({
+  name: z.string().min(2),
+  email: z.string().email(),
+  message: z.string().min(20),
+});
+
+export async function submitContact(formData: FormData) {
+  const result = contactSchema.safeParse({
+    name: formData.get("name"),
+    email: formData.get("email"),
+    message: formData.get("message"),
+  });
+
+  if (!result.success) {
+    return {
+      success: false,
+      errors: result.error.flatten().fieldErrors,
+    };
+  }
+
+  await db.contacts.create({ data: result.data });
+  await sendEmail(result.data);
+
+  return { success: true };
+}
+```
+
+```tsx
+// app/[locale]/contact/page.tsx — Server Component calling a Server Action
+import { submitContact } from "./actions";
+
+export default function ContactPage() {
+  return (
+    <main className="mx-auto max-w-2xl px-4 py-12">
+      <h1 className="text-3xl font-bold">Contact Us</h1>
+      <form action={submitContact} className="mt-8 space-y-4">
+        <input
+          name="name"
+          placeholder="Your name"
+          className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm"
+        />
+        <input
+          name="email"
+          type="email"
+          placeholder="your@email.com"
+          className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm"
+        />
+        <textarea
+          name="message"
+          rows={5}
+          placeholder="Your message..."
+          className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm"
+        />
+        <button
+          type="submit"
+          className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+        >
+          Send Message
+        </button>
+      </form>
+    </main>
+  );
+}
+```
+
+The `action={submitContact}` prop wires the HTML form directly to the Server Action. When submitted, Next.js serializes the form data and calls the function on the server. No client-side JavaScript involved in the submission itself.
+
+This is **progressive enhancement** — the form works even if JavaScript fails to load or is disabled. The server processes the submission and responds. This is something traditional React forms cannot do.
+
+---
+
+## Adding Loading and Error States with useActionState
+
+The basic pattern above lacks UX feedback — the user doesn't know if the form is submitting or if there was an error. `useActionState` (previously `useFormState`) handles this:
+
+```tsx
+// components/ContactForm.tsx
+"use client";
+
+import { useActionState } from "react";
+import { submitContact } from "../app/[locale]/contact/actions";
+
+const initialState = { success: false, errors: {} };
+
+export function ContactForm() {
+  const [state, action, isPending] = useActionState(submitContact, initialState);
+
+  if (state.success) {
+    return (
+      <div className="rounded-xl border border-green-200 bg-green-50 p-8 text-center">
+        <p className="text-lg font-semibold text-green-800">Message sent!</p>
+        <p className="mt-2 text-sm text-green-700">
+          We'll get back to you within one business day.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <form action={action} className="space-y-5">
+      <div className="space-y-1.5">
+        <label className="block text-sm font-medium text-gray-700">Name</label>
+        <input
+          name="name"
+          placeholder="Your name"
+          className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        {state.errors?.name && (
+          <p className="text-xs text-red-600">{state.errors.name[0]}</p>
+        )}
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="block text-sm font-medium text-gray-700">Email</label>
+        <input
+          name="email"
+          type="email"
+          placeholder="your@email.com"
+          className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        {state.errors?.email && (
+          <p className="text-xs text-red-600">{state.errors.email[0]}</p>
+        )}
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="block text-sm font-medium text-gray-700">Message</label>
+        <textarea
+          name="message"
+          rows={5}
+          placeholder="Your message..."
+          className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        {state.errors?.message && (
+          <p className="text-xs text-red-600">{state.errors.message[0]}</p>
+        )}
+      </div>
+
+      <button
+        type="submit"
+        disabled={isPending}
+        className="w-full rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        {isPending ? "Sending..." : "Send Message"}
+      </button>
+    </form>
+  );
+}
+```
+
+`useActionState` gives you three things: the current state returned by the action, the action handler to pass to the form, and `isPending` which is `true` while the action is executing. This is all the state you need for a production form.
+
+---
+
+## Real-World Pattern: RFQ Form with Revalidation
+
+In B2B applications, form submissions often need to invalidate cached pages after they succeed. A Request for Quote form that adds a new inquiry should revalidate the admin dashboard listing.
+
+```tsx
+// app/[locale]/products/[slug]/actions.ts
+"use server";
+
+import { z } from "zod";
+import { revalidateTag } from "next/cache";
+import { redirect } from "next/navigation";
+
+const rfqSchema = z.object({
+  productId: z.string().min(1),
+  companyName: z.string().min(2),
+  contactEmail: z.string().email(),
+  quantity: z.coerce.number().min(1),
+  notes: z.string().optional(),
+});
+
+export async function submitRFQ(
+  prevState: { success: boolean; error?: string },
+  formData: FormData
+) {
+  const result = rfqSchema.safeParse({
+    productId: formData.get("productId"),
+    companyName: formData.get("companyName"),
+    contactEmail: formData.get("contactEmail"),
+    quantity: formData.get("quantity"),
+    notes: formData.get("notes"),
+  });
+
+  if (!result.success) {
+    return {
+      success: false,
+      error: "Please check your form and try again.",
+    };
+  }
+
+  try {
+    await db.rfqRequests.create({ data: result.data });
+    await sendRFQNotification(result.data);
+
+    // Invalidate admin dashboard cache so new inquiry appears immediately
+    revalidateTag("rfq-list");
+
+    return { success: true };
+  } catch {
+    return {
+      success: false,
+      error: "Failed to submit request. Please try again.",
+    };
+  }
+}
+```
+
+The `revalidateTag("rfq-list")` call inside the Server Action immediately invalidates any ISR page tagged with `"rfq-list"` — in this case the admin dashboard. The next visit to the dashboard triggers a fresh render with the new inquiry included. No separate API call needed, no cache management in the client.
+
+---
+
+## Passing Additional Data to Server Actions
+
+Server Actions receive `FormData` by default. When you need to pass additional data — like a product ID from the URL — use `bind`:
+
+```tsx
+// components/RFQButton.tsx
+"use client";
+
+import { useActionState } from "react";
+import { submitRFQ } from "../actions";
+
+export function RFQForm({ productId }: { productId: string }) {
+  // Bind productId to the action — it becomes the first argument
+  const submitRFQWithProduct = submitRFQ.bind(null, { productId });
+  const [state, action, isPending] = useActionState(
+    submitRFQWithProduct,
+    { success: false }
+  );
+
+  return (
+    <form action={action} className="space-y-4">
+      <input type="hidden" name="productId" value={productId} />
+      {/* rest of form fields */}
+      <button
+        type="submit"
+        disabled={isPending}
+        className="w-full rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+      >
+        {isPending ? "Submitting..." : "Request Quote"}
+      </button>
+
+      {state.error && (
+        <p className="text-sm text-red-600">{state.error}</p>
+      )}
+      {state.success && (
+        <p className="text-sm text-green-600">
+          Quote request submitted successfully.
+        </p>
+      )}
+    </form>
+  );
+}
+```
+
+Alternatively, use a hidden input — simpler and equally effective for non-sensitive data.
+
+---
+
+## Server Actions vs API Routes: When to Use Each
+
+Server Actions are powerful but they're not a universal replacement for API routes. Here is how we decide at Atonize:
+
+| Scenario | Server Action | API Route |
+|---|---|---|
+| Contact form submission | ✅ | — |
+| RFQ / inquiry form | ✅ | — |
+| CMS webhook receiver | — | ✅ |
+| Third-party integration endpoint | — | ✅ |
+| Mobile app API | — | ✅ |
+| ISR revalidation endpoint | — | ✅ |
+| Admin CRUD operations | ✅ | — |
+| Real-time data (WebSocket) | — | ✅ |
+
+The rule of thumb: if the mutation is initiated by a user action in your Next.js UI, use a Server Action. If the endpoint needs to be consumed by anything outside your Next.js application, use an API route.
+
+---
+
+## SEO & Performance Impact
+
+Server Actions have a direct positive impact on your JavaScript bundle size. Every mutation that moves from a Client Component `fetch` call to a Server Action removes code from the client bundle:
+
+- No `fetch` call in the component
+- No response parsing logic
+- No state management for the API response
+
+For a form-heavy B2B application — contact forms, RFQ forms, newsletter signups, filter submissions — this adds up to a meaningful reduction in client-side JavaScript. Less JavaScript means faster Time to Interactive, better Lighthouse scores, and as we've established throughout this series, lower JS percentage in your GSC crawl statistics.
+
+---
+
+## Common Pitfalls
+
+### 1. Forgetting "use server" at the top of the file
+
+Without `"use server"`, the function runs on the client. This is a security issue — database calls and secrets would be exposed. Always mark action files or inline actions with `"use server"`.
+
+### 2. Not validating FormData on the server
+
+Client-side validation with Zod and React Hook Form is UX. Server-side validation in the Server Action is security. Always validate on the server — anyone can bypass client validation with a direct HTTP request.
+
+### 3. Using Server Actions for GET operations
+
+Server Actions are for mutations — creating, updating, deleting data. For reading data, use Server Components with direct database calls or `fetch`. Using a Server Action to read data bypasses Next.js caching entirely.
+
+### 4. Not handling the error case
+
+```tsx
+// ❌ No error handling — silent failure
+export async function submitForm(formData: FormData) {
+  await db.contacts.create({ data: parseFormData(formData) });
+}
+
+// ✅ Always return a typed state object
+export async function submitForm(prevState: ActionState, formData: FormData) {
+  try {
+    await db.contacts.create({ data: parseFormData(formData) });
+    return { success: true, error: null };
+  } catch {
+    return { success: false, error: "Submission failed. Please try again." };
+  }
+}
+```
+
+---
+
+## Frequently Asked Questions (FAQ)
+
+### Can Server Actions access the database directly?
+
+Yes — this is one of their primary use cases. Server Actions run on the server with full Node.js runtime access, so you can use `mysql2`, Prisma, or any other database driver directly. Just ensure your database credentials are in environment variables and never hardcoded.
+
+### Are Server Actions secure?
+
+Server Actions are exposed as POST endpoints by Next.js — they can technically be called directly via HTTP. This means you must validate all inputs server-side (never trust FormData), check authentication/authorization for protected actions, and never include sensitive logic that assumes the caller is your UI.
+
+### Can I use React Hook Form with Server Actions?
+
+Yes, with some adaptation. React Hook Form's `handleSubmit` can be used to validate client-side before the Server Action fires. Use `form.handleSubmit(async (data) => { await action(new FormData()); })` to get client-side validation benefits while still using Server Actions for the actual submission.
+
+### Do Server Actions work with file uploads?
+
+Yes. File inputs are included in `FormData` automatically. Access them with `formData.get("file")` — the result is a `File` object. You can then upload to a storage service like Cloudflare R2 or S3 directly from the Server Action, without exposing credentials to the client.
+
+---

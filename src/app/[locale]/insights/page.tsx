@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function Insights({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const posts = getAllPostsMeta(locale);
+  const posts = await getAllPostsMeta(locale);
   const t = await getTranslations('Insights');
 
   return (
