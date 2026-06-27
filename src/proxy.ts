@@ -8,23 +8,19 @@ const intlMiddleware = createMiddleware(routing);
 
 export default function proxy(req: NextRequest) {
   if (req.nextUrl.pathname.startsWith('/admin')) {
-    const basicAuth = req.headers.get('authorization');
-    
-    if (basicAuth) {
-      const authValue = basicAuth.split(' ')[1];
-      const [user, pwd] = atob(authValue).split(':');
+    if (req.nextUrl.pathname === '/admin/login') {
+      return NextResponse.next();
+    }
 
-      if (user === 'admin' && pwd === (process.env.ADMIN_PASSWORD || 'secret123')) {
-        return NextResponse.next();
-      }
+    const session = req.cookies.get('admin_session');
+    
+    if (session?.value === 'authenticated') {
+      return NextResponse.next();
     }
     
-    return new NextResponse('Auth Required', {
-      status: 401,
-      headers: {
-        'WWW-Authenticate': 'Basic realm="Secure Area"',
-      },
-    });
+    // Redirect unauthenticated users to login page
+    const loginUrl = new URL('/admin/login', req.url);
+    return NextResponse.redirect(loginUrl);
   }
 
   return intlMiddleware(req);

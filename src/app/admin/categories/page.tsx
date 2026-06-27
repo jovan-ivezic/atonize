@@ -1,6 +1,7 @@
 import { prisma } from '../../../lib/prisma';
 import Link from 'next/link';
 import { deleteCategory } from '../../../actions/category';
+import DeleteButton from '../components/DeleteButton';
 
 export default async function AdminCategoriesPage() {
   const categories = await prisma.category.findMany({
@@ -12,14 +13,14 @@ export default async function AdminCategoriesPage() {
     <>
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-title-md2 font-semibold text-black dark:text-white text-2xl">
-          Kategorije
+          Categories
         </h2>
         
         <Link 
           href="/admin/categories/new"
           className="inline-flex items-center justify-center rounded-md bg-[#3C50E0] py-2 px-6 text-center font-medium text-white hover:bg-opacity-90"
         >
-          Dodaj Kategoriju
+          Add Category
         </Link>
       </div>
 
@@ -28,10 +29,10 @@ export default async function AdminCategoriesPage() {
           <table className="w-full table-auto">
             <thead>
               <tr className="bg-gray-2 text-left dark:bg-meta-4">
-                <th className="min-w-[220px] py-4 px-4 font-medium text-black dark:text-white xl:pl-11">Kategorija</th>
+                <th className="min-w-[220px] py-4 px-4 font-medium text-black dark:text-white xl:pl-11">Category</th>
                 <th className="min-w-[150px] py-4 px-4 font-medium text-black dark:text-white">Slug (EN)</th>
-                <th className="min-w-[120px] py-4 px-4 font-medium text-black dark:text-white">Jezici</th>
-                <th className="py-4 px-4 font-medium text-black dark:text-white">Akcije</th>
+                <th className="min-w-[120px] py-4 px-4 font-medium text-black dark:text-white">Languages</th>
+                <th className="py-4 px-4 font-medium text-black dark:text-white">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -46,10 +47,10 @@ export default async function AdminCategoriesPage() {
                         {category.icon && <span className="text-xl">{category.icon}</span>}
                         <div className="flex flex-col">
                           <p className="text-black dark:text-white font-medium">
-                            {enTrans?.name || srTrans?.name || 'Bez imena'}
+                            {enTrans?.name || srTrans?.name || 'Unnamed'}
                           </p>
                           <p className="text-xs text-gray-500 line-clamp-1 max-w-[200px]">
-                            {enTrans?.description || 'Nema SEO opisa'}
+                            {enTrans?.description || 'No SEO description'}
                           </p>
                         </div>
                       </div>
@@ -68,11 +69,7 @@ export default async function AdminCategoriesPage() {
                         <Link href={`/admin/categories/${category.id}/edit`} className="hover:text-primary font-medium text-sm">
                           Izmeni
                         </Link>
-                        <form action={deleteCategory.bind(null, category.id)}>
-                          <button type="submit" className="hover:text-danger text-red-500 font-medium text-sm">
-                            Obriši
-                          </button>
-                        </form>
+                        <DeleteButton id={category.id} action={deleteCategory} itemType="ovu kategoriju" />
                       </div>
                     </td>
                   </tr>

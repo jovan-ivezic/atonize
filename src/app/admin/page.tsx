@@ -1,6 +1,7 @@
 import { prisma } from '../../lib/prisma';
 import Link from 'next/link';
 import { deletePost } from '../../actions/post';
+import DeleteButton from './components/DeleteButton';
 
 export default async function AdminDashboard() {
   const posts = await prisma.post.findMany({
@@ -15,14 +16,14 @@ export default async function AdminDashboard() {
     <>
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-title-md2 font-semibold text-black dark:text-white text-2xl">
-          Pregled Objava
+          All Posts
         </h2>
         
         <Link 
           href="/admin/new"
           className="inline-flex items-center justify-center bg-brand-500 py-3 px-6 text-center font-medium text-white hover:bg-opacity-90 rounded-lg shadow-theme-sm transition-all"
         >
-          + Nova Objava
+          + New Post
         </Link>
       </div>
 
@@ -31,10 +32,10 @@ export default async function AdminDashboard() {
           <table className="w-full table-auto">
             <thead>
               <tr className="bg-gray-50 text-left dark:bg-gray-800 border-b border-gray-200 dark:border-gray-800 rounded-lg">
-                <th className="py-4 px-4 font-medium text-gray-700 dark:text-gray-300 xl:pl-11 rounded-l-lg text-theme-sm">Naslov (Jezici)</th>
-                <th className="py-4 px-4 font-medium text-gray-700 dark:text-gray-300 text-theme-sm">Kategorija</th>
-                <th className="py-4 px-4 font-medium text-gray-700 dark:text-gray-300 text-theme-sm">Datum</th>
-                <th className="py-4 px-4 font-medium text-gray-700 dark:text-gray-300 rounded-r-lg text-theme-sm text-right">Akcije</th>
+                <th className="py-4 px-4 font-medium text-gray-700 dark:text-gray-300 xl:pl-11 rounded-l-lg text-theme-sm">Title (Languages)</th>
+                <th className="py-4 px-4 font-medium text-gray-700 dark:text-gray-300 text-theme-sm">Category</th>
+                <th className="py-4 px-4 font-medium text-gray-700 dark:text-gray-300 text-theme-sm">Date</th>
+                <th className="py-4 px-4 font-medium text-gray-700 dark:text-gray-300 rounded-r-lg text-theme-sm text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -67,14 +68,7 @@ export default async function AdminDashboard() {
                         >
                           Izmeni
                         </Link>
-                        <form action={async () => {
-                          'use server';
-                          await deletePost(post.id);
-                        }}>
-                          <button type="submit" className="text-gray-500 hover:text-error-500 transition-colors text-theme-sm font-medium">
-                            Obriši
-                          </button>
-                        </form>
+                        <DeleteButton id={post.id} action={deletePost} itemType="ovu objavu" />
                       </div>
                     </td>
                   </tr>

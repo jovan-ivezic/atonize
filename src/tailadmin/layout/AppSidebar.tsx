@@ -34,12 +34,12 @@ const navItems: NavItem[] = [
   },
   {
     icon: <PageIcon />,
-    name: "Nova Objava",
+    name: "New Post",
     path: "/admin/new",
   },
   {
     icon: <ListIcon />,
-    name: "Kategorije",
+    name: "Categories",
     path: "/admin/categories",
   },
 ];

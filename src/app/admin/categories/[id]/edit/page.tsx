@@ -13,7 +13,7 @@ export default async function EditCategoryPage({ params }: { params: Promise<{ i
 
   if (!category) notFound();
   
-  const mainName = category.translations.find(t => t.locale === 'en')?.name || category.translations[0]?.name || 'Bez imena';
+  const mainName = category.translations.find(t => t.locale === 'en')?.name || category.translations[0]?.name || 'Unnamed';
 
   return (
     <>
@@ -23,8 +23,8 @@ export default async function EditCategoryPage({ params }: { params: Promise<{ i
         </h2>
         <nav>
           <ol className="flex items-center gap-2">
-            <li><Link className="font-medium text-[#3C50E0]" href="/admin/categories">Kategorije /</Link></li>
-            <li className="font-medium">Izmeni Kategoriju</li>
+            <li><Link className="font-medium text-[#3C50E0]" href="/admin/categories">Categories /</Link></li>
+            <li className="font-medium">Edit Category</li>
           </ol>
         </nav>
       </div>

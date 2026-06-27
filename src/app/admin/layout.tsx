@@ -6,7 +6,7 @@ import TailAdminWrapper from '@/tailadmin/layout/TailAdminWrapper';
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>
+      <body suppressHydrationWarning>
         <ThemeProvider>
           <SidebarProvider>
             <TailAdminWrapper>

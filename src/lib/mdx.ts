@@ -8,7 +8,12 @@ export type PostMetadata = {
   categorySlug: string;
   slug: string;
   icon?: string | null;
+  featuredImage?: string | null;
+  author?: string | null;
+  published?: boolean;
   excerpt?: string | null;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
   series?: string | null;
   seriesOrder?: number | null;
   locale?: string;
@@ -24,7 +29,12 @@ const mapPrismaPostToMeta = (post: any, translation: any): PostMetadata => {
     categorySlug: catTranslation?.slug || 'uncategorized',
     slug: translation.slug,
     icon: post.icon,
+    featuredImage: post.featuredImage,
+    author: post.author,
+    published: post.published,
     excerpt: translation.excerpt,
+    seoTitle: translation.seoTitle,
+    seoDescription: translation.seoDescription,
     series: post.series,
     seriesOrder: post.seriesOrder,
     locale: translation.locale,
@@ -63,7 +73,7 @@ export const getPostBySlug = async (slug: string, locale: string = 'en') => {
 
 export const getAllPostsMeta = async (locale: string = 'en'): Promise<PostMetadata[]> => {
   const posts = await prisma.post.findMany({
-    where: { translations: { some: { locale } } },
+    where: { published: true, translations: { some: { locale } } },
     include: { 
       translations: { where: { locale } },
       category: { include: { translations: { where: { locale } } } }
@@ -76,7 +86,7 @@ export const getAllPostsMeta = async (locale: string = 'en'): Promise<PostMetada
 
 export const getPostsInSeries = async (seriesName: string, locale: string = 'en'): Promise<PostMetadata[]> => {
   const posts = await prisma.post.findMany({
-    where: { series: seriesName, translations: { some: { locale } } },
+    where: { published: true, series: seriesName, translations: { some: { locale } } },
     include: { 
       translations: { where: { locale } },
       category: { include: { translations: { where: { locale } } } }
@@ -90,7 +100,9 @@ export const getPostsInSeries = async (seriesName: string, locale: string = 'en'
 export const slugify = (text: string) => {
   const map: Record<string, string> = {
     'š':'s', 'đ':'dj', 'ž':'z', 'č':'c', 'ć':'c',
-    'Š':'s', 'Đ':'dj', 'Ž':'z', 'Č':'c', 'Ć':'c'
+    'Š':'s', 'Đ':'dj', 'Ž':'z', 'Č':'c', 'Ć':'c',
+    'а':'a', 'б':'b', 'в':'v', 'г':'g', 'д':'d', 'ђ':'dj', 'е':'e', 'ж':'z', 'з':'z', 'и':'i', 'ј':'j', 'к':'k', 'л':'l', 'љ':'lj', 'м':'m', 'н':'n', 'њ':'nj', 'о':'o', 'п':'p', 'р':'r', 'с':'s', 'т':'t', 'ћ':'c', 'у':'u', 'ф':'f', 'х':'h', 'ц':'c', 'ч':'c', 'џ':'dz', 'ш':'s',
+    'А':'a', 'Б':'b', 'В':'v', 'Г':'g', 'Д':'d', 'Ђ':'dj', 'Е':'e', 'Ж':'z', 'З':'z', 'И':'i', 'Ј':'j', 'К':'k', 'Л':'l', 'Љ':'lj', 'М':'m', 'Н':'n', 'Њ':'nj', 'О':'o', 'П':'p', 'Р':'r', 'С':'s', 'Т':'t', 'Ћ':'c', 'У':'u', 'Ф':'f', 'Х':'h', 'Ц':'c', 'Ч':'c', 'Џ':'dz', 'Ш':'s'
   };
   let str = text;
   for (const key in map) {
@@ -133,11 +145,11 @@ export const getAllCategorySlugs = async (locale: string = 'en'): Promise<string
 export const getCategoryBySlug = async (categorySlug: string, locale: string = 'en') => {
   const category = await prisma.category.findFirst({
     where: { translations: { some: { slug: categorySlug, locale } } },
-    include: { translations: { where: { locale } } }
+    include: { translations: true }
   });
   
   if (!category || category.translations.length === 0) return null;
-  return category.translations[0];
+  return category;
 };
 
 export const getPostByPostId = async (postId: string, locale: string = 'en'): Promise<PostMetadata | null> => {

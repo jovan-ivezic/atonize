@@ -29,7 +29,7 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
           <ol className="flex items-center gap-2">
             <li>
               <Link className="font-medium text-[#3C50E0]" href="/admin">
-                Pregled Objava /
+                All Posts /
               </Link>
             </li>
             <li className="font-medium">Izmeni</li>

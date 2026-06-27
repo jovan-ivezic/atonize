@@ -8,20 +8,27 @@ import { slugify } from '../lib/mdx';
 export async function createPost(formData: FormData) {
   const categoryId = formData.get('categoryId') as string;
   const icon = formData.get('icon') as string;
+  const featuredImage = formData.get('featuredImage') as string;
+  const author = formData.get('author') as string;
+  const published = formData.get('published') === 'true';
   const series = formData.get('series') as string;
   const seriesOrder = formData.get('seriesOrder') as string;
   const dateStr = formData.get('date') as string;
   const date = dateStr ? new Date(dateStr) : new Date();
 
   const titleEn = formData.get('title_en') as string;
+  const seoTitleEn = formData.get('seoTitle_en') as string;
   const contentEn = formData.get('content_en') as string;
   const excerptEn = formData.get('excerpt_en') as string;
+  const seoDescriptionEn = formData.get('seoDescription_en') as string;
   let slugEn = formData.get('slug_en') as string;
   if (!slugEn && titleEn) slugEn = slugify(titleEn);
 
   const titleSr = formData.get('title_sr') as string;
+  const seoTitleSr = formData.get('seoTitle_sr') as string;
   const contentSr = formData.get('content_sr') as string;
   const excerptSr = formData.get('excerpt_sr') as string;
+  const seoDescriptionSr = formData.get('seoDescription_sr') as string;
   let slugSr = formData.get('slug_sr') as string;
   if (!slugSr && titleSr) slugSr = slugify(titleSr);
 
@@ -30,8 +37,10 @@ export async function createPost(formData: FormData) {
     translations.push({
       locale: 'en',
       title: titleEn,
+      seoTitle: seoTitleEn || null,
       content: contentEn,
       excerpt: excerptEn || null,
+      seoDescription: seoDescriptionEn || null,
       slug: slugEn
     });
   }
@@ -40,8 +49,10 @@ export async function createPost(formData: FormData) {
     translations.push({
       locale: 'sr',
       title: titleSr,
+      seoTitle: seoTitleSr || null,
       content: contentSr,
       excerpt: excerptSr || null,
+      seoDescription: seoDescriptionSr || null,
       slug: slugSr
     });
   }
@@ -51,6 +62,9 @@ export async function createPost(formData: FormData) {
       categoryId,
       date,
       icon: icon || null,
+      featuredImage: featuredImage || null,
+      author: author || null,
+      published,
       series: series || null,
       seriesOrder: seriesOrder ? parseInt(seriesOrder) : null,
       translations: {
@@ -70,20 +84,27 @@ export async function createPost(formData: FormData) {
 export async function updatePost(id: string, formData: FormData) {
   const categoryId = formData.get('categoryId') as string;
   const icon = formData.get('icon') as string;
+  const featuredImage = formData.get('featuredImage') as string;
+  const author = formData.get('author') as string;
+  const published = formData.get('published') === 'true';
   const series = formData.get('series') as string;
   const seriesOrder = formData.get('seriesOrder') as string;
   const dateStr = formData.get('date') as string;
   const date = dateStr ? new Date(dateStr) : new Date();
 
   const titleEn = formData.get('title_en') as string;
+  const seoTitleEn = formData.get('seoTitle_en') as string;
   const contentEn = formData.get('content_en') as string;
   const excerptEn = formData.get('excerpt_en') as string;
+  const seoDescriptionEn = formData.get('seoDescription_en') as string;
   let slugEn = formData.get('slug_en') as string;
   if (!slugEn && titleEn) slugEn = slugify(titleEn);
 
   const titleSr = formData.get('title_sr') as string;
+  const seoTitleSr = formData.get('seoTitle_sr') as string;
   const contentSr = formData.get('content_sr') as string;
   const excerptSr = formData.get('excerpt_sr') as string;
+  const seoDescriptionSr = formData.get('seoDescription_sr') as string;
   let slugSr = formData.get('slug_sr') as string;
   if (!slugSr && titleSr) slugSr = slugify(titleSr);
 
@@ -91,16 +112,16 @@ export async function updatePost(id: string, formData: FormData) {
   if (titleEn && contentEn) {
     translations.push({
       where: { slug_locale: { slug: slugEn, locale: 'en' } },
-      create: { locale: 'en', title: titleEn, content: contentEn, excerpt: excerptEn || null, slug: slugEn },
-      update: { title: titleEn, content: contentEn, excerpt: excerptEn || null, slug: slugEn }
+      create: { locale: 'en', title: titleEn, seoTitle: seoTitleEn || null, content: contentEn, excerpt: excerptEn || null, seoDescription: seoDescriptionEn || null, slug: slugEn },
+      update: { title: titleEn, seoTitle: seoTitleEn || null, content: contentEn, excerpt: excerptEn || null, seoDescription: seoDescriptionEn || null, slug: slugEn }
     });
   }
   
   if (titleSr && contentSr) {
     translations.push({
       where: { slug_locale: { slug: slugSr, locale: 'sr' } },
-      create: { locale: 'sr', title: titleSr, content: contentSr, excerpt: excerptSr || null, slug: slugSr },
-      update: { title: titleSr, content: contentSr, excerpt: excerptSr || null, slug: slugSr }
+      create: { locale: 'sr', title: titleSr, seoTitle: seoTitleSr || null, content: contentSr, excerpt: excerptSr || null, seoDescription: seoDescriptionSr || null, slug: slugSr },
+      update: { title: titleSr, seoTitle: seoTitleSr || null, content: contentSr, excerpt: excerptSr || null, seoDescription: seoDescriptionSr || null, slug: slugSr }
     });
   }
 
@@ -110,6 +131,9 @@ export async function updatePost(id: string, formData: FormData) {
       categoryId,
       date,
       icon: icon || null,
+      featuredImage: featuredImage || null,
+      author: author || null,
+      published,
       series: series || null,
       seriesOrder: seriesOrder ? parseInt(seriesOrder) : null,
     },

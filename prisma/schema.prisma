@@ -12,6 +12,9 @@ model Post {
   date        DateTime @default(now())
   categoryId  String
   icon        String?
+  featuredImage String?
+  author      String?
+  published   Boolean  @default(true)
   series      String?
   seriesOrder Int?
   createdAt   DateTime @default(now())
@@ -25,11 +28,13 @@ model PostTranslation {
   id        String   @id @default(uuid())
   postId    String
   locale    String
-  title     String
-  slug      String
-  excerpt   String?
-  content   String
-  createdAt DateTime @default(now())
+  title           String
+  seoTitle        String?
+  slug            String
+  excerpt         String?
+  seoDescription  String?
+  content         String
+  createdAt       DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)

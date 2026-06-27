@@ -1,4 +1,5 @@
 import { Link } from '../../../../../i18n/routing';
+import { AlternateLocalesRegister } from '../../../../../components/AlternateLocalesRegister';
 import Navbar from '../../../../../components/Navbar';
 import Footer from '../../../../../components/Footer';
 import { getPostsByCategorySlug, getAllCategorySlugs, getCategoryBySlug } from '../../../../../lib/mdx';
@@ -9,14 +10,22 @@ import type { Metadata } from 'next';
 export async function generateMetadata({ params }: { params: Promise<{ locale: string, categorySlug: string }> }): Promise<Metadata> {
   const { locale, categorySlug } = await params;
 
-  const catTranslation = await getCategoryBySlug(categorySlug, locale);
-  if (!catTranslation) return {};
+  const category = await getCategoryBySlug(categorySlug, locale);
+  if (!category) return {};
+
+  const catTranslation = category.translations.find(t => t.locale === locale);
+  const enSlug = category.translations.find(t => t.locale === 'en')?.slug;
+  const srSlug = category.translations.find(t => t.locale === 'sr')?.slug;
 
   return {
-    title: catTranslation.name,
-    description: catTranslation.description || undefined,
+    title: catTranslation?.name,
+    description: catTranslation?.description || undefined,
     alternates: {
       canonical: locale === 'sr' ? `/sr/uvidi/kategorija/${categorySlug}` : `/en/insights/category/${categorySlug}`,
+      languages: {
+        'en': enSlug ? `/en/insights/category/${enSlug}` : undefined,
+        'sr': srSlug ? `/sr/uvidi/kategorija/${srSlug}` : undefined,
+      },
     },
   };
 }
@@ -39,18 +48,26 @@ export default async function CategoryPage({ params }: { params: Promise<{ local
   const { locale, categorySlug } = await params;
   setRequestLocale(locale);
   
-  const [posts, catTranslation, t] = await Promise.all([
+  const [posts, category, t] = await Promise.all([
     getPostsByCategorySlug(categorySlug, locale),
     getCategoryBySlug(categorySlug, locale),
     getTranslations('Insights'),
   ]);
 
+  const catTranslation = category?.translations.find(tr => tr.locale === locale);
   if (!catTranslation && posts.length === 0) notFound();
 
   const categoryName = catTranslation?.name || categorySlug;
+  const enSlug = category?.translations.find(tr => tr.locale === 'en')?.slug;
+  const srSlug = category?.translations.find(tr => tr.locale === 'sr')?.slug;
+
+  const alternates: Record<string, Record<string, string>> = {};
+  if (enSlug) alternates['en'] = { categorySlug: enSlug };
+  if (srSlug) alternates['sr'] = { categorySlug: srSlug };
 
   return (
     <div className="min-h-screen bg-[#fafafa] flex flex-col">
+      <AlternateLocalesRegister alternates={alternates} />
       <Navbar />
       
       <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-24">

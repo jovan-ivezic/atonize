@@ -4,7 +4,7 @@ import { useSidebar } from "@/tailadmin/context/SidebarContext";
 import AppHeader from "@/tailadmin/layout/AppHeader";
 import AppSidebar from "@/tailadmin/layout/AppSidebar";
 import Backdrop from "@/tailadmin/layout/Backdrop";
-import React from "react";
+import { usePathname } from 'next/navigation';
 
 export default function TailAdminWrapper({
   children,
@@ -12,6 +12,11 @@ export default function TailAdminWrapper({
   children: React.ReactNode;
 }) {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
+  const pathname = usePathname();
+
+  if (pathname === '/admin/login') {
+    return <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-outfit text-gray-800 dark:text-white/90">{children}</div>;
+  }
 
   // Dynamic class for main content margin based on sidebar state
   const mainContentMargin = isMobileOpen

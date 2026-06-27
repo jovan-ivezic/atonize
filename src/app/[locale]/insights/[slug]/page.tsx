@@ -32,12 +32,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     }
 
     return {
-      title: `${meta.title} | Atonize`,
-      description: meta.excerpt,
+      title: meta.seoTitle ? meta.seoTitle : `${meta.title} | Atonize`,
+      description: meta.seoDescription || meta.excerpt,
       openGraph: {
         type: 'article',
         publishedTime: meta.date,
-        authors: ['Jovan Ivezić'],
+        authors: [meta.author || 'Jovan Ivezić'],
       },
       alternates: {
         canonical: locale === 'sr' ? `/sr/uvidi/${slug}` : `/en/insights/${slug}`,
@@ -166,6 +166,8 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                   <span className="bg-gray-100 px-3 py-1 rounded-full font-medium text-gray-700">{post.meta.category}</span>
                   <span>•</span>
                   <time>{new Date(post.meta.date).toLocaleDateString(locale === 'sr' ? 'sr-RS' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
+                  <span>•</span>
+                  <span className="font-medium text-gray-700">{post.meta.author || 'Jovan Ivezić'}</span>
                 </div>
                 
                 <h1 className="text-4xl md:text-5xl font-display font-bold text-gray-900 leading-tight mb-6">
@@ -173,9 +175,21 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                 </h1>
                 
                 {post.meta.excerpt && (
-                  <p className="text-xl text-gray-600 leading-relaxed">
+                  <p className="text-xl text-gray-600 leading-relaxed mb-8">
                     {post.meta.excerpt}
                   </p>
+                )}
+
+                {post.meta.featuredImage && (
+                  <div className="mb-12 w-full rounded-2xl overflow-hidden shadow-lg border border-gray-100">
+                    <img 
+                      src={post.meta.featuredImage} 
+                      alt={post.meta.title} 
+                      width={1200}
+                      height={630}
+                      className="w-full h-auto object-cover max-h-[500px]"
+                    />
+                  </div>
                 )}
               </div>
               
