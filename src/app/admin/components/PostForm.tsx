@@ -136,6 +136,33 @@ export default function PostForm({ post, categories = [] }: { post?: any, catego
                 className="w-full rounded-lg border-[1.5px] border-gray-200 bg-transparent py-2.5 px-4 font-medium outline-none transition focus:border-brand-500 active:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:focus:border-brand-500"
               />
             </div>
+
+            <div>
+              <label className="mb-2 block text-gray-800 dark:text-gray-200 font-medium text-sm">
+                Series
+              </label>
+              <input 
+                type="text" 
+                name="series" 
+                defaultValue={post?.series || ''} 
+                placeholder="e.g. React Masterclass"
+                className="w-full rounded-lg border-[1.5px] border-gray-200 bg-transparent py-2.5 px-4 font-medium outline-none transition focus:border-brand-500 active:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:focus:border-brand-500"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-gray-800 dark:text-gray-200 font-medium text-sm">
+                Series Order
+              </label>
+              <input 
+                type="number" 
+                name="seriesOrder" 
+                min={1}
+                defaultValue={post?.seriesOrder ?? ''} 
+                placeholder="e.g. 1"
+                className="w-full rounded-lg border-[1.5px] border-gray-200 bg-transparent py-2.5 px-4 font-medium outline-none transition focus:border-brand-500 active:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:focus:border-brand-500"
+              />
+            </div>
           </div>
           
           <div className="mt-6">
