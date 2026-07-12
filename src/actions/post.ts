@@ -3,7 +3,39 @@
 import { prisma } from '../lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { slugify } from '../lib/mdx'; 
+import { slugify } from '../lib/mdx';
+
+function revalidatePostPaths(slugs: { en?: string; sr?: string }[]) {
+  for (const { en, sr } of slugs) {
+    if (en) revalidatePath(`/en/insights/${en}`);
+    if (sr) revalidatePath(`/sr/uvidi/${sr}`);
+  }
+}
+
+async function revalidateSeriesPosts(seriesNames: (string | null | undefined)[]) {
+  const uniqueSeries = [...new Set(seriesNames.filter(Boolean))] as string[];
+
+  for (const seriesName of uniqueSeries) {
+    const posts = await prisma.post.findMany({
+      where: { series: seriesName },
+      include: { translations: true },
+    });
+
+    revalidatePostPaths(
+      posts.map((post) => ({
+        en: post.translations.find((t) => t.locale === 'en')?.slug,
+        sr: post.translations.find((t) => t.locale === 'sr')?.slug,
+      }))
+    );
+  }
+}
+
+function revalidateListPaths() {
+  revalidatePath('/en/insights');
+  revalidatePath('/sr/uvidi');
+  revalidatePath('/en');
+  revalidatePath('/sr');
+}
 
 export async function createPost(formData: FormData) {
   const categoryId = formData.get('categoryId') as string;
@@ -73,11 +105,15 @@ export async function createPost(formData: FormData) {
     },
   });
 
-  revalidatePath('/en/insights');
-  revalidatePath('/sr/uvidi');
-  revalidatePath('/en');
-  revalidatePath('/sr');
-  
+  revalidateListPaths();
+  revalidatePostPaths([
+    {
+      en: titleEn && contentEn ? slugEn : undefined,
+      sr: titleSr && contentSr ? slugSr : undefined,
+    },
+  ]);
+  await revalidateSeriesPosts([series]);
+
   redirect('/admin');
 }
 
@@ -125,6 +161,11 @@ export async function updatePost(id: string, formData: FormData) {
     });
   }
 
+  const existingPost = await prisma.post.findUnique({
+    where: { id },
+    select: { series: true, translations: { select: { locale: true, slug: true } } },
+  });
+
   await prisma.post.update({
     where: { id },
     data: {
@@ -149,24 +190,43 @@ export async function updatePost(id: string, formData: FormData) {
     });
   }
 
-  revalidatePath('/en/insights');
-  revalidatePath('/sr/uvidi');
-  if (slugEn) revalidatePath(`/en/insights/${slugEn}`);
-  if (slugSr) revalidatePath(`/sr/uvidi/${slugSr}`);
-  revalidatePath('/en');
-  revalidatePath('/sr');
+  revalidateListPaths();
+  const existingEnSlug = existingPost?.translations.find((t) => t.locale === 'en')?.slug;
+  const existingSrSlug = existingPost?.translations.find((t) => t.locale === 'sr')?.slug;
+  revalidatePostPaths([
+    {
+      en: titleEn && contentEn ? slugEn : existingEnSlug,
+      sr: titleSr && contentSr ? slugSr : existingSrSlug,
+    },
+    {
+      en: existingEnSlug,
+      sr: existingSrSlug,
+    },
+  ]);
+  await revalidateSeriesPosts([existingPost?.series, series]);
 
   redirect('/admin');
 }
 
 export async function deletePost(id: string) {
+  const existingPost = await prisma.post.findUnique({
+    where: { id },
+    select: { series: true, translations: { select: { locale: true, slug: true } } },
+  });
+
   // Cascades to translations automatically
   await prisma.post.delete({
     where: { id },
   });
 
-  revalidatePath('/en/insights');
-  revalidatePath('/sr/uvidi');
-  
+  revalidateListPaths();
+  revalidatePostPaths([
+    {
+      en: existingPost?.translations.find((t) => t.locale === 'en')?.slug,
+      sr: existingPost?.translations.find((t) => t.locale === 'sr')?.slug,
+    },
+  ]);
+  await revalidateSeriesPosts([existingPost?.series]);
+
   redirect('/admin');
 }
