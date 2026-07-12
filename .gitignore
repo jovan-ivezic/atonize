@@ -29,5 +29,6 @@ deploy.config.sh
 *.sw?
 public/portfolio/*
 !public/portfolio/images/
+next-env.d.ts
 
 /src/generated/prisma
