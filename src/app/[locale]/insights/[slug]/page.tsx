@@ -188,12 +188,6 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                 <h1 className="text-4xl md:text-5xl font-display font-bold text-gray-900 leading-tight mb-6">
                   {post.meta.title}
                 </h1>
-                
-                {post.meta.excerpt && (
-                  <p className="text-xl text-gray-600 leading-relaxed mb-8">
-                    {post.meta.excerpt}
-                  </p>
-                )}
               </div>
               
               <div className="prose prose-lg max-w-none">

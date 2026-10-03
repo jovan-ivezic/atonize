@@ -41,6 +41,8 @@ const mapPrismaPostToMeta = (post: any, translation: any): PostMetadata => {
   };
 };
 
+const stripLeadingH1 = (content: string) => content.replace(/^\s*#[ \t]+[^\r\n]*\r?\n?/, '');
+
 export const getPostBySlug = async (slug: string, locale: string = 'en') => {
   let post = await prisma.post.findFirst({
     where: { translations: { some: { slug, locale } } },
@@ -67,7 +69,7 @@ export const getPostBySlug = async (slug: string, locale: string = 'en') => {
   return {
     slug: t.slug,
     meta: mapPrismaPostToMeta(post, t),
-    content: t.content
+    content: stripLeadingH1(t.content)
   };
 };
 
