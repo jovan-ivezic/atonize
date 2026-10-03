@@ -2,6 +2,7 @@ import { Link } from '../../../i18n/routing';
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
 import { getAllPostsMeta } from '../../../lib/mdx';
+import PostCard from '../../../components/PostCard';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -62,29 +63,9 @@ export default async function Insights({ params }: { params: Promise<{ locale: s
 
         {/* Grid of Posts */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {posts.length > 0 ? posts.map((post, index) => {
-            // Ciklično menjamo boje pozadine za lepši dizajn
-            const colors = ['bg-[#facc15]', 'bg-[#b4dcdc]', 'bg-[#f05a41]', 'bg-[#818cf8]'];
-            const bgColor = colors[index % colors.length];
-            
-            return (
-              <Link key={post.slug} href={{ pathname: '/insights/[slug]', params: { slug: post.slug } }} className="group block bg-white border border-gray-100 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300">
-                <div className={`${bgColor} h-48 flex items-center justify-center p-8 relative overflow-hidden`}>
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
-                  <span className="text-6xl opacity-90 group-hover:scale-110 transition-transform duration-300">{post.icon || '📝'}</span>
-                </div>
-                <div className="p-6">
-                  <h3 className="font-bold text-gray-900 mb-2 leading-tight group-hover:text-primary-600 transition-colors">
-                    {post.title}
-                  </h3>
-                  <div className="flex justify-between items-center text-gray-400 text-sm mt-4">
-                    <span>{post.category}</span>
-                    <span>{new Date(post.date).toLocaleDateString(locale === 'sr' ? 'sr-RS' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                  </div>
-                </div>
-              </Link>
-            );
-          }) : (
+          {posts.length > 0 ? posts.map((post, index) => (
+            <PostCard key={post.slug} post={post} index={index} locale={locale} />
+          )) : (
             <Link href={{ pathname: '/insights/[slug]', params: { slug: 'coming-soon' } }} className="group block bg-white border border-gray-100 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300">
               <div className="bg-[#facc15] h-48 flex items-center justify-center p-8">
                 <span className="text-6xl opacity-90 group-hover:scale-110 transition-transform duration-300">⏳</span>

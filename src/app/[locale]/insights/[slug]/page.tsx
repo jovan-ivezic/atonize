@@ -38,7 +38,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         type: 'article',
         publishedTime: meta.date,
         authors: [meta.author || 'Jovan Ivezić'],
+        ...(meta.featuredImage && { images: [{ url: meta.featuredImage, width: 1200, height: 630, alt: meta.title }] }),
       },
+      ...(meta.featuredImage && { twitter: { card: 'summary_large_image', images: [meta.featuredImage] } }),
       alternates: {
         canonical: locale === 'sr' ? `/sr/uvidi/${slug}` : `/en/insights/${slug}`,
         languages: {
@@ -161,6 +163,19 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                 <Link href={`/insights`} className="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-700 mb-8 transition-colors">
                   <FaArrowLeft className="mr-2" /> Back to Insights
                 </Link>
+
+                {post.meta.featuredImage && (
+                  <div className="mb-10 w-full rounded-2xl overflow-hidden shadow-lg border border-gray-100">
+                    <img
+                      src={post.meta.featuredImage}
+                      alt={post.meta.title}
+                      width={1200}
+                      height={630}
+                      fetchPriority="high"
+                      className="w-full h-auto object-cover max-h-[500px]"
+                    />
+                  </div>
+                )}
                 
                 <div className="flex items-center gap-3 text-sm text-gray-500 mb-4">
                   <span className="bg-gray-100 px-3 py-1 rounded-full font-medium text-gray-700">{post.meta.category}</span>
@@ -178,18 +193,6 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
                   <p className="text-xl text-gray-600 leading-relaxed mb-8">
                     {post.meta.excerpt}
                   </p>
-                )}
-
-                {post.meta.featuredImage && (
-                  <div className="mb-12 w-full rounded-2xl overflow-hidden shadow-lg border border-gray-100">
-                    <img 
-                      src={post.meta.featuredImage} 
-                      alt={post.meta.title} 
-                      width={1200}
-                      height={630}
-                      className="w-full h-auto object-cover max-h-[500px]"
-                    />
-                  </div>
                 )}
               </div>
               
