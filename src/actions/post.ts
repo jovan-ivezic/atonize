@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { slugify } from '../lib/mdx';
 
 function revalidatePostPaths(slugs: { en?: string; sr?: string }[]) {
+  revalidatePath('/[locale]/insights/[slug]', 'page');
   for (const { en, sr } of slugs) {
     if (en) revalidatePath(`/en/insights/${en}`);
     if (sr) revalidatePath(`/sr/uvidi/${sr}`);
@@ -31,6 +32,10 @@ async function revalidateSeriesPosts(seriesNames: (string | null | undefined)[])
 }
 
 function revalidateListPaths() {
+  revalidatePath('/admin');
+  revalidatePath('/[locale]/insights', 'page');
+  revalidatePath('/[locale]/insights/category/[categorySlug]', 'page');
+  revalidatePath('/[locale]', 'layout');
   revalidatePath('/en/insights');
   revalidatePath('/sr/uvidi');
   revalidatePath('/en');

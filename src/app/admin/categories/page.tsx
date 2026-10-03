@@ -3,6 +3,9 @@ import Link from 'next/link';
 import { deleteCategory } from '../../../actions/category';
 import DeleteButton from '../components/DeleteButton';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function AdminCategoriesPage() {
   const categories = await prisma.category.findMany({
     include: { translations: true },

@@ -3,6 +3,9 @@ import Link from 'next/link';
 import { deletePost } from '../../actions/post';
 import DeleteButton from './components/DeleteButton';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function AdminDashboard() {
   const posts = await prisma.post.findMany({
     include: {

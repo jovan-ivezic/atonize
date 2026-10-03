@@ -46,8 +46,11 @@ export async function createCategory(formData: FormData) {
     },
   });
 
-  revalidatePath('/en/admin/categories');
-  revalidatePath('/sr/admin/categories');
+  revalidatePath('/admin/categories');
+  revalidatePath('/[locale]/insights', 'page');
+  revalidatePath('/[locale]', 'layout');
+  revalidatePath('/en/insights');
+  revalidatePath('/sr/uvidi');
   
   redirect('/admin/categories');
 }
@@ -99,8 +102,9 @@ export async function updateCategory(id: string, formData: FormData) {
     });
   }
 
-  revalidatePath('/en/admin/categories');
-  revalidatePath('/sr/admin/categories');
+  revalidatePath('/admin/categories');
+  revalidatePath('/[locale]/insights', 'page');
+  revalidatePath('/[locale]', 'layout');
   revalidatePath('/en/insights');
   revalidatePath('/sr/uvidi');
 
@@ -112,8 +116,9 @@ export async function deleteCategory(id: string) {
     where: { id },
   });
 
-  revalidatePath('/en/admin/categories');
-  revalidatePath('/sr/admin/categories');
+  revalidatePath('/admin/categories');
+  revalidatePath('/[locale]/insights', 'page');
+  revalidatePath('/[locale]', 'layout');
   revalidatePath('/en/insights');
   revalidatePath('/sr/uvidi');
   
