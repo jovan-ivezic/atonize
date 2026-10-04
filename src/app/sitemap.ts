@@ -41,7 +41,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // 1. Static Routes
   addRoute('/en', '/sr', 1.0, 'weekly');
-  addRoute('/en/about', '/sr/o-nama', 0.8, 'monthly');
+  addRoute('/en/portfolio', '/sr/projekti', 0.9, 'monthly');
   addRoute('/en/insights', '/sr/uvidi', 0.9, 'daily');
 
   // 2. Categories (from DB)

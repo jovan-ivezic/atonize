@@ -19,9 +19,9 @@ export const routing = defineRouting({
       en: '/insights/category/[categorySlug]',
       sr: '/uvidi/kategorija/[categorySlug]'
     },
-    '/about': {
-      en: '/about',
-      sr: '/o-nama'
+    '/portfolio': {
+      en: '/portfolio',
+      sr: '/projekti'
     }
   }
 });

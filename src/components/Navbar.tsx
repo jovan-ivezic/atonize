@@ -1,11 +1,11 @@
 'use client';
-import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { FaBars, FaTimes } from 'react-icons/fa';
 import { Link } from '../i18n/routing';
 import { useTranslations, useLocale } from 'next-intl';
 import LanguageSwitcher from './LanguageSwitcher';
+import Logo from './Logo';
 
 interface MenuItem {
   name: string;
@@ -28,8 +28,8 @@ const Navbar = () => {
   }, []);
 
   const menuItems: MenuItem[] = [
-    { name: t('work'), href: `/#portfolio` },
-    { name: t('about'), href: `/about`, isExternalPage: true },
+    { name: t('work'), href: `/portfolio`, isExternalPage: true },
+    { name: t('about'), href: `/#about` },
     { name: t('insights'), href: `/insights`, isExternalPage: true },
     { name: t('contact'), href: `/#contact` },
   ];
@@ -73,7 +73,7 @@ const Navbar = () => {
               className="flex items-center text-primary"
               onClick={(e) => scrollToSection(e, '/#home')}
             >
-              <Image src="/images/logo-color.svg" alt="Atonize Logo" width={140} height={40} priority className="h-8 w-auto" />
+              <Logo />
             </Link>
           </Motion.div>
 
@@ -84,9 +84,9 @@ const Navbar = () => {
                 key={item.name}
                 href={item.href}
                 onClick={(e) => scrollToSection(e, item.href, item.isExternalPage)}
-                className="text-secondary hover:text-primary font-label-caps text-label-caps transition-colors"
+                className="text-secondary hover:text-primary text-[15px] font-medium transition-colors"
               >
-                {item.name.toUpperCase()}
+                {item.name}
               </Link>
             ))}
             <div className="pl-4 border-l border-gray-200">
@@ -119,9 +119,9 @@ const Navbar = () => {
                 key={item.name}
                 href={item.href}
                 onClick={(e) => scrollToSection(e, item.href, item.isExternalPage)}
-                className="block text-secondary hover:text-primary font-label-caps text-label-caps py-3 border-b border-outline-variant/30"
+                className="block text-secondary hover:text-primary text-base font-medium py-3 border-b border-outline-variant/30"
               >
-                {item.name.toUpperCase()}
+                {item.name}
               </Link>
             ))}
             <div className="pt-2 border-t border-gray-100">

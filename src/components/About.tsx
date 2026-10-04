@@ -58,7 +58,7 @@ const About = () => {
             </h2>
             <div className="space-y-8 font-body-lg text-body-lg text-on-surface-variant leading-relaxed lg:pr-12">
               <p>
-                {t.rich('p1', { strong: (chunks) => <strong className="text-on-surface font-semibold italic serif-italic">{chunks}</strong> })}
+                {t.rich('p1', { strong: (chunks) => <strong className="text-on-surface font-semibold">{chunks}</strong> })}
               </p>
               <p>
                 {t.rich('p2', { strong: (chunks) => <strong className="text-on-surface font-semibold">{chunks}</strong> })}

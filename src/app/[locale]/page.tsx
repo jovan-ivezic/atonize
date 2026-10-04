@@ -33,7 +33,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       <Navbar />
       <Hero />
       <About />
-      <Portfolio />
+      <Portfolio variant="featured" />
       <Services />
       <Contact />
       <Footer />

@@ -112,7 +112,7 @@ const Services = () => {
           transition={{ delay: 0.8 }}
           className="mt-16 text-center"
         >
-          <p className="font-body-md text-on-surface-variant italic serif-italic">
+          <p className="font-body-md text-on-surface-variant">
             {t('footer_note')}
           </p>
         </motion.div>

@@ -2,15 +2,27 @@
   "Navbar": {
     "work": "Projekti",
     "insights": "Uvidi",
-    "about": "O Nama",
+    "about": "O nama",
     "contact": "Kontakt"
   },
   "Hero": {
+    "badge": "B2B Softver & Custom CRM Arhitektura",
     "greeting": "Dobrodošli u",
-    "role": "End-to-End Web Rešenja.",
-    "description": "Specijalizovani smo za izgradnju skalabilnih, brzih i visoko optimizovanih web aplikacija, naprednih B2B platformi i vrhunskih SEO rešenja.",
-    "cta_projects": "Naši Projekti",
-    "cta_contact": "Kontaktirajte Nas"
+    "role": "Namenska B2B i CRM Rešenja.",
+    "description": "Gradimo namenske B2B platforme, interne operativne sisteme i kompleksne web aplikacije koje digitalizuju i automatizuju vaše ključne poslovne procese.",
+    "cta_projects": "Pogledaj projekte",
+    "cta_contact": "Stupimo u kontakt",
+    "stat_experience": "10+",
+    "stat_experience_label": "Godina u produkciji",
+    "stat_perf": "99+",
+    "stat_perf_label": "Lighthouse brzina",
+    "stat_delivery": "100%",
+    "stat_delivery_label": "Custom arhitektura",
+    "featured_badge": "Namenska B2B platforma",
+    "featured_title": "VEEVIO Admin & CRM Sistem",
+    "featured_sub": "Bespoke sistem za prodajni pipeline i RFQ procese",
+    "featured_view": "Detalji",
+    "pill_perf": "Real-time metrike"
   },
   "About": {
     "title_first": "O",
@@ -24,22 +36,6 @@
     "stats": {
       "exp_years": "Godina Iskustva",
       "projects": "Isporučenih Projekata",
-      "seo_years": "Godina u SEO",
-      "commitment": "Posvećenost"
-    }
-  },
-  "AboutFounder": {
-    "title_first": "O",
-    "title_gradient": "Osnivaču",
-    "role": "Lead Full-Stack Inženjer",
-    "p1": "Moje ime je Jovan Ivezić i imam <strong>preko 13 godina iskustva</strong> u razvoju i vođenju kompleksnih web projekata, aplikacija i SPA rešenja.",
-    "p2": "Moja specijalnost su <strong>JavaScript, React, Next.js i moderne arhitekture</strong>. Tokom godina sam uspešno vodio agenciju i radio kao Team Lead, donoseći ključne arhitektonske odluke za enterprise sisteme.",
-    "p3": "Pored tehničkog razvoja, donosim <strong>snažnu ekspertizu u tehničkom SEO-u i digitalnoj strategiji</strong>, što mi omogućava da sagledam softversku arhitekturu kroz prizmu poslovnih rezultata.",
-    "p4": "Moja strast je <strong>izgradnja sistema od nule</strong>, počevši od baze podataka i API sloja, pa sve do prelepih i intuitivnih korisničkih interfejsa.",
-    "p5": "Atonize je moj sledeći korak ka direktnom donošenju <strong>end-to-end tehničke izvrsnosti</strong> biznisima.",
-    "stats": {
-      "exp_years": "Godina Iskustva",
-      "projects": "Završenih Projekata",
       "seo_years": "Godina u SEO",
       "commitment": "Posvećenost"
     }
@@ -78,8 +74,21 @@
   },
   "Portfolio": {
     "title_first": "Istaknuti",
-    "title_gradient": "Case Studies",
-    "description": "Pregled naših nedavnih full-stack rešenja i B2B platformi."
+    "title_gradient": "Studije slučaja",
+    "description": "Pregled naših nedavnih full-stack rešenja i B2B platformi.",
+    "page_title": "Projekti",
+    "view_all": "Pogledaj sve projekte ({total})",
+    "view_project": "Pogledaj projekat",
+    "in_progress": "U izradi",
+    "coming_soon": "Uskoro",
+    "showing": "Prikazano <b>{count}</b> od <b>{total}</b> projekata",
+    "filters": {
+      "all": "Svi projekti",
+      "b2b": "B2B i Enterprise",
+      "saas": "SaaS i web aplikacije",
+      "wordpress": "Korporativni i CMS",
+      "other": "Ostalo"
+    }
   },
   "Contact": {
     "title_first": "Stupimo u",
@@ -137,6 +146,8 @@
     "home_title": "Atonize | Izrada Web Sajtova i B2B Platformi",
     "home_description": "Specijalizovani smo za izradu modernih web aplikacija, naprednih B2B platformi i tehničku SEO optimizaciju.",
     "insights_title": "Članci i Edukacija | Atonize",
-    "insights_description": "Pročitajte naše tekstove o web programiranju, arhitekturi softvera, optimizaciji performansi i tehničkom SEO-u."
+    "insights_description": "Pročitajte naše tekstove o web programiranju, arhitekturi softvera, optimizaciji performansi i tehničkom SEO-u.",
+    "portfolio_title": "Projekti i studije slučaja",
+    "portfolio_description": "Pogledajte naš portfolio B2B platformi, SaaS proizvoda i web aplikacija rađenih u Next.js-u, React-u i modernim full-stack alatima."
   }
 }

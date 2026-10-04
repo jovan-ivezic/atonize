@@ -6,11 +6,23 @@
     "contact": "Contact"
   },
   "Hero": {
+    "badge": "B2B Software & Custom CRM Architecture",
     "greeting": "Welcome to",
-    "role": "End-to-End Web Solutions.",
-    "description": "We specialize in building scalable, accessible, and highly optimized custom web applications, advanced B2B platforms, and technical SEO solutions.",
-    "cta_projects": "View Case Studies",
-    "cta_contact": "Get in Touch"
+    "role": "Bespoke B2B & CRM Solutions.",
+    "description": "We engineer custom B2B platforms, internal operational systems, and high-performance web applications that streamline and automate critical business workflows.",
+    "cta_projects": "View Projects",
+    "cta_contact": "Get in Touch",
+    "stat_experience": "10+",
+    "stat_experience_label": "Years in Production",
+    "stat_perf": "99+",
+    "stat_perf_label": "Lighthouse Score",
+    "stat_delivery": "100%",
+    "stat_delivery_label": "Custom Architecture",
+    "featured_badge": "Bespoke B2B Platform",
+    "featured_title": "VEEVIO Admin & CRM System",
+    "featured_sub": "Complete sales pipeline & RFQ management engine",
+    "featured_view": "Details",
+    "pill_perf": "Real-time Metrics"
   },
   "About": {
     "title_first": "About",
@@ -26,22 +38,6 @@
       "projects": "Projects Delivered",
       "seo_years": "Years in SEO",
       "commitment": "Commitment"
-    }
-  },
-  "AboutFounder": {
-    "title_first": "About the",
-    "title_gradient": "Founder",
-    "role": "Lead Full-Stack Engineer",
-    "p1": "My name is Jovan Ivezić and I have <strong>13+ years of experience</strong> in developing and leading complex web projects, web applications, and single-page applications (SPAs).",
-    "p2": "I specialize in <strong>JavaScript, React, Next.js, and modern architectures</strong>. Over the years, I have successfully operated an agency and worked as a Team Lead, making crucial architectural decisions for enterprise systems.",
-    "p3": "In addition to technical development, I bring <strong>strong expertise in Technical SEO and Digital Strategy</strong>, allowing me to view software architecture in the context of business performance.",
-    "p4": "My passion lies in <strong>building things from scratch</strong>, from the database and API layer all the way to beautiful, intuitive user interfaces.",
-    "p5": "Atonize is my next step towards bringing <strong>end-to-end technical excellence</strong> directly to businesses.",
-    "stats": {
-      "exp_years": "Years Experience",
-      "projects": "Projects Completed",
-      "seo_years": "Years in SEO",
-      "commitment": "Dedication"
     }
   },
   "Services": {
@@ -79,7 +75,20 @@
   "Portfolio": {
     "title_first": "Featured",
     "title_gradient": "Case Studies",
-    "description": "A selection of our recent full-stack solutions and B2B platforms."
+    "description": "A selection of our recent full-stack solutions and B2B platforms.",
+    "page_title": "Projects",
+    "view_all": "View all projects ({total})",
+    "view_project": "View project",
+    "in_progress": "In progress",
+    "coming_soon": "Coming soon",
+    "showing": "Showing <b>{count}</b> of <b>{total}</b> projects",
+    "filters": {
+      "all": "All projects",
+      "b2b": "B2B & Enterprise",
+      "saas": "SaaS & Web Apps",
+      "wordpress": "Corporate & CMS",
+      "other": "Other"
+    }
   },
   "Contact": {
     "title_first": "Get In",
@@ -137,6 +146,8 @@
     "home_title": "Atonize | Custom Web Solutions & B2B Platforms",
     "home_description": "We specialize in building scalable, accessible, and highly optimized custom web applications, advanced B2B platforms, and technical SEO solutions.",
     "insights_title": "Engineering Insights & Articles",
-    "insights_description": "Explore our thoughts on full-stack development, software architecture, performance optimization, and technical SEO."
+    "insights_description": "Explore our thoughts on full-stack development, software architecture, performance optimization, and technical SEO.",
+    "portfolio_title": "Projects & Case Studies",
+    "portfolio_description": "Explore our portfolio of B2B platforms, SaaS products, and custom web applications built with Next.js, React, and modern full-stack tooling."
   }
 }

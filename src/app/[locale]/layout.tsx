@@ -17,6 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       default: t('home_title'),
     },
     description: t('home_description'),
+    icons: { icon: '/favicon.svg' },
     openGraph: {
       type: 'website',
       locale: locale,
@@ -52,7 +53,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale}>
-      <body className="antialiased text-gray-900 bg-white" suppressHydrationWarning>
+      <body className="antialiased text-gray-900 bg-white font-sans" suppressHydrationWarning>
         <NextIntlClientProvider messages={messages}>
           <Providers>
             {children}

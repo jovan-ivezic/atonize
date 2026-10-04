@@ -54,7 +54,8 @@
           "description": "Leveraged Server-Side Rendering (SSR) and Incremental Static Regeneration (ISR) combined with Cloudflare CDN caching to achieve Lighthouse scores of 90+. Designed a scalable relational MySQL schema and built infrastructure for a multi-language experience."
         }
       ]
-    }
+    },
+    "featured": true
   },
   {
     "id": 1,
@@ -69,7 +70,8 @@
       "Admin Panel",
       "Real-time Chat",
       "Payment Integration"
-    ]
+    ],
+    "featured": true
   },
   {
     "id": 22,
@@ -129,7 +131,8 @@
       "/portfolio/images/gallery/ljetovanje-2.webp",
       "/portfolio/images/gallery/ljetovanje-3.webp",
       "/portfolio/images/gallery/ljetovanje-4.webp"
-    ]
+    ],
+    "featured": true
   },
   {
     "id": 2,
@@ -158,7 +161,7 @@
       "Context API",
       "Local Storage"
     ],
-    "hidden":true
+    "hidden": true
   },
   {
     "id": 4,
@@ -300,6 +303,6 @@
       "CSS3",
       "JavaScript"
     ],
-    "hidden":true
+    "hidden": true
   }
 ]

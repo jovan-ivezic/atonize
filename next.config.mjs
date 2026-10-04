@@ -7,6 +7,13 @@ const nextConfig = {
   reactStrictMode: true,
   pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
 
+  async redirects() {
+    return [
+      { source: '/en/about', destination: '/en#about', permanent: true },
+      { source: '/sr/o-nama', destination: '/sr#about', permanent: true },
+    ];
+  },
+
   webpack(config) {
     const fileLoaderRule = config.module.rules.find((rule) =>
       rule.test?.test?.('.svg'),
