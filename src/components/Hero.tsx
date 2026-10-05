@@ -33,19 +33,28 @@ const Hero = () => {
           
           {/* Left Column: Heading, Pitch & CTAs */}
           <div className="lg:col-span-6 xl:col-span-6">
-            {/* Pill Eyebrow */}
-            <Motion.div
+            {/* Announcement Pill Eyebrow */}
+            <Motion.a
+              href="https://industrial.atonize.com/"
+              target="_blank"
+              rel="noopener noreferrer"
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white border border-gray-200/90 shadow-sm text-xs font-semibold text-gray-800 mb-6"
+              className="group inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white hover:bg-slate-50 border border-gray-200/90 hover:border-primary/40 shadow-xs text-xs font-semibold text-gray-800 mb-6 transition-all"
             >
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
               </span>
-              <span>{t('badge')}</span>
-            </Motion.div>
+              <span className="text-primary font-bold uppercase tracking-wider text-[10.5px] px-1.5 py-0.5 rounded bg-primary/10">
+                {t('product_pill_tag')}
+              </span>
+              <span className="group-hover:text-primary transition-colors">
+                {t('product_pill_title')}
+              </span>
+              <FaArrowRight size={10} className="text-gray-400 group-hover:text-primary group-hover:translate-x-0.5 transition-all ml-0.5" />
+            </Motion.a>
 
             {/* Main Headline in Manrope */}
             <Motion.h1 
@@ -122,8 +131,13 @@ const Hero = () => {
               {/* Subtle back ambient glow */}
               <div className="absolute -inset-2 bg-gradient-to-tr from-primary/10 via-accent/15 to-transparent rounded-2xl blur-xl opacity-70 pointer-events-none" />
 
-              {/* Elevated Light Browser Frame */}
-              <div className="relative rounded-2xl bg-white border border-gray-200/90 shadow-2xl shadow-primary/10 overflow-hidden group">
+              {/* Elevated Light Browser Frame Linking to industrial.atonize.com */}
+              <a
+                href="https://industrial.atonize.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group block relative rounded-2xl bg-white border border-gray-200/90 hover:border-primary/40 shadow-2xl shadow-primary/10 hover:shadow-primary/20 overflow-hidden transition-all duration-300"
+              >
                 
                 {/* Browser Top Bar */}
                 <div className="px-4 py-2.5 bg-gray-50/95 border-b border-gray-200/80 flex items-center justify-between">
@@ -134,13 +148,13 @@ const Hero = () => {
                   </div>
                   
                   {/* Clean URL Bar */}
-                  <div className="px-3.5 py-1 rounded-md bg-white border border-gray-200 text-[11px] font-mono text-gray-600 text-center truncate max-w-[240px] shadow-2xs">
-                    app.veevio.com/sales/dashboard
+                  <div className="px-3.5 py-1 rounded-md bg-white border border-gray-200 text-[11px] font-mono text-gray-600 text-center truncate max-w-[240px] shadow-2xs group-hover:text-primary group-hover:border-primary/30 transition-colors">
+                    industrial.atonize.com
                   </div>
 
                   <span className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    Live B2B
+                    Live Product
                   </span>
                 </div>
 
@@ -148,12 +162,13 @@ const Hero = () => {
                 <div className="relative aspect-[3450/1926] overflow-hidden bg-gray-950">
                   <Image
                     src="/images/dashboard-hero.png"
-                    alt="VEEVIO B2B Sales System Admin Dashboard"
+                    alt="Atonize Industrial B2B Sales Operating System"
                     width={1725}
                     height={963}
                     priority
                     className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.01]"
                   />
+                  <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors duration-300" />
                 </div>
 
                 {/* Bottom Showcase Info Bar */}
@@ -162,23 +177,23 @@ const Hero = () => {
                     <div className="text-[11px] font-bold uppercase tracking-wider text-primary">
                       {t('featured_badge')}
                     </div>
-                    <div className="text-sm font-manrope font-bold text-gray-900 mt-0.5">
-                      {t('featured_title')}
+                    <div className="text-sm font-manrope font-bold text-gray-900 mt-0.5 group-hover:text-primary transition-colors flex items-center gap-1.5">
+                      <span>{t('featured_title')}</span>
+                      <FaExternalLinkAlt size={10} className="text-gray-400 group-hover:text-primary transition-colors" />
                     </div>
                     <div className="text-xs text-gray-500 mt-0.5 line-clamp-1">
                       {t('featured_sub')}
                     </div>
                   </div>
 
-                  <Link
-                    href="/portfolio"
-                    className="shrink-0 px-3.5 py-1.5 rounded-lg bg-gray-100 hover:bg-primary hover:text-white text-gray-700 text-xs font-semibold transition-colors flex items-center gap-1.5"
+                  <span
+                    className="shrink-0 px-3.5 py-1.5 rounded-lg bg-gray-100 group-hover:bg-primary text-gray-700 group-hover:text-white text-xs font-semibold transition-all flex items-center gap-1.5 shadow-2xs"
                   >
                     <span>{t('featured_view')}</span>
-                    <FaArrowRight size={10} />
-                  </Link>
+                    <FaExternalLinkAlt size={10} />
+                  </span>
                 </div>
-              </div>
+              </a>
 
             </Motion.div>
           </div>

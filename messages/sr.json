@@ -6,6 +6,8 @@
     "contact": "Kontakt"
   },
   "Hero": {
+    "product_pill_tag": "Novi Proizvod",
+    "product_pill_title": "Atonize Industrial - B2B Sales Operating System",
     "badge": "B2B Softver & Custom CRM Arhitektura",
     "greeting": "Dobrodošli u",
     "role": "Namenska B2B i CRM Rešenja.",
@@ -18,26 +20,25 @@
     "stat_perf_label": "Lighthouse brzina",
     "stat_delivery": "100%",
     "stat_delivery_label": "Custom arhitektura",
-    "featured_badge": "Namenska B2B platforma",
-    "featured_title": "VEEVIO Admin & CRM Sistem",
-    "featured_sub": "Bespoke sistem za prodajni pipeline i RFQ procese",
-    "featured_view": "Detalji",
+    "featured_badge": "Novi Proizvod",
+    "featured_title": "Atonize Industrial",
+    "featured_sub": "B2B Sales Operating System za preduzeća sa RFQ procesima",
+    "featured_view": "Istraži proizvod",
     "pill_perf": "Real-time metrike"
   },
   "About": {
-    "title_first": "O",
-    "title_gradient": "Nama",
-    "role": "Full-Service Web Agencija",
-    "p1": "Mi u Atonize gradimo <strong>high-performance web aplikacije</strong> i digitalna rešenja koja direktno unapređuju vaše poslovanje.",
-    "p2": "Naša specijalnost je <strong>Full-Stack razvoj, moderna Front-End arhitektura i namenski CRM sistemi</strong>. Fokusirani smo na isporuku skalabilnih, održivih i visoko optimizovanih platformi.",
-    "p3": "Sa dubokom ekspertizom u <strong>tehničkom SEO-u i digitalnoj strategiji</strong>, osiguravamo da svako tehničko rešenje bude maksimalno usklađeno sa vašom vidljivošću na pretraživačima i poslovnim ciljevima.",
-    "p4": "Od inicijalnog upita na sajtu, preko custom administracionih panela, pa sve do praćenja proizvodnje, pokrivamo <strong>kompletan digitalni proces od početka do kraja</strong>.",
-    "p5": "Naš rad je <strong>visoko strukturiran i odgovoran</strong>, sa jasnim fokusom na kvalitet, efikasnost i konstantno unapređenje proizvoda.",
+    "eyebrow": "O Nama",
+    "title": "Namenski softverski inženjering i digitalna B2B arhitektura.",
+    "description": "Atonize pruža usluge razvoja namenskog softvera, digitalnih operativnih sistema i web platformi visokih performansi. Naša primarna ekspertiza usmerena je na B2B sektor i optimizaciju složenih poslovnih procesa, uz dokazano iskustvo u realizaciji zahtevnih rešenja u različitim industrijama. Svakom projektu pristupamo individualno - od strateškog planiranja i digitalnog marketinga do implementacije robusne arhitekture, uz garantovano puno vlasništvo klijenta nad kodom i podacima.",
     "stats": {
-      "exp_years": "Godina Iskustva",
-      "projects": "Isporučenih Projekata",
-      "seo_years": "Godina u SEO",
-      "commitment": "Posvećenost"
+      "exp_value": "10+",
+      "exp_label": "Godina inženjerskog iskustva",
+      "speed_value": "100+",
+      "speed_label": "Isporučenih digitalnih projekata",
+      "control_value": "100%",
+      "control_label": "Namenski razvijena arhitektura",
+      "efficiency_value": "B2B",
+      "efficiency_label": "Fokus uz multi-industrijsko znanje"
     }
   },
   "Services": {

@@ -1,103 +1,70 @@
 'use client';
-import { motion as Motion } from 'framer-motion';
-import { useInView } from 'framer-motion';
+
+import { motion as Motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import { useTranslations } from 'next-intl';
-
-interface Stat {
-  number: string;
-  label: string;
-}
 
 const About = () => {
   const t = useTranslations('About');
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const isInView = useInView(ref, { once: true, margin: '-80px' });
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
-      },
-    },
-  };
-
-  const itemVariants: any = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: "easeOut" } },
-  };
-
-  const stats: Stat[] = [
-    { number: '13+', label: t('stats.exp_years') },
-    { number: '100+', label: t('stats.projects') },
-    { number: '3+', label: t('stats.seo_years') },
-    { number: '100%', label: t('stats.commitment') },
+  const stats = [
+    { value: t('stats.exp_value'), label: t('stats.exp_label') },
+    { value: t('stats.speed_value'), label: t('stats.speed_label') },
+    { value: t('stats.control_value'), label: t('stats.control_label') },
+    { value: t('stats.efficiency_value'), label: t('stats.efficiency_label') },
   ];
 
   return (
-    <section id="about" className="py-section-gap bg-surface overflow-hidden" ref={ref}>
+    <section id="about" className="py-24 md:py-32 bg-[#faf8ff] border-t border-gray-100 overflow-hidden" ref={ref}>
       <div className="container max-w-container-max mx-auto px-margin-mobile md:px-gutter">
         <Motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate={isInView ? 'visible' : 'hidden'}
-          className="flex flex-col lg:flex-row gap-20 items-center"
+          initial={{ opacity: 0, y: 24 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+          className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-center"
         >
-          {/* Left Column - Text */}
-          <Motion.div variants={itemVariants} className="lg:w-7/12 order-2 lg:order-1">
-            <div className="flex items-center gap-4 mb-8">
-              <span className="w-8 h-px bg-primary/40"></span>
-              <span className="font-label-caps text-label-caps text-primary tracking-[0.2em]">
-                {t('title_first').toUpperCase()}
-              </span>
+          {/* Left Column - Big Story with Few Words */}
+          <div className="lg:col-span-7 xl:col-span-7">
+            {/* Minimal Eyebrow */}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-gray-200/90 shadow-2xs text-xs font-semibold text-primary mb-6">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+              <span className="tracking-wider uppercase text-[11px] font-bold">{t('eyebrow')}</span>
             </div>
-            <h2 className="font-headline-lg text-headline-lg md:text-[42px] mb-10 font-semibold text-on-surface">
-              {t('title_gradient')}
-            </h2>
-            <div className="space-y-8 font-body-lg text-body-lg text-on-surface-variant leading-relaxed lg:pr-12">
-              <p>
-                {t.rich('p1', { strong: (chunks) => <strong className="text-on-surface font-semibold">{chunks}</strong> })}
-              </p>
-              <p>
-                {t.rich('p2', { strong: (chunks) => <strong className="text-on-surface font-semibold">{chunks}</strong> })}
-              </p>
-              <p>
-                {t.rich('p3', { strong: (chunks) => <strong className="text-on-surface font-semibold">{chunks}</strong> })}
-              </p>
-              <p>
-                {t.rich('p4', { strong: (chunks) => <strong className="text-on-surface font-semibold">{chunks}</strong> })}
-              </p>
-              <p>
-                {t.rich('p5', { strong: (chunks) => <strong className="text-on-surface font-semibold">{chunks}</strong> })}
-              </p>
-            </div>
-          </Motion.div>
 
-          {/* Right Column - Stats */}
-          <Motion.div variants={itemVariants} className="lg:w-5/12 order-1 lg:order-2 self-start lg:mt-12">
+            {/* Clear, Powerful Headline */}
+            <h2 className="font-manrope text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-gray-950 tracking-[-0.035em] leading-[1.18] mb-6">
+              {t('title')}
+            </h2>
+
+            {/* Single High-Impact Paragraph */}
+            <p className="text-base sm:text-lg text-gray-600 font-normal leading-relaxed max-w-2xl">
+              {t('description')}
+            </p>
+          </div>
+
+          {/* Right Column - 4 Minimalist Facts */}
+          <div className="lg:col-span-5 xl:col-span-5">
             <div className="grid grid-cols-2 gap-4">
-              {stats.map((stat, index) => (
+              {stats.map((stat, idx) => (
                 <Motion.div
-                  key={stat.label}
-                  className="bg-surface-container-lowest p-10 border border-outline-variant/60 rounded-xl ambient-hover flex flex-col justify-center"
-                  custom={index}
-                  variants={{
-                    hidden: { opacity: 0, y: 40 },
-                    visible: { opacity: 1, y: 0, transition: { duration: 0.8, delay: index * 0.1 } }
-                  }}
+                  key={idx}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+                  transition={{ duration: 0.45, delay: 0.1 + idx * 0.06 }}
+                  className="p-6 sm:p-7 rounded-2xl bg-white border border-gray-200/80 shadow-xs hover:border-primary/30 hover:shadow-md transition-all flex flex-col justify-between min-h-[140px] group"
                 >
-                  <span className="font-headline-xl text-[48px] text-primary block mb-3 leading-none">
-                    {stat.number}
-                  </span>
-                  <span className="font-label-caps text-[11px] text-secondary tracking-widest uppercase">
+                  <div className="text-3xl sm:text-4xl font-manrope font-extrabold text-primary tracking-tight mb-2 group-hover:scale-105 transition-transform origin-left">
+                    {stat.value}
+                  </div>
+                  <div className="text-xs sm:text-[13px] text-gray-600 font-medium leading-snug">
                     {stat.label}
-                  </span>
+                  </div>
                 </Motion.div>
               ))}
             </div>
-          </Motion.div>
+          </div>
         </Motion.div>
       </div>
     </section>
