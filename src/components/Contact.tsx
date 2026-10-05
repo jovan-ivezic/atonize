@@ -29,8 +29,8 @@ const Contact = () => {
     {
       icon: FaEnvelope,
       title: t('info.email'),
-      value: 'jovanivezic@gmail.com',
-      link: 'mailto:jovanivezic@gmail.com',
+      value: 'jovan.ivezic@atonize.com',
+      link: 'mailto:jovan.ivezic@atonize.com',
     },
     {
       icon: FaPhone,
@@ -62,7 +62,7 @@ const Contact = () => {
     {
       icon: FaEnvelope,
       name: 'Email',
-      url: 'mailto:jovanivezic@gmail.com',
+      url: 'mailto:jovan.ivezic@atonize.com',
       color: 'hover:text-primary',
     },
   ];

@@ -14,7 +14,7 @@ const contactSchema = z.object({
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    
+
     // Validate request body
     const validatedData = contactSchema.parse(body);
 
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
 
     // Send email using Resend
     const data = await resend.emails.send({
-      from: 'Atonize Contact Form <onboarding@resend.dev>', // Required default for sandbox
+      from: 'Atonize <jovan.ivezic@atonize.com>',
       to: 'jovanivezic@gmail.com', // Replace with verified recipient or owner's email
       replyTo: email,
       subject: `New Project Inquiry from ${name}`,
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: 'Validation failed', details: (error as any).errors }, { status: 400 });
     }
-    
+
     console.error('Contact API Error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
