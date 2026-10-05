@@ -14,7 +14,8 @@ async function main() {
 
   // Translation mappings for the default categories
   const defaultCategoryTranslations: Record<string, { en: string, sr: string }> = {
-    'Engineering': { en: 'Engineering', sr: 'Inženjering' },
+    'Web Architecture': { en: 'Web Architecture', sr: 'Web Arhitektura' },
+    'Engineering': { en: 'Web Architecture', sr: 'Web Arhitektura' },
     'Product': { en: 'Product', sr: 'Proizvod' },
     'Design': { en: 'Design', sr: 'Dizajn' },
   };

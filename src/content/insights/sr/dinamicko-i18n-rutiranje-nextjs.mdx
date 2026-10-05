@@ -10,11 +10,11 @@ translationKey: "dynamic-i18n-routing"
 
 Ukoliko gradite višejezičnu aplikaciju u Next.js-u (App Router) koristeći biblioteke poput `next-intl`, verovatno ste naišli na ovaj tačan scenario:
 
-Čitate tekst na `/en/insights/how-to-code`. Kliknete na language switcher kako biste prešli na srpski jezik. Switcher poslušno menja URL u `/sr/uvidi/how-to-code`.
+Čitate tekst na `/en/insights/how-to-code`. Kliknete na language switcher kako biste prešli na srpski jezik. Switcher poslušno menja URL u `/sr/clanci/how-to-code`.
 
 Rezultat? **404 Not Found** stranica.
 
-Zašto? Zato što srpski prevod tog članka ima lokalizovan slug: `/sr/uvidi/kako-kodirati`. Standardni language switcher zamenjuje samo prefiks jezika, potpuno nesvestan da i dinamički `[slug]` segment URL-a mora biti preveden.
+Zašto? Zato što srpski prevod tog članka ima lokalizovan slug: `/sr/clanci/kako-kodirati`. Standardni language switcher zamenjuje samo prefiks jezika, potpuno nesvestan da i dinamički `[slug]` segment URL-a mora biti preveden.
 
 Evo paterna koji mi u Atonize-u koristimo kako bismo ovo rešili čisto, bez prop-drilling-a ili guranja komplikovane logike za pretragu URL-ova unutar Header komponente.
 

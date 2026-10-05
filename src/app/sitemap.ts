@@ -42,7 +42,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 1. Static Routes
   addRoute('/en', '/sr', 1.0, 'weekly');
   addRoute('/en/portfolio', '/sr/projekti', 0.9, 'monthly');
-  addRoute('/en/insights', '/sr/uvidi', 0.9, 'daily');
+  addRoute('/en/insights', '/sr/clanci', 0.9, 'daily');
 
   // 2. Categories (from DB)
   const [enCategorySlugs, srCategorySlugs] = await Promise.all([
@@ -57,7 +57,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (enSlug) {
       addRoute(
         `/en/insights/category/${enSlug}`,
-        `/sr/uvidi/kategorija/${srSlug}`,
+        `/sr/clanci/kategorija/${srSlug}`,
         0.8,
         'weekly'
       );
@@ -80,7 +80,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (srSlug) {
       addRoute(
         `/en/insights/${post.slug}`,
-        `/sr/uvidi/${srSlug}`,
+        `/sr/clanci/${srSlug}`,
         0.7,
         'monthly',
         new Date(post.date)

@@ -32,7 +32,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     }
 
     return {
-      title: meta.seoTitle ? meta.seoTitle : `${meta.title} | Atonize`,
+      title: {
+        absolute: meta.seoTitle || meta.title,
+      },
       description: meta.seoDescription || meta.excerpt,
       openGraph: {
         type: 'article',
@@ -42,16 +44,18 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       },
       ...(meta.featuredImage && { twitter: { card: 'summary_large_image', images: [meta.featuredImage] } }),
       alternates: {
-        canonical: locale === 'sr' ? `/sr/uvidi/${slug}` : `/en/insights/${slug}`,
+        canonical: locale === 'sr' ? `/sr/clanci/${slug}` : `/en/insights/${slug}`,
         languages: {
           'en': enSlug ? `/en/insights/${enSlug}` : undefined,
-          'sr': srSlug ? `/sr/uvidi/${srSlug}` : undefined,
+          'sr': srSlug ? `/sr/clanci/${srSlug}` : undefined,
         },
       },
     };
   } catch (error) {
     return {
-      title: 'Article Not Found | Atonize',
+      title: {
+        absolute: 'Article Not Found',
+      },
     };
   }
 }

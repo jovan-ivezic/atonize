@@ -9,15 +9,15 @@ export const routing = defineRouting({
     '/': '/',
     '/insights': {
       en: '/insights',
-      sr: '/uvidi'
+      sr: '/clanci'
     },
     '/insights/[slug]': {
       en: '/insights/[slug]',
-      sr: '/uvidi/[slug]'
+      sr: '/clanci/[slug]'
     },
     '/insights/category/[categorySlug]': {
       en: '/insights/category/[categorySlug]',
-      sr: '/uvidi/kategorija/[categorySlug]'
+      sr: '/clanci/kategorija/[categorySlug]'
     },
     '/portfolio': {
       en: '/portfolio',

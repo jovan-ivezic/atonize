@@ -10,11 +10,11 @@ translationKey: "dynamic-i18n-routing"
 
 If you are building a multilingual application in Next.js (App Router) using libraries like `next-intl`, you have likely encountered this exact scenario:
 
-You are reading an article at `/en/insights/how-to-code`. You click the language switcher to switch to Serbian. The switcher obediently changes the URL to `/sr/uvidi/how-to-code`. 
+You are reading an article at `/en/insights/how-to-code`. You click the language switcher to switch to Serbian. The switcher obediently changes the URL to `/sr/clanci/how-to-code`. 
 
 The result? A **404 Not Found** page. 
 
-Why? Because the Serbian translation of that article has a localized slug: `/sr/uvidi/kako-kodirati`. The standard language switcher only replaces the locale prefix, completely unaware that the dynamic `[slug]` segment needs translation too.
+Why? Because the Serbian translation of that article has a localized slug: `/sr/clanci/kako-kodirati`. The standard language switcher only replaces the locale prefix, completely unaware that the dynamic `[slug]` segment needs translation too.
 
 Here is the pattern we use at Atonize to solve this cleanly without prop-drilling or messy URL lookups inside the Header component.
 

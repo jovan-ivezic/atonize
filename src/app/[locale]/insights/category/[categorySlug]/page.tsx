@@ -22,10 +22,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     title: catTranslation?.name,
     description: catTranslation?.description || undefined,
     alternates: {
-      canonical: locale === 'sr' ? `/sr/uvidi/kategorija/${categorySlug}` : `/en/insights/category/${categorySlug}`,
+      canonical: locale === 'sr' ? `/sr/clanci/kategorija/${categorySlug}` : `/en/insights/category/${categorySlug}`,
       languages: {
         'en': enSlug ? `/en/insights/category/${enSlug}` : undefined,
-        'sr': srSlug ? `/sr/uvidi/kategorija/${srSlug}` : undefined,
+        'sr': srSlug ? `/sr/clanci/kategorija/${srSlug}` : undefined,
       },
     },
   };

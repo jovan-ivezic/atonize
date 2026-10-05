@@ -13,10 +13,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     title: t('insights_title'),
     description: t('insights_description'),
     alternates: {
-      canonical: `/${locale}/insights`,
+      canonical: locale === 'sr' ? '/sr/clanci' : '/en/insights',
       languages: {
         'en': '/en/insights',
-        'sr': '/sr/uvidi',
+        'sr': '/sr/clanci',
       },
     },
   };

@@ -50,7 +50,7 @@ export async function createCategory(formData: FormData) {
   revalidatePath('/[locale]/insights', 'page');
   revalidatePath('/[locale]', 'layout');
   revalidatePath('/en/insights');
-  revalidatePath('/sr/uvidi');
+  revalidatePath('/sr/clanci');
   
   redirect('/admin/categories');
 }
@@ -106,7 +106,7 @@ export async function updateCategory(id: string, formData: FormData) {
   revalidatePath('/[locale]/insights', 'page');
   revalidatePath('/[locale]', 'layout');
   revalidatePath('/en/insights');
-  revalidatePath('/sr/uvidi');
+  revalidatePath('/sr/clanci');
 
   redirect('/admin/categories');
 }
@@ -120,7 +120,7 @@ export async function deleteCategory(id: string) {
   revalidatePath('/[locale]/insights', 'page');
   revalidatePath('/[locale]', 'layout');
   revalidatePath('/en/insights');
-  revalidatePath('/sr/uvidi');
+  revalidatePath('/sr/clanci');
   
   redirect('/admin/categories');
 }

@@ -11,6 +11,10 @@ const nextConfig = {
     return [
       { source: '/en/about', destination: '/en#about', permanent: true },
       { source: '/sr/o-nama', destination: '/sr#about', permanent: true },
+      { source: '/sr/uvidi/:path*', destination: '/sr/clanci/:path*', permanent: true },
+      { source: '/sr/uvidi', destination: '/sr/clanci', permanent: true },
+      { source: '/en/insights/category/engineering', destination: '/en/insights/category/web-architecture', permanent: true },
+      { source: '/sr/clanci/kategorija/inzenjering', destination: '/sr/clanci/kategorija/web-arhitektura', permanent: true },
     ];
   },
 

@@ -86,7 +86,7 @@ Follow these STRICT guidelines:
      seriesOrder: [Number]
      ---
      ```
-8. **Internal Linking:** All internal links MUST use the base English route prefix `/insights/` (e.g., `[Link](/insights/slug)`). The system handles localization automatically. Do NOT use `/sr/uvidi/` or `/uvidi/`.
+8. **Internal Linking:** All internal links MUST use the base English route prefix `/insights/` (e.g., `[Link](/insights/slug)`). The system handles localization automatically. Do NOT use `/sr/clanci/` or `/clanci/`.
 ```
 
 ### Korak 2: Adaptacija na Srpski (Lokalizacija)
@@ -104,7 +104,7 @@ Pravila za adaptaciju:
 5. Prevedi i sam YAML Frontmatter na vrhu fajla (pazi da `title` i `excerpt` budu na srpskom, a `slug` prilagođen za srpski URL, npr. `arhitektura-react-komponenti`). 
 6. **KRITIČNO ZA FRONTMATTER:** Polja `translationKey`, `category` i `series` OBAVEZNO moraju ostati apsolutno ista kao i u engleskoj verziji, bez prevođenja! Na osnovu `translationKey` sistema spajamo prevode.
 7. Umesto "Key Takeaways" koristi "Ključni Uvidi", umesto "Common Pitfalls" koristi "Česte Greške i Zamke", a "FAQ" ostavi kao "Često Postavljana Pitanja (FAQ)".
-8. **Interni linkovi:** Sve interne markdown linkove OBAVEZNO ostavi da koriste englesku rutu `/insights/` (npr. `[Neki tekst](/insights/engleski-slug)`). Naš sistem (`next-intl`) će to sam prevesti u rutu na srpskom. NIKAKO ne koristi `/uvidi/` u samom kodu.
+8. **Interni linkovi:** Sve interne markdown linkove OBAVEZNO ostavi da koriste englesku rutu `/insights/` (npr. `[Neki tekst](/insights/engleski-slug)`). Naš sistem (`next-intl`) će to sam prevesti u rutu na srpskom. NIKAKO ne koristi `/clanci/` u samom kodu.
 
 Molim te izgeneriši srpsku verziju teksta sada.
 ```

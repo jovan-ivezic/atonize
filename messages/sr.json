@@ -1,7 +1,7 @@
 {
   "Navbar": {
     "work": "Projekti",
-    "insights": "Uvidi",
+    "insights": "Članci",
     "about": "O nama",
     "contact": "Kontakt"
   },
@@ -145,7 +145,7 @@
   "SEO": {
     "home_title": "Atonize | Izrada Web Sajtova i B2B Platformi",
     "home_description": "Specijalizovani smo za izradu modernih web aplikacija, naprednih B2B platformi i tehničku SEO optimizaciju.",
-    "insights_title": "Članci i Edukacija | Atonize",
+    "insights_title": "Članci i Edukacija",
     "insights_description": "Pročitajte naše tekstove o web programiranju, arhitekturi softvera, optimizaciji performansi i tehničkom SEO-u.",
     "portfolio_title": "Projekti i studije slučaja",
     "portfolio_description": "Pogledajte naš portfolio B2B platformi, SaaS proizvoda i web aplikacija rađenih u Next.js-u, React-u i modernim full-stack alatima."

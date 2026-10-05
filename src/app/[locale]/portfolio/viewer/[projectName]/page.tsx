@@ -11,11 +11,11 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const project = projectsData.find(p => createSlug(p.title) === projectName);
 
   if (!project) {
-    return { title: 'Project Not Found | Atonize' };
+    return { title: 'Project Not Found' };
   }
 
   return {
-    title: `${project.title} - Portfolio | Atonize`,
+    title: `${project.title} - Portfolio`,
     description: project.description,
     openGraph: {
       type: 'website',
