@@ -44,7 +44,7 @@ const Services = () => {
   };
 
   return (
-    <section id="services" className="py-section-gap bg-surface" ref={ref}>
+    <section id="services" className="py-section-gap bg-surface overflow-x-hidden" ref={ref}>
       <div className="container max-w-container-max mx-auto px-margin-mobile md:px-gutter">
         {/* Section Title */}
         <motion.div

@@ -71,7 +71,7 @@ const Contact = () => {
   };
 
   return (
-    <section id="contact" className="py-section-gap bg-surface" ref={ref}>
+    <section id="contact" className="py-section-gap bg-surface overflow-x-hidden" ref={ref}>
       <div className="container max-w-container-max mx-auto px-margin-mobile md:px-gutter">
         {/* Section Title */}
         <motion.div
@@ -101,30 +101,30 @@ const Contact = () => {
           className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-16"
         >
           {/* Left Column: Info & Socials */}
-          <div className="space-y-8">
+          <div className="space-y-8 min-w-0">
             <div className="space-y-6">
               {contactInfo.map((info) => (
                 <motion.div
                   key={info.title}
                   variants={itemVariants}
-                  className="bg-surface-container-lowest p-6 md:p-8 rounded-xl border border-outline-variant/30 ambient-hover flex items-center gap-6"
+                  className="bg-surface-container-lowest p-5 sm:p-6 md:p-8 rounded-xl border border-outline-variant/30 ambient-hover flex items-center gap-4 sm:gap-6"
                 >
-                  <div className="flex-shrink-0 inline-flex items-center justify-center w-14 h-14 bg-surface-dim text-primary rounded-full">
-                    <info.icon size={24} />
+                  <div className="flex-shrink-0 inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-surface-dim text-primary rounded-full">
+                    <info.icon size={22} />
                   </div>
-                  <div className="text-left">
+                  <div className="text-left min-w-0 flex-1">
                     <h3 className="font-headline-md font-semibold text-on-surface mb-1">
                       {info.title}
                     </h3>
                     {info.link ? (
                       <a
                         href={info.link}
-                        className="font-body-md text-secondary hover:text-primary transition-colors text-lg"
+                        className="font-body-md text-secondary hover:text-primary transition-colors text-base sm:text-lg break-all sm:break-normal"
                       >
                         {info.value}
                       </a>
                     ) : (
-                      <p className="font-body-md text-secondary text-lg">{info.value}</p>
+                      <p className="font-body-md text-secondary text-base sm:text-lg">{info.value}</p>
                     )}
                   </div>
                 </motion.div>
@@ -158,7 +158,7 @@ const Contact = () => {
           </div>
 
           {/* Right Column: Form */}
-          <motion.div variants={itemVariants} className="h-full">
+          <motion.div variants={itemVariants} className="h-full min-w-0">
             <ContactForm />
           </motion.div>
         </motion.div>

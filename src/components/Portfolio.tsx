@@ -128,7 +128,7 @@ const Portfolio = ({ variant = 'full' }: { variant?: Variant }) => {
     <section
       id="portfolio"
       ref={ref}
-      className={`bg-surface-container-lowest ${isFeatured ? 'py-section-gap' : 'pt-32 pb-section-gap min-h-screen'}`}
+      className={`bg-surface-container-lowest overflow-x-hidden ${isFeatured ? 'py-section-gap' : 'pt-32 pb-section-gap min-h-screen'}`}
     >
       <div className="container max-w-container-max mx-auto px-margin-mobile md:px-gutter">
         <Motion.div

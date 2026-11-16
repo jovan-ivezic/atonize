@@ -31,7 +31,7 @@ const Hero = () => {
         <div className="grid lg:grid-cols-12 gap-12 lg:gap-10 items-center">
           
           {/* Left Column: Heading, Pitch & CTAs */}
-          <div className="lg:col-span-6 xl:col-span-6">
+          <div className="lg:col-span-6 xl:col-span-6 min-w-0">
             {/* Announcement Pill Eyebrow */}
             <Motion.a
               href="https://atonizer.com/"
@@ -40,7 +40,7 @@ const Hero = () => {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="group inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white hover:bg-slate-50 border border-gray-200/90 hover:border-primary/40 shadow-xs text-xs font-semibold text-gray-800 mb-6 transition-all"
+              className="group inline-flex flex-wrap items-center gap-2 sm:gap-2.5 max-w-full px-3.5 py-1.5 rounded-full bg-white hover:bg-slate-50 border border-gray-200/90 hover:border-primary/40 shadow-xs text-xs font-semibold text-gray-800 mb-6 transition-all"
             >
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
@@ -120,7 +120,7 @@ const Hero = () => {
           </div>
 
           {/* Right Column: Real Admin Dashboard Showcase */}
-          <div className="lg:col-span-6 xl:col-span-6 relative">
+          <div className="lg:col-span-6 xl:col-span-6 relative min-w-0">
             <Motion.div
               initial={{ opacity: 0, y: 24, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -139,19 +139,19 @@ const Hero = () => {
               >
                 
                 {/* Browser Top Bar */}
-                <div className="px-4 py-2.5 bg-gray-50/95 border-b border-gray-200/80 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                <div className="px-3 sm:px-4 py-2.5 bg-gray-50/95 border-b border-gray-200/80 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                     <span className="w-2.5 h-2.5 rounded-full bg-rose-400/80 inline-block" />
                     <span className="w-2.5 h-2.5 rounded-full bg-amber-400/80 inline-block" />
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-400/80 inline-block" />
                   </div>
                   
                   {/* Clean URL Bar */}
-                  <div className="px-3.5 py-1 rounded-md bg-white border border-gray-200 text-[11px] font-mono text-gray-600 text-center truncate max-w-[240px] shadow-2xs group-hover:text-primary group-hover:border-primary/30 transition-colors">
+                  <div className="min-w-0 px-3 py-1 rounded-md bg-white border border-gray-200 text-[11px] font-mono text-gray-600 text-center truncate max-w-[200px] sm:max-w-[240px] shadow-2xs group-hover:text-primary group-hover:border-primary/30 transition-colors">
                     atonizer.com
                   </div>
 
-                  <span className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600">
+                  <span className="shrink-0 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     Live Product
                   </span>
