@@ -2,20 +2,16 @@
 import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import {
-  FaCode,
-  FaSearch,
-  FaDatabase,
-  FaPaintBrush,
-  FaServer,
-  FaChartLine,
-} from 'react-icons/fa';
+  LuCode,
+  LuSearch,
+  LuDatabase,
+} from 'react-icons/lu';
 import { IconType } from 'react-icons';
 import { useTranslations } from 'next-intl';
 
 interface Service {
   id: string;
   icon: IconType;
-  color: string;
 }
 
 const Services = () => {
@@ -24,12 +20,9 @@ const Services = () => {
   const isInView = useInView(ref, { once: true, margin: '-100px' });
 
   const services: Service[] = [
-    { id: 'fullstack', icon: FaCode, color: 'text-primary' },
-    { id: 'b2b', icon: FaDatabase, color: 'text-inverse-primary' },
-    { id: 'seo', icon: FaSearch, color: 'text-primary' },
-    { id: 'uiux', icon: FaPaintBrush, color: 'text-outline' },
-    { id: 'cloud', icon: FaServer, color: 'text-secondary' },
-    { id: 'strategy', icon: FaChartLine, color: 'text-primary' },
+    { id: 'b2b', icon: LuDatabase },
+    { id: 'fullstack', icon: LuCode },
+    { id: 'seo', icon: LuSearch },
   ];
 
   const containerVariants = {
@@ -79,42 +72,34 @@ const Services = () => {
           variants={containerVariants}
           initial="hidden"
           animate={isInView ? 'visible' : 'hidden'}
-          className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto"
+          className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto"
         >
           {services.map((service, index) => (
             <motion.div
               key={service.id}
               variants={itemVariants}
-              className="bg-surface-container-lowest p-10 rounded-xl border border-outline-variant/30 ambient-hover flex flex-col items-center justify-center text-center h-full"
+              className="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/40 ambient-hover flex flex-col justify-between text-left h-full group"
             >
-              {/* Icon */}
-              <div className={`${service.color} mb-6`}>
-                <service.icon size={48} />
-              </div>
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <div className="w-11 h-11 rounded-lg bg-surface-container-low border border-outline-variant/50 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
+                    <service.icon size={20} />
+                  </div>
+                  <span className="font-mono text-xs text-outline/70 tracking-wider">
+                    0{index + 1}
+                  </span>
+                </div>
 
-              {/* Service Name */}
-              <h3 className="font-headline-md font-semibold text-secondary text-xl mb-4">
-                {t(`items.${service.id}.title`)}
-              </h3>
-              
-              {/* Description */}
-              <p className="text-on-surface-variant font-body-md leading-relaxed">
-                {t(`items.${service.id}.description`)}
-              </p>
+                <h3 className="font-headline-md font-semibold text-on-surface text-lg mb-3">
+                  {t(`items.${service.id}.title`)}
+                </h3>
+
+                <p className="text-on-surface-variant font-body-md text-[15px] leading-relaxed">
+                  {t(`items.${service.id}.description`)}
+                </p>
+              </div>
             </motion.div>
           ))}
-        </motion.div>
-
-        {/* Additional Info */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={isInView ? { opacity: 1 } : {}}
-          transition={{ delay: 0.8 }}
-          className="mt-16 text-center"
-        >
-          <p className="font-body-md text-on-surface-variant">
-            {t('footer_note')}
-          </p>
         </motion.div>
       </div>
     </section>

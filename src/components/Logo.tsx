@@ -1,39 +1,40 @@
 type LogoProps = {
   className?: string;
   showWordmark?: boolean;
+  variant?: 'dark' | 'light';
 };
 
-export function LogoMark({ className = 'h-9 w-9' }: { className?: string }) {
+export function LogoMark({ className = 'h-9 w-auto' }: { className?: string }) {
   return (
-    <svg viewBox="0 0 40 40" fill="none" className={className} aria-hidden="true">
-      <circle cx="29.5" cy="10.5" r="3" fill="#FBA167" />
+    <svg viewBox="225 570 390 290" fill="none" className={className} aria-hidden="true">
       <path
-        d="M4 34 L17.6 9.6 Q20 5.4 22.4 9.6 L36 34"
-        stroke="currentColor"
-        strokeWidth="3.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        fill="#36424A"
+        d="M420.8 576.6 L230.6 851.0 L341.8 851.0 L413.2 744.8 L315.7 824.8 L282.8 824.8 L420.8 633.1 L558.8 824.8 L525.9 824.8 L428.4 744.8 L499.8 851.0 L611.0 851.0 Z"
       />
-      <path
-        d="M8.7 25.5 Q14.35 22 20 25.5 T31.3 25.5"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
+      <path fill="#686866" d="M420.8 633.1 L311.6 779.3 L420.8 688.3 L530.0 779.3 Z" />
+      <path fill="#686866" d="M311.6 779.3 L282.8 824.8 L306.1 824.8 Z" />
+      <path fill="#686866" d="M530.0 779.3 L558.8 824.8 L535.5 824.8 Z" />
     </svg>
   );
 }
 
-export default function Logo({ className = '', showWordmark = true }: LogoProps) {
+export default function Logo({ className = '', showWordmark = true, variant = 'dark' }: LogoProps) {
+  if (!showWordmark) {
+    return (
+      <span className={`inline-flex items-center ${className}`}>
+        <LogoMark />
+        <span className="sr-only">Atonize</span>
+      </span>
+    );
+  }
+
   return (
-    <span className={`inline-flex items-center gap-2.5 ${className}`}>
-      <LogoMark />
-      {showWordmark && (
-        <span className="font-manrope text-[22px] font-extrabold tracking-[-0.03em] text-on-surface leading-none">
-          atonize
-        </span>
-      )}
-      <span className="sr-only">Atonize</span>
+    <span className={`inline-flex items-center ${className}`}>
+      <img
+        src={variant === 'light' ? '/images/atonize-logo-light.svg' : '/images/atonize-logo.svg'}
+        alt="Atonize"
+        className="h-12 w-auto"
+      />
     </span>
   );
 }

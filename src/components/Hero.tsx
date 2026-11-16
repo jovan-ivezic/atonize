@@ -11,17 +11,16 @@ const Hero = () => {
 
   const stats = [
     { value: t('stat_experience'), label: t('stat_experience_label') },
-    { value: t('stat_perf'), label: t('stat_perf_label') },
     { value: t('stat_delivery'), label: t('stat_delivery_label') },
   ];
 
   return (
-    <section id="home" className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden bg-gradient-to-b from-[#faf8ff] via-white to-white">
+    <section id="home" className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden bg-gradient-to-b from-surface via-white to-white">
       {/* Subtle Ambient Background Elements */}
       <div 
         className="absolute inset-0 pointer-events-none opacity-[0.035]" 
         style={{ 
-          backgroundImage: 'radial-gradient(#0C457B 1px, transparent 1px)', 
+          backgroundImage: 'radial-gradient(#36424A 1px, transparent 1px)', 
           backgroundSize: '24px 24px' 
         }} 
       />
@@ -35,7 +34,7 @@ const Hero = () => {
           <div className="lg:col-span-6 xl:col-span-6">
             {/* Announcement Pill Eyebrow */}
             <Motion.a
-              href="https://industrial.atonize.com/"
+              href="https://atonizer.com/"
               target="_blank"
               rel="noopener noreferrer"
               initial={{ opacity: 0, y: 16 }}
@@ -105,7 +104,7 @@ const Hero = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.7, delay: 0.4 }}
-              className="pt-8 border-t border-gray-200/70 grid grid-cols-3 gap-4 sm:gap-8 max-w-lg"
+              className="pt-8 border-t border-gray-200/70 grid grid-cols-2 gap-6 sm:gap-10 max-w-md"
             >
               {stats.map((stat, idx) => (
                 <div key={idx}>
@@ -133,7 +132,7 @@ const Hero = () => {
 
               {/* Elevated Light Browser Frame Linking to industrial.atonize.com */}
               <a
-                href="https://industrial.atonize.com/"
+                href="https://atonizer.com/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group block relative rounded-2xl bg-white border border-gray-200/90 hover:border-primary/40 shadow-2xl shadow-primary/10 hover:shadow-primary/20 overflow-hidden transition-all duration-300"
@@ -149,7 +148,7 @@ const Hero = () => {
                   
                   {/* Clean URL Bar */}
                   <div className="px-3.5 py-1 rounded-md bg-white border border-gray-200 text-[11px] font-mono text-gray-600 text-center truncate max-w-[240px] shadow-2xs group-hover:text-primary group-hover:border-primary/30 transition-colors">
-                    industrial.atonize.com
+                    atonizer.com
                   </div>
 
                   <span className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600">
@@ -162,7 +161,7 @@ const Hero = () => {
                 <div className="relative aspect-[3450/1926] overflow-hidden bg-gray-950">
                   <Image
                     src="/images/dashboard-hero.png"
-                    alt="Atonize Industrial B2B Sales Operating System"
+                    alt="Atonizer B2B Sales Operating System"
                     width={1725}
                     height={963}
                     priority

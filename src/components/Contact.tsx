@@ -1,7 +1,7 @@
 'use client';
 import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { FaGithub, FaLinkedin, FaEnvelope, FaPhone, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaLinkedin, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa';
 import { IconType } from 'react-icons';
 import { useTranslations } from 'next-intl';
 import ContactForm from './ContactForm';
@@ -33,12 +33,6 @@ const Contact = () => {
       link: 'mailto:jovan.ivezic@atonize.com',
     },
     {
-      icon: FaPhone,
-      title: t('info.phone'),
-      value: '+387 64 294 3372',
-      link: 'tel:+387642943372',
-    },
-    {
       icon: FaMapMarkerAlt,
       title: t('info.location'),
       value: 'Novi Sad, Serbia',
@@ -47,12 +41,6 @@ const Contact = () => {
   ];
 
   const socialLinks: SocialLink[] = [
-    {
-      icon: FaGithub,
-      name: 'GitHub',
-      url: 'https://github.com/jovan-ivezic',
-      color: 'hover:text-gray-900',
-    },
     {
       icon: FaLinkedin,
       name: 'LinkedIn',

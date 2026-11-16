@@ -7,7 +7,7 @@
   },
   "Hero": {
     "product_pill_tag": "Novi Proizvod",
-    "product_pill_title": "Atonize Industrial - B2B Sales Operating System",
+    "product_pill_title": "Atonizer - B2B Sales Operating System",
     "badge": "B2B Softver & Custom CRM Arhitektura",
     "greeting": "Dobrodošli u",
     "role": "Namenska B2B i CRM Rešenja.",
@@ -21,7 +21,7 @@
     "stat_delivery": "100%",
     "stat_delivery_label": "Custom arhitektura",
     "featured_badge": "Novi Proizvod",
-    "featured_title": "Atonize Industrial",
+    "featured_title": "Atonizer",
     "featured_sub": "B2B Sales Operating System za preduzeća sa RFQ procesima",
     "featured_view": "Istraži proizvod",
     "pill_perf": "Real-time metrike"
@@ -44,32 +44,19 @@
   "Services": {
     "title_first": "Naše",
     "title_gradient": "Usluge",
-    "description": "Sveobuhvatna digitalna rešenja skrojena prema vašim poslovnim potrebama.",
-    "footer_note": "Gradimo robusne arhitekture i isporučujemo merljive poslovne rezultate.",
+    "description": "Tri oblasti na koje smo fokusirani, od internih B2B alata do javnih web platformi.",
     "items": {
-      "fullstack": {
-        "title": "Full-Stack Razvoj",
-        "description": "End-to-end razvoj robusnih web aplikacija koristeći React, Next.js i moderne backend tehnologije."
-      },
       "b2b": {
         "title": "B2B Platforme & CRM",
-        "description": "Namenska enterprise rešenja i CRM sistemi krojeni da automatizuju vaše kompleksne poslovne procese."
+        "description": "Namenski prodajni sistemi, RFQ tokovi, interni portali i CRM rešenja prilagođena vašem načinu rada."
+      },
+      "fullstack": {
+        "title": "Full-Stack Web Aplikacije",
+        "description": "Kompletan razvoj od dizajna interfejsa do baze, API-ja i produkcione infrastrukture u React, Next.js i modernim backend tehnologijama."
       },
       "seo": {
-        "title": "Tehnički SEO",
-        "description": "Napredne on-page i arhitektonske SEO optimizacije za maksimalnu vidljivost na pretraživačima."
-      },
-      "uiux": {
-        "title": "UI/UX Dizajn",
-        "description": "Kreiranje intuitivnih, pristupačnih i modernih korisničkih interfejsa koji podižu vaše brend iskustvo."
-      },
-      "cloud": {
-        "title": "Cloud Arhitektura",
-        "description": "Skalabilna cloud infrastruktura, CI/CD pajplajnovi i pouzdana kontejnerizacija koristeći moderne provajdere."
-      },
-      "strategy": {
-        "title": "Digitalna Strategija",
-        "description": "Tehnički konsalting zasnovan na podacima za usklađivanje softverske arhitekture sa poslovnim ciljevima."
+        "title": "Digitalni Marketing & SEO",
+        "description": "Kompletan digitalni nastup: SEO i AEO/GEO vidljivost na Google-u i AI pretragama, plaćene kampanje, analitika i optimizacija konverzija."
       }
     }
   },
@@ -139,9 +126,8 @@
     "series": "Serijal:"
   },
   "Footer": {
-    "made_with": "Napravljeno sa",
-    "by": "od strane Atonize",
-    "rights": "Sva prava zadržana."
+    "tagline": "Namenska B2B i CRM softverska rešenja.",
+    "rights": "Atonize. Sva prava zadržana."
   },
   "SEO": {
     "home_title": "Atonize | Izrada Web Sajtova i B2B Platformi",

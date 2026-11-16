@@ -7,7 +7,7 @@
   },
   "Hero": {
     "product_pill_tag": "New Product",
-    "product_pill_title": "Atonize Industrial — B2B Sales Operating System",
+    "product_pill_title": "Atonizer - B2B Sales Operating System",
     "badge": "B2B Software & Custom CRM Architecture",
     "greeting": "Welcome to",
     "role": "Bespoke B2B & CRM Solutions.",
@@ -21,7 +21,7 @@
     "stat_delivery": "100%",
     "stat_delivery_label": "Custom Architecture",
     "featured_badge": "Flagship Product",
-    "featured_title": "Atonize Industrial",
+    "featured_title": "Atonizer",
     "featured_sub": "B2B Sales Operating System for quote-driven enterprises",
     "featured_view": "Explore Product",
     "pill_perf": "Real-time Metrics"
@@ -29,7 +29,7 @@
   "About": {
     "eyebrow": "About Us",
     "title": "Bespoke software engineering and digital B2B architecture.",
-    "description": "Atonize specializes in the engineering of bespoke software, digital operating systems, and high-performance web platforms. Our primary expertise centers on the B2B sector and the optimization of mission-critical commercial workflows, backed by extensive experience delivering complex solutions across diverse industries. We approach every engagement with architectural precision — from strategic planning and digital marketing to robust deployment, ensuring complete client ownership of all proprietary code and data.",
+    "description": "Atonize specializes in the engineering of bespoke software, digital operating systems, and high-performance web platforms. Our primary expertise centers on the B2B sector and the optimization of mission-critical commercial workflows, backed by extensive experience delivering complex solutions across diverse industries. We approach every engagement with architectural precision, from strategic planning and digital marketing to robust deployment, ensuring complete client ownership of all proprietary code and data.",
     "stats": {
       "exp_value": "10+",
       "exp_label": "Years of Engineering Expertise",
@@ -44,32 +44,19 @@
   "Services": {
     "title_first": "Our",
     "title_gradient": "Services",
-    "description": "Comprehensive digital solutions tailored to your business needs.",
-    "footer_note": "Building robust architectures and delivering measurable business results.",
+    "description": "Three core areas we focus on, from internal B2B systems to search-ready web platforms.",
     "items": {
-      "fullstack": {
-        "title": "Full-Stack Development",
-        "description": "End-to-end development of robust web applications using React, Next.js, and modern backend technologies."
-      },
       "b2b": {
         "title": "B2B Platforms & CRM",
-        "description": "Custom enterprise solutions and CRM systems tailored to streamline your complex business operations."
+        "description": "Custom sales systems, RFQ workflows, internal portals, and CRM software built around your exact operations."
+      },
+      "fullstack": {
+        "title": "Full-Stack Web Applications",
+        "description": "End-to-end engineering from interface design to databases, APIs, and production deployment in React, Next.js, and modern backends."
       },
       "seo": {
-        "title": "Technical SEO",
-        "description": "Advanced on-page and architectural SEO optimizations to maximize your search engine visibility."
-      },
-      "uiux": {
-        "title": "UI/UX Design",
-        "description": "Creating intuitive, accessible, and high-converting user interfaces that elevate your brand experience."
-      },
-      "cloud": {
-        "title": "Cloud Architecture",
-        "description": "Scalable cloud infrastructure, CI/CD pipelines, and reliable containerization using modern providers."
-      },
-      "strategy": {
-        "title": "Digital Strategy",
-        "description": "Data-driven technical consulting to align your software architecture with overarching business goals."
+        "title": "Digital Marketing & SEO",
+        "description": "Full-funnel digital growth: SEO and AEO/GEO visibility across Google and AI search, paid acquisition, analytics, and conversion optimization."
       }
     }
   },
@@ -139,9 +126,8 @@
     "series": "Series:"
   },
   "Footer": {
-    "made_with": "Made with",
-    "by": "by Atonize",
-    "rights": "All rights reserved."
+    "tagline": "Bespoke B2B & CRM software engineering.",
+    "rights": "Atonize. All rights reserved."
   },
   "SEO": {
     "home_title": "Atonize | Custom Web Solutions & B2B Platforms",

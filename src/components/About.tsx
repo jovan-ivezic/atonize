@@ -17,7 +17,7 @@ const About = () => {
   ];
 
   return (
-    <section id="about" className="py-24 md:py-32 bg-[#faf8ff] border-t border-gray-100 overflow-hidden" ref={ref}>
+    <section id="about" className="py-24 md:py-32 bg-surface-container-low border-t border-outline-variant/40 overflow-hidden" ref={ref}>
       <div className="container max-w-container-max mx-auto px-margin-mobile md:px-gutter">
         <Motion.div
           initial={{ opacity: 0, y: 24 }}
